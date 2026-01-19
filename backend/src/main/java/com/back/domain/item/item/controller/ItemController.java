@@ -1,6 +1,6 @@
 package com.back.domain.item.item.controller;
 
-import com.back.domain.item.item.dto.ItemListResponse;
+import com.back.domain.item.item.dto.ItemSummaryResponse;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
 import com.back.global.rsData.RsData;
@@ -25,16 +25,18 @@ public class ItemController {
     @GetMapping
     @Transactional(readOnly = true)
     @Operation(summary = "아이템 목록 조회")
-    public RsData<ItemListResponse> getItems(
-            @RequestParam Long userId
-    ) {
+    public RsData<List<ItemSummaryResponse>> getItems(@RequestParam Long userId) {
+
         List<Item> items = itemService.findAllByUserIdOrderByNextReplacementDateAsc(userId);
+
+        List<ItemSummaryResponse> data = items.stream()
+                .map(ItemSummaryResponse::new)
+                .toList();
 
         return new RsData<>(
                 "200-1",
                 "아이템 목록 조회 성공",
-                ItemListResponse.of(items)
-        );
+                data);
     }
 
 }

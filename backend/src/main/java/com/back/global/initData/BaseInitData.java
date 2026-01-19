@@ -37,10 +37,14 @@ public class BaseInitData {
         // 이미 카테고리가 있으면 스킵 (원하면 조건 변경 가능)
         if (categoryService.count() > 0) return;
 
+        categoryService.create("집/생활");
         categoryService.create("욕실");
         categoryService.create("주방");
-        categoryService.create("생활가전");
+        categoryService.create("뷰티");
+        categoryService.create("반려동물");
         categoryService.create("자동차");
+        categoryService.create("전자기기");
+        categoryService.create("업무");
     }
 
     @Transactional
@@ -63,7 +67,7 @@ public class BaseInitData {
                 "칫솔",
                 "https://example.com/toothbrush.png",
                 LocalDate.of(2026, 1, 1),
-                "90",
+                "3m",
                 LocalDate.of(2026, 4, 1),
                 true
         );
@@ -74,8 +78,8 @@ public class BaseInitData {
                 "수세미",
                 "https://example.com/sponge.png",
                 LocalDate.of(2026, 1, 5),
-                "30",
-                LocalDate.of(2026, 2, 4),
+                "1m",
+                LocalDate.of(2026, 2, 5),
                 true
         );
 
@@ -85,7 +89,7 @@ public class BaseInitData {
                 "엔진오일",
                 "https://example.com/engineoil.png",
                 LocalDate.of(2025, 12, 1),
-                "180",
+                "6m",
                 LocalDate.of(2026, 5, 30),
                 true
         );
