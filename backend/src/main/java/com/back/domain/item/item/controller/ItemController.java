@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,23 @@ public class ItemController {
             @Valid @RequestBody ItemCreateRequest request
     ) {
         Long userId = 1L; //토큰 추출
+
+        Item item = itemService.createItem(userId, request);
+
+        return new RsData<>(
+                "201-1",
+                "아이템 등록 성공",
+                new ItemCreateResponse(item)
+        );
+    }
+
+    @PostMapping
+    @Operation(summary = "아이템 등록")
+    public RsData<ItemCreateResponse> createItem(
+            @RequestHeader("Authorization") String token,
+            @RequestBody ItemCreateRequest request
+    ) {
+        Long userId = 1L; //임시 인증 토큰
 
         Item item = itemService.createItem(userId, request);
 
