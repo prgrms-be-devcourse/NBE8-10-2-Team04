@@ -22,7 +22,7 @@ public record ItemSummaryResponse(
                 item.getNextReplacementDate() == null
                         ? 0
                         : ChronoUnit.DAYS.between(LocalDate.now(), item.getNextReplacementDate()),
-                item.getIsActive() != null && item.getIsActive()
+                item.isActive()
         );
     }
 }
