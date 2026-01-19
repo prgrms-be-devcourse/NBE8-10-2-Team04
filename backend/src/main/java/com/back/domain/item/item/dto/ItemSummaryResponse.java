@@ -4,7 +4,6 @@ import com.back.domain.item.item.entity.Item;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 
 public record ItemSummaryResponse(
         Long id,
