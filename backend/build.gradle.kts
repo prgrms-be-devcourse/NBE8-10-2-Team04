@@ -54,6 +54,7 @@ dependencies {
 
     // DB Drivers (둘 중 필요한 것만 켜도 됨)
     runtimeOnly("com.h2database:h2")
+    runtimeOnly("org.springframework.boot:spring-boot-h2console") // Spring Boot 4.0 부터 필요한 라이브러리
     runtimeOnly("com.mysql:mysql-connector-j")
 
     // Tests
