@@ -21,7 +21,8 @@ public class SecurityConfig {
                                 // 허용할 요청 설정
                                 .requestMatchers("/favicon.ico").permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
-
+                                // 회원가입과 로그인은 누구나 들어갈 수 있게 허용
+                                .requestMatchers("/api/v1/user/signup", "/api/v1/user/login").permitAll()
                                 // ✅ (개발용) 아이템만 임시 허용
                                 .requestMatchers("/api/v1/items/**").permitAll()
 
