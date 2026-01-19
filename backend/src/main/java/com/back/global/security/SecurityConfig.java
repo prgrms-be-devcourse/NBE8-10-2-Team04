@@ -22,13 +22,6 @@ public class SecurityConfig {
                                 .requestMatchers("/favicon.ico").permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
 
-                                // ✅ Swagger 허용 (springdoc)
-                                .requestMatchers(
-                                        "/v3/api-docs/**",
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html"
-                                ).permitAll()
-
                                 // ✅ (개발용) 아이템 목록 조회만 임시 허용
                                 .requestMatchers(HttpMethod.GET, "/api/v1/items/**").permitAll()
 
