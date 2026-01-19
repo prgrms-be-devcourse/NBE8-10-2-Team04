@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -72,6 +73,7 @@ public class ItemController {
         Item item = itemService.findByIdAndUserId(itemId, userId);
         return new RsData<>("200-1", "아이템 단건 조회 성공", new ItemResponse(item));
     }
+
 
 
 }
