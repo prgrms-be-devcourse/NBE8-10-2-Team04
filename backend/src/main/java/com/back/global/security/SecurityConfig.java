@@ -3,6 +3,7 @@ package com.back.global.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
@@ -20,6 +21,17 @@ public class SecurityConfig {
                                 // 허용할 요청 설정
                                 .requestMatchers("/favicon.ico").permitAll()
                                 .requestMatchers("/h2-console/**").permitAll()
+
+                                // ✅ Swagger 허용 (springdoc)
+                                .requestMatchers(
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html"
+                                ).permitAll()
+
+                                // ✅ (개발용) 아이템 목록 조회만 임시 허용
+                                .requestMatchers(HttpMethod.GET, "/api/v1/items/**").permitAll()
+
                                 // 기타 api 요청은 인가 필요 -> 로그인하지 않으면 제한
                                 .requestMatchers("/api/*/**").authenticated()
                                 // 나머지 요청은 허용
