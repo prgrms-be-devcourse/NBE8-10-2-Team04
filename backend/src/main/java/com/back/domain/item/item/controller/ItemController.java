@@ -45,23 +45,6 @@ public class ItemController {
         );
     }
 
-    @PostMapping
-    @Operation(summary = "아이템 등록")
-    public RsData<ItemCreateResponse> createItem(
-            @RequestHeader("Authorization") String token,
-            @RequestBody ItemCreateRequest request
-    ) {
-        Long userId = 1L; //임시 인증 토큰
-
-        Item item = itemService.createItem(userId, request);
-
-        return new RsData<>(
-                "201-1",
-                "아이템 등록 성공",
-                new ItemCreateResponse(item)
-        );
-    }
-
     @GetMapping
     @Operation(summary = "아이템 목록 조회")
     public RsData<List<ItemSummaryResponse>> getItems(
