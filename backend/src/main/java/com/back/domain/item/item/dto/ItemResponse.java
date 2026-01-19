@@ -8,32 +8,15 @@ import java.time.temporal.ChronoUnit;
 
 public record ItemResponse(
         Long id,
-
-        @JsonProperty("user_id")
-        Long userId,
-
-        @JsonProperty("category_id")
-        Long categoryId,
-
+        Long user_id,
+        Long category_id,
         String name,
-
-        @JsonProperty("img_url")
-        String imgUrl,
-
-        @JsonProperty("start_date")
-        LocalDate startDate,
-
-        @JsonProperty("cycle_days")
-        String cycleDays,
-
-        @JsonProperty("next_replacement_date")
-        LocalDate nextReplacementDate,
-
-        @JsonProperty("is_active")
-        Boolean isActive,
-
-        @JsonProperty("d_day")
-        long dDay
+        String img_url,
+        LocalDate start_date,
+        String cycle_days,
+        LocalDate next_replacement_date,
+        Boolean is_active,
+        long d_day
 ) {
     public ItemResponse(Item item) {
         this(

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,8 +64,8 @@ public class ItemController {
             @PathVariable Long itemId,
             @RequestParam Long userId
     ) {
-        Item item = itemService.findByIdAndUserId(itemId, userId).orElse(null);
-        return new RsData<>("200-1", "아이템 단건 조회 성공", item == null ? null : new ItemResponse(item));
+        Item item = itemService.findByIdAndUserId(itemId, userId);
+        return new RsData<>("200-1", "아이템 단건 조회 성공", new ItemResponse(item));
     }
 
 

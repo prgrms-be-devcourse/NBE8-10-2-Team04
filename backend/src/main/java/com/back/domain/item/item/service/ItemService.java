@@ -29,8 +29,9 @@ public class ItemService {
 
     //단건조회용
     @Transactional(readOnly = true)
-    public Optional<Item> findByIdAndUserId(Long itemId, Long userId) {
-        return itemRepository.findByIdAndUserId(itemId, userId);
+    public Item findByIdAndUserId(Long itemId, Long userId) {
+        return itemRepository.findByIdAndUserId(itemId, userId)
+                .orElseThrow();
     }
 
     @Transactional(readOnly = true)
