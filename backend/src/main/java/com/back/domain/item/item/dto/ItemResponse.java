@@ -30,7 +30,7 @@ public record ItemResponse(
         LocalDate nextReplacementDate,
 
         @JsonProperty("is_active")
-        boolean isActive,
+        Boolean isActive,
 
         @JsonProperty("d_day")
         long dDay
@@ -45,7 +45,7 @@ public record ItemResponse(
                 item.getStartDate(),
                 item.getCycleDays(),
                 item.getNextReplacementDate(),
-                item.isActive(),
+                item.getIsActive(),
                 item.getNextReplacementDate() == null
                         ? 0
                         : ChronoUnit.DAYS.between(LocalDate.now(), item.getNextReplacementDate())

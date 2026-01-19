@@ -11,7 +11,7 @@ public record ItemSummaryResponse(
         LocalDate nextReplacementDate,
         String imgUrl,
         long dDay,
-        boolean isActive
+        Boolean isActive
 ) {
     public ItemSummaryResponse(Item item) {
         this(
@@ -22,7 +22,7 @@ public record ItemSummaryResponse(
                 item.getNextReplacementDate() == null
                         ? 0
                         : ChronoUnit.DAYS.between(LocalDate.now(), item.getNextReplacementDate()),
-                item.isActive()
+                item.getIsActive()
         );
     }
 }

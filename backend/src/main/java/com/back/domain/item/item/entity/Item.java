@@ -32,7 +32,7 @@ public class Item {
 
     private LocalDate nextReplacementDate;
 
-    private boolean isActive;
+    private Boolean isActive;
 
     public Item(
             Long userId,

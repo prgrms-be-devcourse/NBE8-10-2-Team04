@@ -2,6 +2,7 @@ package com.back.domain.item.item.controller;
 
 import com.back.domain.item.item.dto.ItemCreateRequest;
 import com.back.domain.item.item.dto.ItemCreateResponse;
+import com.back.domain.item.item.dto.ItemResponse;
 import com.back.domain.item.item.dto.ItemSummaryResponse;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
@@ -40,7 +41,6 @@ public class ItemController {
     }
 
     @GetMapping
-    @Transactional(readOnly = true)
     @Operation(summary = "아이템 목록 조회")
     public RsData<List<ItemSummaryResponse>> getItems(@RequestParam Long userId) {
 
@@ -55,5 +55,17 @@ public class ItemController {
                 "아이템 목록 조회 성공",
                 data);
     }
+
+
+    @GetMapping("/{itemId}")
+    @Operation(summary = "아이템 단건 조회")
+    public RsData<ItemResponse> getItem(
+            @PathVariable Long itemId,
+            @RequestParam Long userId
+    ) {
+        Item item = itemService.findByIdAndUserId(itemId, userId).orElse(null);
+        return new RsData<>("200-1", "아이템 단건 조회 성공", item == null ? null : new ItemResponse(item));
+    }
+
 
 }

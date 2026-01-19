@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,12 @@ public class ItemService {
     @Transactional(readOnly = true)
     public List<Item> findAllByUserIdOrderByNextReplacementDateAsc(Long userId) {
         return itemRepository.findAllByUserIdOrderByNextReplacementDateAsc(userId);
+    }
+
+    //단건조회용
+    @Transactional(readOnly = true)
+    public Optional<Item> findByIdAndUserId(Long itemId, Long userId) {
+        return itemRepository.findByIdAndUserId(itemId, userId);
     }
 
     @Transactional(readOnly = true)
