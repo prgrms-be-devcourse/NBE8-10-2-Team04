@@ -1,0 +1,18 @@
+package com.back.domain.item.itemHistory.entity;
+
+import com.back.domain.item.item.entity.Item;
+import jakarta.persistence.*;
+
+import java.time.LocalDate;
+
+@Entity(name = "item_histories")
+public class ItemHistory {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne // item(1) : item_history(N)
+    private Item item;
+
+    private LocalDate startDate;
+}
