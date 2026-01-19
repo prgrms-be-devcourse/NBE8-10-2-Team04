@@ -8,27 +8,20 @@ import java.time.LocalDate;
 public record ItemCreateResponse(
         Long id,
 
-        @JsonProperty("user_id")
         Long userId,
 
-        @JsonProperty("category_id")
         Long categoryId,
 
         String name,
 
-        @JsonProperty("img_url")
         String imgUrl,
 
-        @JsonProperty("start_date")
         LocalDate startDate,
 
-        @JsonProperty("cycle_days")
         String cycleDays,
 
-        @JsonProperty("next_replacement_date")
         LocalDate nextReplacementDate,
 
-        @JsonProperty("is_active")
         Boolean isActive
 ) {
     public ItemCreateResponse(Item item) {
