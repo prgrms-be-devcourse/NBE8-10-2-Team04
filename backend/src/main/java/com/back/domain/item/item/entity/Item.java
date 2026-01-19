@@ -2,9 +2,14 @@ package com.back.domain.item.item.entity;
 
 import com.back.domain.category.category.entity.Category;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity(name = "items")
 public class Item {
     @Id
@@ -28,4 +33,24 @@ public class Item {
     private LocalDate nextReplacementDate;
 
     private Boolean isActive;
+
+    public Item(
+            Long userId,
+            Category category,
+            String name,
+            String imgUrl,
+            LocalDate startDate,
+            String cycleDays,
+            LocalDate nextReplacementDate,
+            Boolean isActive
+    ) {
+        this.userId = userId;
+        this.category = category;
+        this.name = name;
+        this.imgUrl = imgUrl;
+        this.startDate = startDate;
+        this.cycleDays = cycleDays;
+        this.nextReplacementDate = nextReplacementDate;
+        this.isActive = isActive;
+    }
 }
