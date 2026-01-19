@@ -1,12 +1,18 @@
 package com.back.domain.item.item.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
 import java.time.LocalDate;
 
 public record ItemCreateRequest(
-        Long categoryId,
-        String name,
+        @NotNull Long categoryId,
+        @NotBlank String name,
         String imgUrl,
         LocalDate startDate,
-        String cycleDays
+        @NotBlank String cycleDays
 ) {
+    public LocalDate resolvedStartDate() {
+        return (startDate == null) ? LocalDate.now() : startDate;
+    }
 }

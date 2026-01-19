@@ -8,6 +8,7 @@ import com.back.domain.item.item.service.ItemService;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,9 +26,9 @@ public class ItemController {
     @Operation(summary = "아이템 등록")
     public RsData<ItemCreateResponse> createItem(
             @RequestHeader("Authorization") String token,
-            @RequestBody ItemCreateRequest request
+            @Valid @RequestBody ItemCreateRequest request
     ) {
-        Long userId = 1L; //임시 인증 토큰
+        Long userId = 1L; //토큰 추출
 
         Item item = itemService.createItem(userId, request);
 

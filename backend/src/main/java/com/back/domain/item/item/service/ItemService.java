@@ -5,6 +5,7 @@ import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.item.item.dto.ItemCreateRequest;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
+import com.back.domain.item.item.vo.CyclePeriod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,39 +51,22 @@ public class ItemService {
 
     @Transactional
     public Item createItem(Long userId, ItemCreateRequest request) {
-        // Category 조회
         Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다. id=" + request.categoryId()));
 
-        // nextReplacementDate 계산
-        LocalDate nextReplacementDate = calculateNextReplacementDate(
-                request.startDate(),
-                request.cycleDays()
-        );
+        LocalDate startDate = request.resolvedStartDate();
+        CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
+        LocalDate nextReplacementDate = cyclePeriod.addTo(startDate);
 
         return create(
                 userId,
                 category,
                 request.name(),
                 request.imgUrl(),
-                request.startDate(),
-                request.cycleDays(),
+                startDate,
+                request.cycleDays(),          // 원문 저장이 필요하면 유지
                 nextReplacementDate,
-                true  // 기본값 활성화
+                true
         );
-    }
-
-    private LocalDate calculateNextReplacementDate(LocalDate startDate, String cycleDays) {
-        if (cycleDays.endsWith("d")) {
-            int days = Integer.parseInt(cycleDays.substring(0, cycleDays.length() - 1));
-            return startDate.plusDays(days);
-        } else if (cycleDays.endsWith("m")) {
-            int months = Integer.parseInt(cycleDays.substring(0, cycleDays.length() - 1));
-            return startDate.plusMonths(months);
-        } else if (cycleDays.endsWith("y")) {
-            int years = Integer.parseInt(cycleDays.substring(0, cycleDays.length() - 1));
-            return startDate.plusYears(years);
-        }
-        throw new IllegalArgumentException("잘못된 cycleDays 형식입니다.");
     }
 }
