@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +30,7 @@ public class ItemService {
     @Transactional(readOnly = true)
     public Item findByIdAndUserId(Long itemId, Long userId) {
         return itemRepository.findByIdAndUserId(itemId, userId)
-                .orElseThrow();
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 아이템입니다."));
     }
 
     @Transactional(readOnly = true)
