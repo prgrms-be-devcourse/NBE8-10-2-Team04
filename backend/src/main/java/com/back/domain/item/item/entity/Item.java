@@ -2,9 +2,11 @@ package com.back.domain.item.item.entity;
 
 import com.back.domain.category.category.entity.Category;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.time.LocalDate;
 
+@Getter
 @Entity(name = "items")
 public class Item {
     @Id
