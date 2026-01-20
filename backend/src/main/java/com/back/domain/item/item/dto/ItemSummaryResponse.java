@@ -8,10 +8,10 @@ import java.time.temporal.ChronoUnit;
 public record ItemSummaryResponse(
         Long id,
         String name,
-        LocalDate nextReplacementDate,
-        String imgUrl,
-        long dDay,
-        boolean isActive
+        LocalDate next_replacement_date,
+        String img_url,
+        long d_day,
+        Boolean is_active
 ) {
     public ItemSummaryResponse(Item item) {
         this(
@@ -22,7 +22,7 @@ public record ItemSummaryResponse(
                 item.getNextReplacementDate() == null
                         ? 0
                         : ChronoUnit.DAYS.between(LocalDate.now(), item.getNextReplacementDate()),
-                item.getIsActive() != null && item.getIsActive()
+                item.getIsActive()
         );
     }
 }

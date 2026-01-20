@@ -7,6 +7,7 @@ import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
 import com.back.global.exception.ServiceException;
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,13 @@ public class ItemService {
     @Transactional(readOnly = true)
     public List<Item> findAllByUserIdOrderByNextReplacementDateAsc(Long userId) {
         return itemRepository.findAllByUserIdOrderByNextReplacementDateAsc(userId);
+    }
+
+    //단건조회용
+    @Transactional(readOnly = true)
+    public Item findByIdAndUserId(Long itemId, Long userId) {
+        return itemRepository.findByIdAndUserId(itemId, userId)
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 아이템입니다."));
     }
 
     @Transactional(readOnly = true)
