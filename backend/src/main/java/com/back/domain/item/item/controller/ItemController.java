@@ -73,6 +73,26 @@ public class ItemController {
         return new RsData<>("200-1", "아이템 단건 조회 성공", new ItemResponse(item));
     }
 
+    @GetMapping("/category/{categoryId}")
+    @Operation(summary = "아이템 카테고리별 조회")
+    public RsData<List<ItemSummaryResponse>> getItemsByCategory(
+            @RequestHeader(value = "Authorization", required = false) String token,  //인증 건너뜀
+            @PathVariable Long categoryId
+    ) {
+        Long userId = 1L;
+
+        List<Item> items = itemService.findAllByUserIdAndCategoryId(userId, categoryId);
+
+        List<ItemSummaryResponse> data = items.stream()
+                .map(ItemSummaryResponse::new)
+                .toList();
+
+        return new RsData<>(
+                "200-1",
+                "아이템 목록 조회 성공",
+                data);
+    }
+
 
     @PutMapping("/{id}/replace")
     @Operation(summary = "아이템 교체")

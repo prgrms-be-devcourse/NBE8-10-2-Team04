@@ -14,4 +14,6 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findAllByUserIdOrderByNextReplacementDateAsc(Long userId);
     //단건조회
     Optional<Item> findByIdAndUserId(Long id, Long userId);
+    //카테고리별목록조회
+    List<Item> findAllByUserIdAndCategoryId(Long userId, Long categoryId);
 }
