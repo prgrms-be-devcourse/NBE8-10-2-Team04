@@ -20,4 +20,8 @@ public class SecurityUser extends User {
         this.id = id;
         this.email = email;
     }
+
+    public String getLoginId() {
+        return getUsername(); 
+    }
 }
