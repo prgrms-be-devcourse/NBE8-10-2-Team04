@@ -24,11 +24,8 @@ public class ItemHistoryService {
 
     @Transactional(readOnly = true)
     public List<ItemHistoryResponse> getItemHistories(Long itemId) {
-        List<ItemHistory> histories = itemHistoryRepository
-                .findByItemIdOrderByStartDateDesc(itemId);
-
-        return histories.stream()
-                .map(ItemHistoryResponse::new)
-                .collect(Collectors.toList());
+        return itemHistoryRepository.findByItemIdOrderByStartDateDesc(itemId).stream()
+                .map(ItemHistoryResponse::from)
+                .toList();
     }
 }
