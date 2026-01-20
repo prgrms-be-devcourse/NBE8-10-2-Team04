@@ -29,4 +29,10 @@ public class MemberService {
     public Optional<Member> findByLoginid(String loginid) {
         return memberRepository.findByLoginid(loginid);
     }
+
+    //민지B추가
+    public Member findByApiKey(String apiKey) {
+        return memberRepository.findByApiKey(apiKey)
+                .orElseThrow(() -> new ServiceException("401-3", "유효하지 않은 apiKey 입니다."));
+    }
 }
