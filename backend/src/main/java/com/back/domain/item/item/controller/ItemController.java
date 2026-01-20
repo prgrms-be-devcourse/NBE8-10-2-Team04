@@ -60,11 +60,18 @@ public class ItemController {
     @GetMapping
     @Operation(summary = "아이템 목록 조회")
     public RsData<List<ItemSummaryResponse>> getItems(
-            @RequestHeader(value = "Authorization", required = false) String token  //인증 건너뜀
+            @RequestHeader(value = "Authorization", required = false) String token,  //인증 건너뜀
+            @RequestParam(required = false) Long categoryId
     ) {
         Long userId = 1L;
+        List<Item> items;
 
-        List<Item> items = itemService.findAllByUserIdOrderByNextReplacementDateAsc(userId);
+        if(categoryId != null) {
+            items = itemService.findAllByUserIdAndCategoryId(userId, categoryId);
+        }
+        else {
+            items = itemService.findAllByUserIdOrderByNextReplacementDateAsc(userId);
+        }
 
         List<ItemSummaryResponse> data = items.stream()
                 .map(ItemSummaryResponse::new)

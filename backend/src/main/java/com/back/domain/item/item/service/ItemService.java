@@ -51,6 +51,15 @@ public class ItemService {
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 아이템입니다."));
     }
 
+    //카테고리별 목록조회용
+    public List<Item> findAllByUserIdAndCategoryId(Long userId, Long categoryId) {
+        if (!categoryRepository.existsById(categoryId)) {
+            throw new ServiceException("404-1", "존재하지 않는 카테고리입니다.");
+        }
+
+        return itemRepository.findAllByUserIdAndCategoryId(userId, categoryId);
+    }
+
     @Transactional(readOnly = true)
     public long count() {
         return itemRepository.count();
