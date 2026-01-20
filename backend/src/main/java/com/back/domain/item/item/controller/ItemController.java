@@ -3,14 +3,15 @@ package com.back.domain.item.item.controller;
 import com.back.domain.item.item.dto.*;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
+import com.back.domain.member.member.service.MemberService;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ public class ItemController {
     @PostMapping
     @Operation(summary = "아이템 등록")
     public RsData<ItemCreateResponse> createItem(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token, //인증 건너뜀
             @Valid @RequestBody ItemCreateRequest request
     ) {
         Long userId = 1L; //토큰 추출
@@ -43,8 +44,10 @@ public class ItemController {
     @GetMapping
     @Operation(summary = "아이템 목록 조회")
     public RsData<List<ItemSummaryResponse>> getItems(
-            @RequestParam @Min(value = 1, message = "userId는 1 이상이어야 합니다.") Long userId
+            @RequestHeader(value = "Authorization", required = false) String token  //인증 건너뜀
     ) {
+        Long userId = 1L;
+
         List<Item> items = itemService.findAllByUserIdOrderByNextReplacementDateAsc(userId);
 
         List<ItemSummaryResponse> data = items.stream()
@@ -61,9 +64,11 @@ public class ItemController {
     @GetMapping("/{itemId}")
     @Operation(summary = "아이템 단건 조회")
     public RsData<ItemResponse> getItem(
-            @PathVariable Long itemId,
-            @RequestParam Long userId
+            @RequestHeader(value = "Authorization", required = false) String token, //인증 건너뜀
+            @PathVariable Long itemId
     ) {
+        Long userId = 1L;
+
         Item item = itemService.findByIdAndUserId(itemId, userId);
         return new RsData<>("200-1", "아이템 단건 조회 성공", new ItemResponse(item));
     }
