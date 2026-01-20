@@ -3,6 +3,8 @@ package com.back.global.initData;
 import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.service.CategoryService;
 import com.back.domain.item.item.service.ItemService;
+import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -22,11 +24,13 @@ public class BaseInitData {
 
     private final CategoryService categoryService;
     private final ItemService itemService;
+    private final MemberService memberService;
 
     @Bean
     ApplicationRunner baseInitDataApplicationRunner() {
         return args -> {
             self.createDefaultCategory();
+            self.createDefaultMembers();
             self.initItems();
         };
     }
@@ -48,13 +52,23 @@ public class BaseInitData {
     }
 
     @Transactional
+    public void createDefaultMembers() {
+        // 이미 있으면 스킵, 없으면 생성
+        memberService.findByLoginid("user1")
+                .orElseGet(() -> memberService.join("user1", "1234", "user1@test.com"));
+
+        memberService.findByLoginid("user2")
+                .orElseGet(() -> memberService.join("user2", "1234", "user2@test.com"));
+    }
+
+    @Transactional
     public void initItems() {
         // 이미 아이템이 있으면 스킵
         if (itemService.count() > 0) return;
 
         // TODO: User 엔티티 붙으면 userId 대신 memberId/user 엔티티로 교체
-        Long user1 = 1L;
-        Long user2 = 2L;
+        Member member1 = memberService.findByLoginid("user1").orElseThrow();
+        Member member2 = memberService.findByLoginid("user2").orElseThrow();
 
         Category bathroom = categoryService.findByName("욕실").orElseThrow();
         Category kitchen = categoryService.findByName("주방").orElseThrow();
@@ -62,7 +76,7 @@ public class BaseInitData {
 
 
         itemService.create(
-                user1,
+                member1.getId(),
                 bathroom,
                 "칫솔",
                 "https://example.com/toothbrush.png",
@@ -73,7 +87,7 @@ public class BaseInitData {
         );
 
         itemService.create(
-                user1,
+                member1.getId(),
                 kitchen,
                 "수세미",
                 "https://example.com/sponge.png",
@@ -84,7 +98,7 @@ public class BaseInitData {
         );
 
         itemService.create(
-                user2,
+                member2.getId(),
                 car,
                 "엔진오일",
                 "https://example.com/engineoil.png",
