@@ -1,12 +1,14 @@
 package com.back.domain.item.item.entity;
 
 import com.back.domain.category.category.entity.Category;
+import com.back.global.exception.ServiceException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -57,5 +59,12 @@ public class Item {
     public void modifyDate(LocalDate startDate, LocalDate nextReplacementDate) {
         this.startDate = startDate;
         this.nextReplacementDate = nextReplacementDate;
+    }
+
+    //현재 요청자(actorUserId)가 이 Item의 소유자인지 확인
+    public void validateOwner(Long actorUserId) {
+        if (!Objects.equals(this.userId, actorUserId)) {
+            throw new ServiceException("403-1", "삭제 권한이 없습니다.");
+        }
     }
 }
