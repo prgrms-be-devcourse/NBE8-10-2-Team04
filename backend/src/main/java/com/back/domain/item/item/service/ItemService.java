@@ -6,6 +6,7 @@ import com.back.domain.item.item.dto.ItemCreateRequest;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
+import com.back.domain.item.itemHistory.service.ItemHistoryService;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class ItemService {
+    private final ItemHistoryService itemHistoryService;
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
 
@@ -92,5 +94,14 @@ public class ItemService {
         LocalDate newNextReplacementDate = cyclePeriod.addTo(newStartDate);
 
         item.modifyDate(newStartDate, newNextReplacementDate);
+    }
+
+    @Transactional
+    public void replaceItem(Item item) {
+        // 아이템 정보 교체
+        modifyDate(item);
+
+        // 이력 추가
+        itemHistoryService.createItemHistory(item);
     }
 }
