@@ -95,16 +95,21 @@ public class ItemService {
         CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
         LocalDate nextReplacementDate = cyclePeriod.addTo(startDate);
 
-        return create(
+        Item item = create(
                 userId,
                 category,
                 request.name(),
                 request.imgUrl(),
                 startDate,
-                request.cycleDays(),          // 원문 저장이 필요하면 유지
+                request.cycleDays(),
                 nextReplacementDate,
                 true
         );
+
+        // 아이템 생성 시 첫 번째 히스토리 생성 (추가)
+        itemHistoryService.createItemHistory(item);
+
+        return item;
     }
 
     public void modifyDate(Item item) {
