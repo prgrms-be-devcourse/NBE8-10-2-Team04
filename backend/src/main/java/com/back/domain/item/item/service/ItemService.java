@@ -27,6 +27,19 @@ public class ItemService {
         return itemRepository.findById(id);
     }
 
+    // itemId로 아이템을 조회하고 요청자(userId)가 소유자인지 검증한 뒤 실제 삭제 수행
+    @Transactional
+    public void deleteItem(Long userId, Long itemId) {
+        Item item = findItemOrThrow(itemId);
+        item.validateOwner(userId);
+        itemRepository.delete(item);
+    }
+
+    // itemId로 Item 조회
+    private Item findItemOrThrow(Long itemId) {
+        return itemRepository.findById(itemId).orElseThrow(() -> new ServiceException(("400-1"), "존재하지 않는 아이템입니다."));
+    }
+
     //목록조회용
     @Transactional(readOnly = true)
     public List<Item> findAllByUserIdOrderByNextReplacementDateAsc(Long userId) {
