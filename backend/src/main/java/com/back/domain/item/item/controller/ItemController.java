@@ -45,13 +45,13 @@ public class ItemController {
     @Operation(summary = "아이템 목록 조회")
     public RsData<List<ItemSummaryResponse>> getItems(
             @RequestHeader(value = "Authorization", required = false) String token,  //인증 건너뜀
-            @RequestParam(required = false) Long category
+            @RequestParam(required = false) Long categoryId
     ) {
         Long userId = 1L;
         List<Item> items;
 
-        if(category != null) {
-            items = itemService.findAllByUserIdAndCategoryId(userId, category);
+        if(categoryId != null) {
+            items = itemService.findAllByUserIdAndCategoryId(userId, categoryId);
         }
         else {
             items = itemService.findAllByUserIdOrderByNextReplacementDateAsc(userId);
