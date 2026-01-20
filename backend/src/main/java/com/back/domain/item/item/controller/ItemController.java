@@ -29,7 +29,7 @@ public class ItemController {
     @PostMapping
     @Operation(summary = "아이템 등록")
     public RsData<ItemCreateResponse> createItem(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token, //인증 건너뜀
             @Valid @RequestBody ItemCreateRequest request
     ) {
         Long userId = 1L; //토큰 추출
@@ -46,7 +46,7 @@ public class ItemController {
     @GetMapping
     @Operation(summary = "아이템 목록 조회")
     public RsData<List<ItemSummaryResponse>> getItems(
-            @RequestHeader("Authorization") String token
+            @RequestHeader(value = "Authorization", required = false) String token  //인증 건너뜀
     ) {
         Long userId = 1L;
 
@@ -66,7 +66,7 @@ public class ItemController {
     @GetMapping("/{itemId}")
     @Operation(summary = "아이템 단건 조회")
     public RsData<ItemResponse> getItem(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token, //인증 건너뜀
             @PathVariable Long itemId
     ) {
         Long userId = 1L;
