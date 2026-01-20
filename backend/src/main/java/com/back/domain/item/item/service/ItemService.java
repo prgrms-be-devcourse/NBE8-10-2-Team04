@@ -27,6 +27,17 @@ public class ItemService {
         return itemRepository.findById(id);
     }
 
+    @Transactional
+    public void deleteItem(Long userId, Long itemId) {
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new ServiceException("400-1", "존재하지 않는 아이템입니다"));
+
+        if (!item.getUserId().equals(userId)) {
+            throw new ServiceException("403-1", "삭제 권한이 없습니다.");
+        }
+
+        itemRepository.delete(item);
+    }
+
     //목록조회용
     @Transactional(readOnly = true)
     public List<Item> findAllByUserIdOrderByNextReplacementDateAsc(Long userId) {

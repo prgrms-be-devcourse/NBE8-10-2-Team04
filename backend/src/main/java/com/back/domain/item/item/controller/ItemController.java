@@ -24,6 +24,22 @@ import java.util.Map;
 public class ItemController {
     private final ItemService itemService;
 
+    @DeleteMapping("/{itemId}")
+    @Operation(summary = "아이템 삭제")
+    public RsData<Void> deleteItem(
+            @RequestHeader(value = "Authorization", required = false) String token, //인증 건너뜀
+            @PathVariable Long itemId
+    ) {
+        Long userId = 1L; // 임시 토큰
+
+        itemService.deleteItem(userId, itemId);
+
+        return new RsData<>(
+                "200-1",
+                "아이템 삭제 성공"
+        );
+    }
+
     @PostMapping
     @Operation(summary = "아이템 등록")
     public RsData<ItemCreateResponse> createItem(
