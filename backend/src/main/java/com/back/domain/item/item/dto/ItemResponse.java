@@ -8,15 +8,15 @@ import java.time.temporal.ChronoUnit;
 
 public record ItemResponse(
         Long id,
-        Long user_id,
-        Long category_id,
+        Long userID,
+        Long categoryID,
         String name,
-        String img_url,
-        LocalDate start_date,
-        String cycle_days,
-        LocalDate next_replacement_date,
-        Boolean is_active,
-        long d_day
+        String imgUrl,
+        LocalDate startDate,
+        String cycleDays,
+        LocalDate NextReplacementDate,
+        Boolean isActive,
+        long dDay
 ) {
     public ItemResponse(Item item) {
         this(
