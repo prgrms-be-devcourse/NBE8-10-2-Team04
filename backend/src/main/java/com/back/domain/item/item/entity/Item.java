@@ -64,7 +64,7 @@ public class Item {
     //현재 요청자(actorUserId)가 이 Item의 소유자인지 확인
     public void validateOwner(Long actorUserId) {
         if (!Objects.equals(this.userId, actorUserId)) {
-            throw new ServiceException("403-1", "삭제 권한이 없습니다.");
+            throw new ServiceException("403-1", "%d번 아이템에 대한 권한이 없습니다.".formatted(this.id));
         }
     }
 

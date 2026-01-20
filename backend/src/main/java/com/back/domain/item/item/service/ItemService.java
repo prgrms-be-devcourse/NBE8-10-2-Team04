@@ -121,16 +121,29 @@ public class ItemService {
     }
 
     @Transactional
-    public void replaceItem(Item item) {
+    public Item replaceItem(Long userId, Long itemId) {
+        // 아이템 가져오기
+        Item item = findItemOrThrow(itemId);
+
+        // 아이템 생성자가 아니면 예외 처리(인가)
+        item.validateOwner(userId);
+
         // 아이템 정보 교체
         modifyDate(item);
 
         // 이력 추가
         itemHistoryService.createItemHistory(item);
+
+        return item;
     }
 
     @Transactional
-    public void modify(Item item, ItemUpdateRequest request) {
+    public Item modify(Long userId, Long itemId, ItemUpdateRequest request) {
+        // 아이템 가져오기
+        Item item = findItemOrThrow(itemId);
+
+        // 아이템 생성자가 아니면 예외 처리(인가)
+        item.validateOwner(userId);
 
         // 카테고리 존재 여부 확인
         Category category = categoryRepository.findById(request.categoryId())
@@ -144,7 +157,9 @@ public class ItemService {
         }
 
         // 아이템 수정
-        item.modify(category, request.name(), request.imgUrl(), request.cycleDays(), newNextReplacementDate,
+        item.modify(category, request.name(), request.imgUrl(), request.cycleDays(), nextReplacementDate,
                 request.isActive());
+
+        return item;
     }
 }

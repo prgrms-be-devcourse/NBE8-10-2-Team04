@@ -98,14 +98,10 @@ public class ItemController {
     public RsData<ItemUpdateResponse> modifyItem(@PathVariable Long id,
                                                  @Valid @RequestBody ItemUpdateRequest request) {
         // todo: 요청 헤더의 인증 정보를 바탕으로 user_id 받아오기
-
-        // 아이템 가져오기
-        Item item = itemService.findById(id).get();
-
-        // todo: 아이템 생성자가 아니면 예외 처리(인가)
+        Long userId = 1L; // 임시 값
 
         // 아이템 수정
-        itemService.modify(item, request);
+        Item item = itemService.modify(userId, id, request);
 
         // 응답값 리턴
         return new RsData<>(
@@ -120,14 +116,10 @@ public class ItemController {
     @Operation(summary = "아이템 교체")
     public RsData<Map<String, ItemReplaceResponse>> replaceItem(@PathVariable Long id) {
         // todo: 요청 헤더의 인증 정보를 바탕으로 user_id 받아오기
-
-        // 아이템 가져오기
-        Item item = itemService.findById(id).get();
-
-        // todo: 아이템 생성자가 아니면 예외 처리(인가)
+        Long userId = 1L; // 임시 값
 
         // 아이템 교체
-        itemService.replaceItem(item);
+        Item item = itemService.replaceItem(userId, id);
 
         // 응답값 리턴
         return new RsData<>(

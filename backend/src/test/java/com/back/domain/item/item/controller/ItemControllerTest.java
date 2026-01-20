@@ -71,8 +71,8 @@ public class ItemControllerTest {
         resultActions
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("replaceItem"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("403"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.resultCode").value("403-1"))
                 .andExpect(jsonPath("$.msg").value("%d번 아이템에 대한 권한이 없습니다.".formatted(id)));
     }
 }
