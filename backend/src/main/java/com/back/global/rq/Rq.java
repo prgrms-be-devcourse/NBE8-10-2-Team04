@@ -32,4 +32,22 @@ public class Rq {
                 .orElse(defaultValue);
     }
 
+    public void setCookie(String name, String value) {
+        if (value == null) value = "";
+
+        Cookie cookie = new Cookie(name, value);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+
+        if (value.isBlank()) {
+            cookie.setMaxAge(0);
+        }
+
+        resp.addCookie(cookie);
+    }
+
+    public void setHeader(String name, String value) {
+        resp.setHeader(name, value);
+    }
+
 }
