@@ -21,7 +21,7 @@ public class Item {
     // TODO: User 엔티티 추가 시 변경 예정
     private Long userId;
 
-    @ManyToOne // category(1) : item(N)
+    @ManyToOne(fetch = FetchType.LAZY) // category(1) : item(N)
     private Category category;
 
     private String name;
