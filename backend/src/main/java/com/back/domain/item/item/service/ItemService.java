@@ -6,7 +6,7 @@ import com.back.domain.item.item.dto.ItemCreateRequest;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
-import com.back.global.exception.ServiceException;
+import com.back.domain.item.itemHistory.service.ItemHistoryService;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -14,12 +14,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ItemService {
+    private final ItemHistoryService itemHistoryService;
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
+
+    public Optional<Item> findById(Long id) {
+        return itemRepository.findById(id);
+    }
 
     //목록조회용
     @Transactional(readOnly = true)
@@ -77,5 +83,25 @@ public class ItemService {
                 nextReplacementDate,
                 true
         );
+    }
+
+    public void modifyDate(Item item) {
+        // 시작일 변경 : 교체를 요청한 시각
+        LocalDate newStartDate = LocalDate.now();
+
+        // 다음 교체일 변경 : 시작일 + 주기
+        CyclePeriod cyclePeriod = CyclePeriod.from(item.getCycleDays());
+        LocalDate newNextReplacementDate = cyclePeriod.addTo(newStartDate);
+
+        item.modifyDate(newStartDate, newNextReplacementDate);
+    }
+
+    @Transactional
+    public void replaceItem(Item item) {
+        // 아이템 정보 교체
+        modifyDate(item);
+
+        // 이력 추가
+        itemHistoryService.createItemHistory(item);
     }
 }
