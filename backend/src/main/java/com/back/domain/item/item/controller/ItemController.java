@@ -9,7 +9,6 @@ import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -47,8 +46,10 @@ public class ItemController {
     @GetMapping
     @Operation(summary = "아이템 목록 조회")
     public RsData<List<ItemSummaryResponse>> getItems(
-            @RequestParam @Min(value = 1, message = "userId는 1 이상이어야 합니다.") Long userId
+            @RequestHeader("Authorization") String token
     ) {
+        Long userId = 1L;
+
         List<Item> items = itemService.findAllByUserIdOrderByNextReplacementDateAsc(userId);
 
         List<ItemSummaryResponse> data = items.stream()
@@ -65,9 +66,11 @@ public class ItemController {
     @GetMapping("/{itemId}")
     @Operation(summary = "아이템 단건 조회")
     public RsData<ItemResponse> getItem(
-            @RequestHeader("Authorization") String apiKey,
-            @RequestParam Long itemId
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long itemId
     ) {
+        Long userId = 1L;
+
         Item item = itemService.findByIdAndUserId(itemId, userId);
         return new RsData<>("200-1", "아이템 단건 조회 성공", new ItemResponse(item));
     }
