@@ -151,7 +151,7 @@ public class ItemService {
 
         // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
         LocalDate nextReplacementDate = item.getNextReplacementDate();
-        if (Objects.equals(request.cycleDays(), item.getCycleDays())) {
+        if (!Objects.equals(request.cycleDays(), item.getCycleDays())) {
             CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
             nextReplacementDate = cyclePeriod.addTo(item.getStartDate());
         }
