@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -136,8 +137,11 @@ public class ItemService {
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 카테고리입니다."));
 
         // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
-        CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
-        LocalDate newNextReplacementDate = cyclePeriod.addTo(item.getStartDate());
+        LocalDate nextReplacementDate = item.getNextReplacementDate();
+        if (Objects.equals(request.cycleDays(), item.getCycleDays())) {
+            CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
+            nextReplacementDate = cyclePeriod.addTo(item.getStartDate());
+        }
 
         // 아이템 수정
         item.modify(category, request.name(), request.imgUrl(), request.cycleDays(), newNextReplacementDate,
