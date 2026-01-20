@@ -31,11 +31,7 @@ public class ItemService {
     @Transactional
     public void deleteItem(Long userId, Long itemId) {
         Item item = findItemOrThrow(itemId);
-
-        if (!item.getUserId().equals(userId)) {
-            throw new ServiceException("403-1", "삭제 권한이 없습니다.");
-        }
-
+        item.validateOwner(userId);
         itemRepository.delete(item);
     }
 
