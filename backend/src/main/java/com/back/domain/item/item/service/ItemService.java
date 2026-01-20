@@ -3,6 +3,7 @@ package com.back.domain.item.item.service;
 import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.item.item.dto.ItemCreateRequest;
+import com.back.domain.item.item.dto.ItemUpdateRequest;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
@@ -125,5 +126,21 @@ public class ItemService {
 
         // 이력 추가
         itemHistoryService.createItemHistory(item);
+    }
+
+    @Transactional
+    public void modify(Item item, ItemUpdateRequest request) {
+
+        // 카테고리 존재 여부 확인
+        Category category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 카테고리입니다."));
+
+        // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
+        CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
+        LocalDate newNextReplacementDate = cyclePeriod.addTo(item.getStartDate());
+
+        // 아이템 수정
+        item.modify(category, request.name(), request.imgUrl(), request.cycleDays(), newNextReplacementDate,
+                request.isActive());
     }
 }

@@ -67,4 +67,14 @@ public class Item {
             throw new ServiceException("403-1", "삭제 권한이 없습니다.");
         }
     }
+
+    public void modify(Category category, String name, String imgUrl, String cycleDays, LocalDate nextReplacementDate
+            , Boolean isActive) {
+        this.category = category;
+        this.name = name;
+        this.imgUrl = imgUrl;
+        this.cycleDays = cycleDays;
+        this.nextReplacementDate = nextReplacementDate;
+        this.isActive = isActive;
+    }
 }
