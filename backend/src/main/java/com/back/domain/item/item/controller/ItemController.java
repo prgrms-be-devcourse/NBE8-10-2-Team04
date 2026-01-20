@@ -3,6 +3,8 @@ package com.back.domain.item.item.controller;
 import com.back.domain.item.item.dto.*;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
+import com.back.domain.member.member.entity.Member;
+import com.back.domain.member.member.service.MemberService;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,6 +13,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 import java.util.Map;
@@ -22,6 +25,7 @@ import java.util.Map;
 @Tag(name = "ItemController", description = "아이템 컨트롤러")
 public class ItemController {
     private final ItemService itemService;
+    private final MemberService memberService;
 
     @PostMapping
     @Operation(summary = "아이템 등록")
@@ -61,8 +65,8 @@ public class ItemController {
     @GetMapping("/{itemId}")
     @Operation(summary = "아이템 단건 조회")
     public RsData<ItemResponse> getItem(
-            @PathVariable Long itemId,
-            @RequestParam Long userId
+            @RequestHeader("Authorization") String apiKey,
+            @RequestParam Long itemId
     ) {
         Item item = itemService.findByIdAndUserId(itemId, userId);
         return new RsData<>("200-1", "아이템 단건 조회 성공", new ItemResponse(item));
