@@ -2,10 +2,13 @@ package com.back.domain.item.itemHistory.entity;
 
 import com.back.domain.item.item.entity.Item;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Entity(name = "item_histories")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ItemHistory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,4 +18,9 @@ public class ItemHistory {
     private Item item;
 
     private LocalDate startDate;
+
+    public ItemHistory(Item item) {
+        this.item = item;
+        this.startDate = item.getStartDate();
+    }
 }

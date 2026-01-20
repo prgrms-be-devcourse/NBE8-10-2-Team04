@@ -53,4 +53,9 @@ public class Item {
         this.nextReplacementDate = nextReplacementDate;
         this.isActive = isActive;
     }
+
+    public void modifyDate(LocalDate startDate, LocalDate nextReplacementDate) {
+        this.startDate = startDate;
+        this.nextReplacementDate = nextReplacementDate;
+    }
 }

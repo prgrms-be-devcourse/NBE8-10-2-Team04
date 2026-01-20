@@ -1,26 +1,21 @@
 package com.back.domain.item.item.controller;
 
-import com.back.domain.item.item.dto.ItemCreateRequest;
-import com.back.domain.item.item.dto.ItemCreateResponse;
-import com.back.domain.item.item.dto.ItemResponse;
-import com.back.domain.item.item.dto.ItemSummaryResponse;
+import com.back.domain.item.item.dto.*;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
+import com.back.domain.item.itemHistory.service.ItemHistoryService;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/items")
@@ -29,6 +24,7 @@ import java.util.List;
 @Tag(name = "ItemController", description = "아이템 컨트롤러")
 public class ItemController {
     private final ItemService itemService;
+    private final ItemHistoryService itemHistoryService;
 
     @PostMapping
     @Operation(summary = "아이템 등록")
@@ -50,7 +46,7 @@ public class ItemController {
     @GetMapping
     @Operation(summary = "아이템 목록 조회")
     public RsData<List<ItemSummaryResponse>> getItems(
-            @RequestParam  @Min(value = 1, message = "userId는 1 이상이어야 합니다.") Long userId
+            @RequestParam @Min(value = 1, message = "userId는 1 이상이어야 합니다.") Long userId
     ) {
         List<Item> items = itemService.findAllByUserIdOrderByNextReplacementDateAsc(userId);
 
@@ -76,4 +72,28 @@ public class ItemController {
     }
 
 
+    @PutMapping("/{id}/replace")
+    @Transactional
+    @Operation(summary = "아이템 교체")
+    public RsData<Map<String, ItemReplaceResponse>> replaceItem(@PathVariable Long id) {
+        // todo: 요청 헤더의 인증 정보를 바탕으로 user_id 받아오기
+
+        // 아이템 가져오기
+        Item item = itemService.findById(id).get();
+
+        // todo: 아이템 생성자가 아니면 예외 처리(인가)
+
+        // 아이템 정보 교체
+        itemService.modifyDate(item);
+
+        // 이력 추가
+        itemHistoryService.createItemHistory(item);
+
+        // 응답값 리턴
+        return new RsData<>(
+                "200",
+                "아이템 교체 처리 성공",
+                Map.of("item", new ItemReplaceResponse(item))
+        );
+    }
 }
