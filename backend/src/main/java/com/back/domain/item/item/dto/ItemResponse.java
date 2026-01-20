@@ -8,13 +8,13 @@ import java.time.temporal.ChronoUnit;
 
 public record ItemResponse(
         Long id,
-        Long userID,
-        Long categoryID,
+        Long userId,
+        Long categoryId,
         String name,
         String imgUrl,
         LocalDate startDate,
         String cycleDays,
-        LocalDate NextReplacementDate,
+        LocalDate nextReplacementDate,
         Boolean isActive,
         long dDay
 ) {

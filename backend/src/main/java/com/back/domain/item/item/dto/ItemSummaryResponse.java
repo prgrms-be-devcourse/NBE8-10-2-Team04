@@ -8,7 +8,7 @@ import java.time.temporal.ChronoUnit;
 public record ItemSummaryResponse(
         Long id,
         String name,
-        LocalDate NextReplacementDate,
+        LocalDate nextReplacementDate,
         String imgUrl,
         long dDay,
         Boolean isActive

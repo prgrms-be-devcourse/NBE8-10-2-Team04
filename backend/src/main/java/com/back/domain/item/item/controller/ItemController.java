@@ -3,7 +3,6 @@ package com.back.domain.item.item.controller;
 import com.back.domain.item.item.dto.*;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
-import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,7 +23,6 @@ import java.util.Map;
 @Tag(name = "ItemController", description = "아이템 컨트롤러")
 public class ItemController {
     private final ItemService itemService;
-    private final MemberService memberService;
 
     @PostMapping
     @Operation(summary = "아이템 등록")
