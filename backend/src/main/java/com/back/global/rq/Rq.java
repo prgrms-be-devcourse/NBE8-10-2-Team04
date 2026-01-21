@@ -20,16 +20,21 @@ public class Rq {
     private final HttpServletRequest req;
     private final HttpServletResponse resp;
 
-    public Member getActor() {
+    public MemberDto getActor() {
         return Optional.ofNullable(
                         SecurityContextHolder
                                 .getContext()
                                 .getAuthentication()
                 )
+                .filter(Authentication::isAuthenticated)  // 인증 체크 추가
                 .map(Authentication::getPrincipal)
                 .filter(principal -> principal instanceof SecurityUser)
                 .map(principal -> (SecurityUser) principal)
-                .map(securityUser -> new Member(securityUser.getUsername(), securityUser.getUsername(), securityUser.getEmail()))
+                .map(securityUser -> new MemberDto(  // MemberDto 생성
+                        securityUser.getId(),
+                        securityUser.getLoginId(),
+                        securityUser.getEmail()
+                ))
                 .orElse(null);
     }
 

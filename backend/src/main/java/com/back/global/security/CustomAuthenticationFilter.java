@@ -96,7 +96,6 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         // 5) 토큰에서 회원 ID 추출
         Long id = claims.get("id", Long.class);
         String loginid = claims.get("loginid", String.class);
-        String email = claims.get("email", String.class);
 
         if (id == null || loginid == null) {
             throw new ServiceException("401-1", "토큰 클레임이 올바르지 않습니다.");

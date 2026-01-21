@@ -111,24 +111,34 @@ public class ApiV1MemberController {
             throw new ServiceException("401-1", "로그인이 필요합니다.");
         }
 
-        memberService.deleteById((int)actor.id()); // Todo: 몇몇은 long이고 몇몇은 int인게 통일이 안되어 있음. 수정 필요.
+        memberService.deleteById(actor.id());
 
         rq.setCookie("accessToken", "");
 
         return new RsData<>(
                 "200-1",
                 "회원탈퇴가 완료되었습니다.",
-                null
+                null);
+    }
+
     @GetMapping("/me")
     public RsData<MemberDto> me() {
-        Member actor = memberService
-                .findByLoginid(rq.getActor().getLoginid())
-                .get();
+//        Member actor = memberService
+//                .findByLoginid(rq.getActor().id())
+//                .get();
+        MemberDto actor = rq.getActor();
 
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        // MemberDto는 이미 필요한 정보를 포함하고 있으므로 그대로 반환
         return new RsData<>(
                 "200-1",
-                "%s님의 정보입니다.".formatted(actor.getLoginid()),
-                new MemberDto(actor)
+//                "%s님의 정보입니다.".formatted(actor.id()),
+//                new MemberDto(actor)
+                "%s님의 정보입니다.".formatted(actor.loginid()),
+                actor
         );
     }
 
