@@ -1,5 +1,6 @@
 package com.back.global.rq;
 
+import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.dto.MemberDto;
 import com.back.global.security.SecurityUser;
 import jakarta.servlet.http.Cookie;
@@ -19,17 +20,16 @@ public class Rq {
     private final HttpServletRequest req;
     private final HttpServletResponse resp;
 
-    public MemberDto getActor() {
-        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
-                .filter(Authentication::isAuthenticated)
+    public Member getActor() {
+        return Optional.ofNullable(
+                        SecurityContextHolder
+                                .getContext()
+                                .getAuthentication()
+                )
                 .map(Authentication::getPrincipal)
                 .filter(principal -> principal instanceof SecurityUser)
                 .map(principal -> (SecurityUser) principal)
-                .map(securityUser -> new MemberDto(
-                    securityUser.getId(),
-                    securityUser.getLoginId(),
-                    securityUser.getEmail()
-                ))
+                .map(securityUser -> new Member(securityUser.getUsername(), securityUser.getUsername(), securityUser.getEmail()))
                 .orElse(null);
     }
 
@@ -62,6 +62,9 @@ public class Rq {
         }
 
         resp.addCookie(cookie);
+    }
+    public void deleteCookie(String name) {
+        setCookie(name, null);
     }
 
     public void setHeader(String name, String value) {

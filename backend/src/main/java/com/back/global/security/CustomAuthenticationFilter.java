@@ -103,7 +103,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // 6) DB에서 실제 회원 조회
-        Member member = memberRepository.findById(id.intValue())  // Repository 타입이 Integer
+        Member member = memberRepository.findById(id)  //
                 .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 회원입니다."));
 
         // 7) accessToken이 만료되었는지 확인 (선택적 - 만료 시간 체크)

@@ -21,10 +21,18 @@ public class Member {
     @Column(unique = true)
     private String apiKey;
 
+    public Member(long id, String loginid) {
+        this.id = id;
+        this.loginid = loginid;
+    }
+
     public Member(String loginid, String password, String email) {
         this.loginid = loginid;
         this.password = password;
         this.email = email;
         this.apiKey = UUID.randomUUID().toString();
+    }
+    public void modifyApiKey(String apiKey) {
+        this.apiKey = apiKey;
     }
 }
