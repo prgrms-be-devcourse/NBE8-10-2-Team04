@@ -15,19 +15,19 @@ public class Member {
     private Long id;
 
     @Column(unique = true)
-    private String loginid;
+    private String loginId;
     private String password;
     private String email;
     @Column(unique = true)
     private String apiKey;
 
-    public Member(long id, String loginid) {
+    public Member(long id, String loginId) {
         this.id = id;
-        this.loginid = loginid;
+        this.loginId = loginId;
     }
 
-    public Member(String loginid, String password, String email) {
-        this.loginid = loginid;
+    public Member(String loginId, String password, String email) {
+        this.loginId = loginId;
         this.password = password;
         this.email = email;
         this.apiKey = UUID.randomUUID().toString();

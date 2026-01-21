@@ -26,7 +26,7 @@ public class ApiV1MemberController {
     record MemberJoinReqBody(
             @NotBlank
             @Size(min = 2, max = 30)
-            String loginid,
+            String loginId,
             @NotBlank
             @Size(min = 2, max = 30)
             String password,
@@ -43,14 +43,14 @@ public class ApiV1MemberController {
     ) {
 
         Member member = memberService.join(
-                reqBody.loginid(),
+                reqBody.loginId(),
                 reqBody.password(),
                 reqBody.email()
         );
 
         return new RsData<>(
                 "201-1",
-                "%s님 환영합니다. 회원가입이 완료되었습니다.".formatted(member.getLoginid()),
+                "%s님 환영합니다. 회원가입이 완료되었습니다.".formatted(member.getLoginId()),
                 new MemberDto(member)
         );
     }
@@ -59,7 +59,7 @@ public class ApiV1MemberController {
     record MemberLoginReqBody(
             @NotBlank
             @Size(min = 2, max = 30)
-            String loginid,
+            String loginId,
             @NotBlank
             @Size(min = 2, max = 30)
             String password
@@ -79,7 +79,7 @@ public class ApiV1MemberController {
     public RsData<MemberLoginResBody> login(
             @Valid @RequestBody MemberLoginReqBody reqBody
     ) {
-        Member member = memberService.findByLoginid(reqBody.loginid())
+        Member member = memberService.findByLoginId(reqBody.loginId())
                 .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 아이디입니다."));
 
         memberService.checkPassword(
@@ -94,7 +94,7 @@ public class ApiV1MemberController {
 
         return new RsData<>(
                 "200-1",
-                "%s님 환영합니다.".formatted(member.getLoginid()),
+                "%s님 환영합니다.".formatted(member.getLoginId()),
                 new MemberLoginResBody(
                         new MemberDto(member),
                         member.getApiKey(),
@@ -124,7 +124,7 @@ public class ApiV1MemberController {
     @GetMapping("/me")
     public RsData<MemberDto> me() {
 //        Member actor = memberService
-//                .findByLoginid(rq.getActor().id())
+//                .findByLoginId(rq.getActor().id())
 //                .get();
         MemberDto actor = rq.getActor();
 
@@ -137,7 +137,7 @@ public class ApiV1MemberController {
                 "200-1",
 //                "%s님의 정보입니다.".formatted(actor.id()),
 //                new MemberDto(actor)
-                "%s님의 정보입니다.".formatted(actor.loginid()),
+                "%s님의 정보입니다.".formatted(actor.loginId()),
                 actor
         );
     }

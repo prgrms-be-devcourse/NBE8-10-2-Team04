@@ -22,7 +22,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
 @SpringBootTest
@@ -54,7 +55,7 @@ class SecurityIntegrationTest {
         // Given
         Map<String, Object> claims = Map.of(
                 "id", 1L,
-                "loginid", "testuser",
+                "loginId", "testuser",
                 "email", "test@test.com"
         );
 
@@ -68,7 +69,7 @@ class SecurityIntegrationTest {
         Claims parsedClaims = Ut.jwt.payload(jwtSecret, token);
         assertThat(parsedClaims).isNotNull();
         assertThat(parsedClaims.get("id", Long.class)).isEqualTo(1L);
-        assertThat(parsedClaims.get("loginid", String.class)).isEqualTo("testuser");
+        assertThat(parsedClaims.get("loginId", String.class)).isEqualTo("testuser");
         assertThat(parsedClaims.get("email", String.class)).isEqualTo("test@test.com");
     }
 
@@ -100,11 +101,11 @@ class SecurityIntegrationTest {
                         post("/api/v1/user/login")
                                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                                 .content("""
-                            {
-                                "loginid": "testuser",
-                                "password": "1234"
-                            }
-                            """.stripIndent())
+                                        {
+                                            "loginId": "testuser",
+                                            "password": "1234"
+                                        }
+                                        """.stripIndent())
                 )
                 .andDo(print());
 
@@ -174,7 +175,7 @@ class SecurityIntegrationTest {
 
         Map<String, Object> claims = Map.of(
                 "id", member.getId(),
-                "loginid", member.getLoginid(),
+                "loginId", member.getLoginId(),
                 "email", member.getEmail() != null ? member.getEmail() : ""
         );
 
@@ -186,12 +187,12 @@ class SecurityIntegrationTest {
                                 .header("Authorization", "Bearer " + accessToken)
                                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                                 .content("""
-                            {
-                                "name": "테스트 아이템",
-                                "categoryId": 1,
-                                "cycleDays": 30
-                            }
-                            """.stripIndent())
+                                        {
+                                            "name": "테스트 아이템",
+                                            "categoryId": 1,
+                                            "cycleDays": 30
+                                        }
+                                        """.stripIndent())
                 )
                 .andDo(print());
 
@@ -210,7 +211,7 @@ class SecurityIntegrationTest {
         // Given - 존재하지 않는 회원 ID로 토큰 생성
         Map<String, Object> claims = Map.of(
                 "id", 99999L,
-                "loginid", "nonexistent",
+                "loginId", "nonexistent",
                 "email", "nonexistent@test.com"
         );
 
@@ -238,10 +239,10 @@ class SecurityIntegrationTest {
     @Test
     @DisplayName("테스트 8: 토큰 클레임이 올바르지 않을 때 401")
     void t8_invalidTokenClaimsReturns401() throws Exception {
-        // Given - 필수 클레임(id, loginid)이 없는 토큰
+        // Given - 필수 클레임(id, loginId)이 없는 토큰
         Map<String, Object> invalidClaims = Map.of(
                 "email", "test@test.com"
-                // id, loginid 누락
+                // id, loginId 누락
         );
 
         String token = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, invalidClaims);
@@ -273,7 +274,7 @@ class SecurityIntegrationTest {
 
         Map<String, Object> claims = Map.of(
                 "id", member.getId(),
-                "loginid", member.getLoginid(),
+                "loginId", member.getLoginId(),
                 "email", member.getEmail() != null ? member.getEmail() : ""
         );
 

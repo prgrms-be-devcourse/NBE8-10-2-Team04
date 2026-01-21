@@ -17,23 +17,24 @@ public class AuthTokenService {
 
     String genAccessToken(Member member) {
         long id = member.getId();
-        String loginid = member.getLoginid();
+        String loginId = member.getLoginId();
 
         return Ut.jwt.toString(
                 jwtSecretKey,
                 accessTokenExpirationSeconds,
-                Map.of("id", id, "loginid", loginid)
+                Map.of("id", id, "loginId", loginId)
         );
     }
+
     Map<String, Object> payload(String accessToken) {
         Map<String, Object> parsedPayload = Ut.jwt.payload(jwtSecretKey, accessToken);
 
         if (parsedPayload == null) return null;
 
         int id = (int) parsedPayload.get("id");
-        String loginid = (String) parsedPayload.get("loginid");
+        String loginId = (String) parsedPayload.get("loginId");
 
-        return Map.of("id", id, "loginid", loginid);
+        return Map.of("id", id, "loginId", loginId);
 
     }
 }
