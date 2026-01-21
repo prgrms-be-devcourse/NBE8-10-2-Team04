@@ -3,6 +3,7 @@ package com.back.domain.item.item.controller;
 import com.back.domain.item.item.dto.*;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
+import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,14 +22,14 @@ import java.util.Map;
 @Tag(name = "ItemController", description = "아이템 컨트롤러")
 public class ItemController {
     private final ItemService itemService;
+    private final Rq rq;
 
     @DeleteMapping("/{itemId}")
     @Operation(summary = "아이템 삭제")
     public RsData<Void> deleteItem(
-            @RequestHeader(value = "Authorization", required = false) String token, //인증 건너뜀
             @PathVariable Long itemId
     ) {
-        Long userId = 1L; // 임시 토큰
+        Long userId = rq.getRequiredMemberId();
 
         itemService.deleteItem(userId, itemId);
 
@@ -41,10 +42,9 @@ public class ItemController {
     @PostMapping
     @Operation(summary = "아이템 등록")
     public RsData<ItemCreateResponse> createItem(
-            @RequestHeader(value = "Authorization", required = false) String token, //인증 건너뜀
             @Valid @RequestBody ItemCreateRequest request
     ) {
-        Long userId = 1L; //토큰 추출
+        Long userId = rq.getRequiredMemberId();
 
         Item item = itemService.createItem(userId, request);
 
@@ -58,10 +58,9 @@ public class ItemController {
     @GetMapping
     @Operation(summary = "아이템 목록 조회")
     public RsData<List<ItemSummaryResponse>> getItems(
-            @RequestHeader(value = "Authorization", required = false) String token,  //인증 건너뜀
             @RequestParam(required = false) Long categoryId
     ) {
-        Long userId = 1L;
+        Long userId = rq.getRequiredMemberId();
         List<Item> items;
 
         if (categoryId != null) {
@@ -84,10 +83,9 @@ public class ItemController {
     @GetMapping("/{itemId}")
     @Operation(summary = "아이템 단건 조회")
     public RsData<ItemResponse> getItem(
-            @RequestHeader(value = "Authorization", required = false) String token, //인증 건너뜀
             @PathVariable Long itemId
     ) {
-        Long userId = 1L;
+        Long userId = rq.getRequiredMemberId();
 
         Item item = itemService.findByIdAndUserId(itemId, userId);
         return new RsData<>("200-1", "아이템 단건 조회 성공", new ItemResponse(item));
@@ -95,10 +93,11 @@ public class ItemController {
 
     @PutMapping("/{id}")
     @Operation(summary = "아이템 수정")
-    public RsData<ItemUpdateResponse> modifyItem(@PathVariable Long id,
-                                                 @Valid @RequestBody ItemUpdateRequest request) {
-        // todo: 요청 헤더의 인증 정보를 바탕으로 user_id 받아오기
-        Long userId = 1L; // 임시 값
+    public RsData<ItemUpdateResponse> modifyItem(
+            @PathVariable Long id,
+            @Valid @RequestBody ItemUpdateRequest request
+    ) {
+        Long userId = rq.getRequiredMemberId();
 
         // 아이템 수정
         Item item = itemService.modify(userId, id, request);
@@ -116,7 +115,7 @@ public class ItemController {
     @Operation(summary = "아이템 교체")
     public RsData<Map<String, ItemReplaceResponse>> replaceItem(@PathVariable Long id) {
         // todo: 요청 헤더의 인증 정보를 바탕으로 user_id 받아오기
-        Long userId = 1L; // 임시 값
+        Long userId = rq.getRequiredMemberId();
 
         // 아이템 교체
         Item item = itemService.replaceItem(userId, id);
