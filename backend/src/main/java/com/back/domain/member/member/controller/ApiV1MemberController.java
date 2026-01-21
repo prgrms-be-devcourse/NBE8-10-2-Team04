@@ -1,6 +1,8 @@
 package com.back.domain.member.member.controller;
 
 import com.back.domain.member.member.dto.MemberDto;
+import com.back.domain.member.member.dto.MemberUpdateRequest;
+import com.back.domain.member.member.dto.MemberUpdateResponse;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.global.exception.ServiceException;
@@ -152,4 +154,33 @@ public class ApiV1MemberController {
                 "로그아웃 되었습니다."
         );
     }
+
+
+    @PutMapping("/modify")
+    public RsData<MemberUpdateResponse> updateMember(
+            @Valid @RequestBody MemberUpdateRequest request
+    ) {
+        MemberDto actor = rq.getActor();
+
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        Member updatedMember = memberService.updateMember(
+                actor.id(),
+                request.email(),
+                request.password()
+        );
+
+        String newAccessToken = memberService.genAccessToken(updatedMember);
+        rq.setCookie("accessToken", newAccessToken);
+
+        return new RsData<>(
+                "200-2",
+                "회원정보가 수정되었습니다.",
+                new MemberUpdateResponse(updatedMember)
+        );
+
+    }
+
 }
