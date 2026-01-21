@@ -22,20 +22,20 @@ public class MemberService {
         return memberRepository.count();
     }
 
-    public Member join(String loginid, String password, String email) {
+    public Member join(String loginId, String password, String email) {
         memberRepository
-                .findByLoginid(loginid)
+                .findByLoginId(loginId)
                 .ifPresent(_member -> {
                     throw new ServiceException("409-1", "이미 존재하는 아이디입니다.");
                 });
         password = passwordEncoder.encode(password); //패스워드 암호화 추가
 
-        Member member = new Member(loginid, password, email);
+        Member member = new Member(loginId, password, email);
         return memberRepository.save(member);
     }
 
-    public Optional<Member> findByLoginid(String loginid) {
-        return memberRepository.findByLoginid(loginid);
+    public Optional<Member> findByLoginId(String loginId) {
+        return memberRepository.findByLoginId(loginId);
     }
 
 

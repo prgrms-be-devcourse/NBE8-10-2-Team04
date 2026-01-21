@@ -18,7 +18,7 @@ import java.time.LocalDate;
 
 @Configuration
 @RequiredArgsConstructor
-public class    BaseInitData {
+public class BaseInitData {
     @Autowired
     @Lazy
     private BaseInitData self;
@@ -55,10 +55,10 @@ public class    BaseInitData {
     @Transactional
     public void createDefaultMembers() {
         // 이미 있으면 스킵, 없으면 생성
-        memberService.findByLoginid("user1")
+        memberService.findByLoginId("user1")
                 .orElseGet(() -> memberService.join("user1", "1234", "user1@test.com"));
 
-        memberService.findByLoginid("user2")
+        memberService.findByLoginId("user2")
                 .orElseGet(() -> memberService.join("user2", "1234", "user2@test.com"));
     }
 
@@ -68,8 +68,8 @@ public class    BaseInitData {
         if (itemService.count() > 0) return;
 
         // TODO: User 엔티티 붙으면 userId 대신 memberId/user 엔티티로 교체
-        Member member1 = memberService.findByLoginid("user1").orElseThrow();
-        Member member2 = memberService.findByLoginid("user2").orElseThrow();
+        Member member1 = memberService.findByLoginId("user1").orElseThrow();
+        Member member2 = memberService.findByLoginId("user2").orElseThrow();
 
         Category bathroom = categoryService.findByName("욕실").orElseThrow();
         Category kitchen = categoryService.findByName("주방").orElseThrow();
@@ -109,11 +109,12 @@ public class    BaseInitData {
                 true
         );
     }
+
     @Transactional
     public void work1() {
         if (memberService.count() > 0) return;
 
         Member memberUser1 = memberService.join("user1", "1234", "유저1");
-        if (AppConfig.isNotProd()) memberUser1.modifyApiKey(memberUser1.getLoginid());
+        if (AppConfig.isNotProd()) memberUser1.modifyApiKey(memberUser1.getLoginId());
     }
 }

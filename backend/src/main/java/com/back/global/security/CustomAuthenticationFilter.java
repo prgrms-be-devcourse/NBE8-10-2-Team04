@@ -95,9 +95,9 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
         // 5) 토큰에서 회원 ID 추출
         Long id = claims.get("id", Long.class);
-        String loginid = claims.get("loginid", String.class);
+        String loginId = claims.get("loginId", String.class);
 
-        if (id == null || loginid == null) {
+        if (id == null || loginId == null) {
             throw new ServiceException("401-1", "토큰 클레임이 올바르지 않습니다.");
         }
 
@@ -107,7 +107,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
 
         // 7) accessToken이 만료되었는지 확인 (선택적 - 만료 시간 체크)
         // 현재는 토큰이 유효하면 통과, 만료되면 위에서 이미 null 반환됨
-        
+
         // 8) accessToken이 유효하지만 만료 시간이 가까우면 새로 발급 (선택적)
         // 필요시 토큰 만료 시간을 체크하여 재발급할 수 있음
         // 현재는 토큰이 유효하면 그대로 사용
@@ -115,7 +115,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         // 9) SecurityContext에 인증 정보 주입
         UserDetails user = new SecurityUser(
                 member.getId(),
-                member.getLoginid(),
+                member.getLoginId(),
                 "",
                 member.getEmail() != null ? member.getEmail() : "",
                 List.of() // 권한 없으면 빈 리스트
