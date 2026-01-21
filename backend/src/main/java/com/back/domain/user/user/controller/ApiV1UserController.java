@@ -1,8 +1,8 @@
-package com.back.domain.member.member.controller;
+package com.back.domain.user.user.controller;
 
-import com.back.domain.member.member.dto.MemberDto;
-import com.back.domain.member.member.entity.Member;
-import com.back.domain.member.member.service.MemberService;
+import com.back.domain.user.user.dto.UserDto;
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
-@Tag(name = "ApiV1MemberController", description = "API 회원 컨트롤러") //Swagger 문서 태그용
-public class ApiV1MemberController {
-    private final MemberService memberService;
+@Tag(name = "ApiV1UserController", description = "API 회원 컨트롤러") //Swagger 문서 태그용
+public class ApiV1UserController {
+    private final UserService userService;
     private final Rq rq;
 
     //회원가입
-    record MemberJoinReqBody(
+    record UserJoinReqBody(
             @NotBlank
             @Size(min = 2, max = 30)
             String loginId,
@@ -38,11 +38,11 @@ public class ApiV1MemberController {
 
     @PostMapping("/signup")
     @Transactional
-    public RsData<MemberDto> join(
-            @Valid @RequestBody MemberJoinReqBody reqBody
+    public RsData<UserDto> join(
+            @Valid @RequestBody UserJoinReqBody reqBody
     ) {
 
-        Member member = memberService.join(
+        User user = userService.join(
                 reqBody.loginId(),
                 reqBody.password(),
                 reqBody.email()
@@ -50,13 +50,13 @@ public class ApiV1MemberController {
 
         return new RsData<>(
                 "201-1",
-                "%s님 환영합니다. 회원가입이 완료되었습니다.".formatted(member.getLoginId()),
-                new MemberDto(member)
+                "%s님 환영합니다. 회원가입이 완료되었습니다.".formatted(user.getLoginId()),
+                new UserDto(user)
         );
     }
 
     //로그인
-    record MemberLoginReqBody(
+    record UserLoginReqBody(
             @NotBlank
             @Size(min = 2, max = 30)
             String loginId,
@@ -66,8 +66,8 @@ public class ApiV1MemberController {
     ) {
     }
 
-    record MemberLoginResBody(
-            MemberDto item,
+    record UserLoginResBody(
+            UserDto item,
             String apiKey,
             String accessToken
     ) {
@@ -76,28 +76,28 @@ public class ApiV1MemberController {
 
     @PostMapping("/login")
     @Transactional(readOnly = true)
-    public RsData<MemberLoginResBody> login(
-            @Valid @RequestBody MemberLoginReqBody reqBody
+    public RsData<UserLoginResBody> login(
+            @Valid @RequestBody UserLoginReqBody reqBody
     ) {
-        Member member = memberService.findByLoginId(reqBody.loginId())
+        User user = userService.findByLoginId(reqBody.loginId())
                 .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 아이디입니다."));
 
-        memberService.checkPassword(
-                member,
+        userService.checkPassword(
+                user,
                 reqBody.password()
         );
 
-        String accessToken = memberService.genAccessToken(member);
+        String accessToken = userService.genAccessToken(user);
 
-        rq.setCookie("apiKey", member.getApiKey());
+        rq.setCookie("apiKey", user.getApiKey());
         rq.setCookie("accessToken", accessToken);
 
         return new RsData<>(
                 "200-1",
-                "%s님 환영합니다.".formatted(member.getLoginId()),
-                new MemberLoginResBody(
-                        new MemberDto(member),
-                        member.getApiKey(),
+                "%s님 환영합니다.".formatted(user.getLoginId()),
+                new UserLoginResBody(
+                        new UserDto(user),
+                        user.getApiKey(),
                         accessToken
                 )
         );
@@ -105,13 +105,13 @@ public class ApiV1MemberController {
 
     @DeleteMapping("/me")
     public RsData<Void> deleteMe() {
-        MemberDto actor = rq.getActor();
+        UserDto actor = rq.getActor();
 
         if (actor == null) {
             throw new ServiceException("401-1", "로그인이 필요합니다.");
         }
 
-        memberService.deleteById(actor.id());
+        userService.deleteById(actor.id());
 
         rq.setCookie("accessToken", "");
 
@@ -122,21 +122,21 @@ public class ApiV1MemberController {
     }
 
     @GetMapping("/me")
-    public RsData<MemberDto> me() {
-//        Member actor = memberService
+    public RsData<UserDto> me() {
+//        User actor = userService
 //                .findByLoginId(rq.getActor().id())
 //                .get();
-        MemberDto actor = rq.getActor();
+        UserDto actor = rq.getActor();
 
         if (actor == null) {
             throw new ServiceException("401-1", "로그인이 필요합니다.");
         }
 
-        // MemberDto는 이미 필요한 정보를 포함하고 있으므로 그대로 반환
+        // UserDto는 이미 필요한 정보를 포함하고 있으므로 그대로 반환
         return new RsData<>(
                 "200-1",
 //                "%s님의 정보입니다.".formatted(actor.id()),
-//                new MemberDto(actor)
+//                new UserDto(actor)
                 "%s님의 정보입니다.".formatted(actor.loginId()),
                 actor
         );

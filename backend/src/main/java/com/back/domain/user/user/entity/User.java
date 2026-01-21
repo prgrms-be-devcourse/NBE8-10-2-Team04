@@ -1,15 +1,16 @@
-package com.back.domain.member.member.entity;
+package com.back.domain.user.user.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@Entity
+@Entity(name = "users")
 @Getter
-@NoArgsConstructor
-public class Member {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,17 +22,18 @@ public class Member {
     @Column(unique = true)
     private String apiKey;
 
-    public Member(long id, String loginId) {
+    public User(long id, String loginId) {
         this.id = id;
         this.loginId = loginId;
     }
 
-    public Member(String loginId, String password, String email) {
+    public User(String loginId, String password, String email) {
         this.loginId = loginId;
         this.password = password;
         this.email = email;
         this.apiKey = UUID.randomUUID().toString();
     }
+
     public void modifyApiKey(String apiKey) {
         this.apiKey = apiKey;
     }

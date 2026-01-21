@@ -1,7 +1,7 @@
-package com.back.domain.member.member.controller;
+package com.back.domain.user.user.controller;
 
-import com.back.domain.member.member.entity.Member;
-import com.back.domain.member.member.service.MemberService;
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +24,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @Transactional
 @AutoConfigureMockMvc
-public class ApiV1MemberControllerTest {
+public class ApiV1UserControllerTest {
     @Autowired
-    private MemberService memberService;
+    private UserService userService;
     @Autowired
     private MockMvc mvc;
 
@@ -49,14 +49,14 @@ public class ApiV1MemberControllerTest {
                 .andDo(print());
 
         resultActions
-                .andExpect(handler().handlerType(ApiV1MemberController.class))
+                .andExpect(handler().handlerType(ApiV1UserController.class))
                 .andExpect(handler().methodName("join"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("201-1"))
                 .andExpect(jsonPath("$.msg").exists())
                 .andExpect(jsonPath("$.data").exists());
 
-        Member member = memberService.findByLoginId("usernew").orElseThrow();
+        User user = userService.findByLoginId("usernew").orElseThrow();
 
         resultActions
                 .andExpect(jsonPath("$.data.loginId").value("usernew"));
@@ -67,7 +67,7 @@ public class ApiV1MemberControllerTest {
     void t2() throws Exception {
         // 1. [준비] t1 데이터는 지워졌으므로, t2를 위해 다시 가입시켜야 합니다!
         // join() 결과를 바로 받아서 쓰면 DB 조회 에러 걱정이 없습니다.
-        Member member = memberService.join("usernew", "1234", "test@test.com");
+        User user = userService.join("usernew", "1234", "test@test.com");
 
         // 2. [요청]
         ResultActions resultActions = mvc
@@ -85,18 +85,18 @@ public class ApiV1MemberControllerTest {
                 .andDo(print());
 
         // 3. [검증]
-        // member 변수에 이미 정보가 있으므로 findByLoginId를 또 할 필요가 없습니다.
+        // user 변수에 이미 정보가 있으므로 findByLoginId를 또 할 필요가 없습니다.
 
         resultActions
-                .andExpect(handler().handlerType(ApiV1MemberController.class))
+                .andExpect(handler().handlerType(ApiV1UserController.class))
                 .andExpect(handler().methodName("login"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("200-1"))
-                .andExpect(jsonPath("$.msg").value("%s님 환영합니다.".formatted(member.getLoginId())))
+                .andExpect(jsonPath("$.msg").value("%s님 환영합니다.".formatted(user.getLoginId())))
                 .andExpect(jsonPath("$.data.item").exists())
-                .andExpect(jsonPath("$.data.item.id").value(member.getId()))
-                .andExpect(jsonPath("$.data.item.loginId").value(member.getLoginId()))
-                .andExpect(jsonPath("$.data.apiKey").value(member.getApiKey()));
+                .andExpect(jsonPath("$.data.item.id").value(user.getId()))
+                .andExpect(jsonPath("$.data.item.loginId").value(user.getLoginId()))
+                .andExpect(jsonPath("$.data.apiKey").value(user.getApiKey()));
     }
 
     @Test
@@ -109,13 +109,13 @@ public class ApiV1MemberControllerTest {
                 )
                 .andDo(print());
 
-        Member member = memberService.findByLoginId("user1").get();
+        User user = userService.findByLoginId("user1").get();
 
         resultActions
-                .andExpect(handler().handlerType(ApiV1MemberController.class))
+                .andExpect(handler().handlerType(ApiV1UserController.class))
                 .andExpect(handler().methodName("me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(member.getId()));
+                .andExpect(jsonPath("$.id").value(user.getId()));
     }
 
 }
