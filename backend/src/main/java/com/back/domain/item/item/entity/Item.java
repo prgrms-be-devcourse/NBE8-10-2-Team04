@@ -1,6 +1,7 @@
 package com.back.domain.item.item.entity;
 
 import com.back.domain.category.category.entity.Category;
+import com.back.domain.user.user.entity.User;
 import com.back.global.exception.ServiceException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -18,8 +19,8 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // TODO: User 엔티티 추가 시 변경 예정
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY) // user(1) : item(N)
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY) // category(1) : item(N)
     private Category category;
@@ -37,7 +38,7 @@ public class Item {
     private Boolean isActive;
 
     public Item(
-            Long userId,
+            User user,
             Category category,
             String name,
             String imgUrl,
@@ -46,7 +47,7 @@ public class Item {
             LocalDate nextReplacementDate,
             Boolean isActive
     ) {
-        this.userId = userId;
+        this.user = user;
         this.category = category;
         this.name = name;
         this.imgUrl = imgUrl;
@@ -63,7 +64,7 @@ public class Item {
 
     //현재 요청자(actorUserId)가 이 Item의 소유자인지 확인
     public void validateOwner(Long actorUserId) {
-        if (!Objects.equals(this.userId, actorUserId)) {
+        if (!Objects.equals(this.user.getId(), actorUserId)) {
             throw new ServiceException("403-1", "%d번 아이템에 대한 권한이 없습니다.".formatted(this.id));
         }
     }
