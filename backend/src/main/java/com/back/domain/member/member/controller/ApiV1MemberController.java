@@ -106,7 +106,7 @@ public class ApiV1MemberController {
     @GetMapping("/me")
     public RsData<MemberDto> me() {
         Member actor = memberService
-                .findById(rq.getActor().getId())
+                .findByLoginid(rq.getActor().getLoginid())
                 .get();
 
         return new RsData<>(
