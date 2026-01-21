@@ -103,6 +103,22 @@ public class ApiV1MemberController {
         );
     }
 
+    @DeleteMapping("/me")
+    public RsData<Void> deleteMe() {
+        MemberDto actor = rq.getActor();
+
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        memberService.deleteById((int)actor.id()); // Todo: 몇몇은 long이고 몇몇은 int인게 통일이 안되어 있음. 수정 필요.
+
+        rq.setCookie("accessToken", "");
+
+        return new RsData<>(
+                "200-1",
+                "회원탈퇴가 완료되었습니다.",
+                null
     @GetMapping("/me")
     public RsData<MemberDto> me() {
         Member actor = memberService
