@@ -16,7 +16,7 @@ public class ItemHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne // item(1) : item_history(N)
+    @ManyToOne(fetch = FetchType.LAZY) // item(1) : item_history(N)
     private Item item;
 
     private LocalDate startDate;
