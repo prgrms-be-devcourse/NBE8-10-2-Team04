@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,8 +30,8 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    @Transactional
-    public Category getOrCreate(String name) {
-        return findByName(name).orElseGet(() -> create(name));
+    //카테고리 조회용
+    public List<Category> findAll() {
+        return categoryRepository.findAll();
     }
 }
