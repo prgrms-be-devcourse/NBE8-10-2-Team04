@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type MissionKey = "items" | "members" | "history" | "categories";
+type MissionKey = "items" | "me" | "history" | "categories";
 
 type MissionCard = {
   key: MissionKey;
@@ -19,7 +19,25 @@ type TodayMission = {
   category: string;
   desc: string;
   dueText: string;
-  done: boolean;
+  dDay: number;
+};
+
+// 백엔드(/api/v1/items) 목록 응답(ItemSummaryResponse) 형태
+type ItemSummaryApi = {
+  id: number;
+  name: string;
+  categoryName: string | null;
+  nextReplacementDate: string | null; // LocalDate -> "YYYY-MM-DD"
+  imgUrl: string | null;
+  dDay: number; // ChronoUnit.DAYS.between(now, nextReplacementDate)
+  isActive: boolean;
+};
+
+// RsData 래퍼 형태
+type RsData<T> = {
+  resultCode: string;
+  msg: string;
+  data: T;
 };
 
 const COLOR = {
@@ -52,25 +70,6 @@ const COLOR = {
     iconBg: "bg-pink-500",
   },
 } as const;
-
-function DotIcon({ tone }: { tone: "red" | "blue" | "yellow" | "pink" | "green" }) {
-  const cls =
-    tone === "green"
-      ? "text-emerald-300"
-      : tone === "red"
-      ? "text-red-300"
-      : tone === "blue"
-      ? "text-blue-300"
-      : tone === "yellow"
-      ? "text-yellow-300"
-      : "text-pink-300";
-
-  return (
-    <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/10 ${cls}`}>
-      <span className="h-3 w-3 rounded-full bg-current shadow-[0_0_16px_rgba(255,255,255,0.15)]" />
-    </span>
-  );
-}
 
 function IconBox(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -113,7 +112,7 @@ function IconLayers(props: React.SVGProps<SVGSVGElement>) {
 function MissionIcon({ kind, className }: { kind: MissionKey; className?: string }) {
   const common = `h-6 w-6 ${className ?? ""}`;
   if (kind === "items") return <IconBox className={common} />;
-  if (kind === "members") return <IconUser className={common} />;
+  if (kind === "me") return <IconUser className={common} />;
   if (kind === "history") return <IconClock className={common} />;
   return <IconLayers className={common} />;
 }
@@ -134,55 +133,60 @@ function MissionBadgeIcon() {
 export default function Page() {
   const router = useRouter();
 
+  // 왼쪽 카드(고정 UI)
   const cards: MissionCard[] = [
-    {
-      key: "items",
-      title: "아이템 관리",
-      subtitle: "아이템을 등록, 조회, 수정, 삭제하세요",
-      action: "미션 시작",
-      color: "red",
-    },
-    {
-      key: "members",
-      title: "멤버 관리",
-      subtitle: "멤버를 추가하고 조회하세요",
-      action: "미션 시작",
-      color: "blue",
-    },
-    {
-      key: "history",
-      title: "이력 조회",
-      subtitle: "이력을 확인하세요",
-      action: "미션 시작",
-      color: "yellow",
-    },
-    {
-      key: "categories",
-      title: "카테고리",
-      subtitle: "카테고리를 관리하세요",
-      action: "미션 시작",
-      color: "pink",
-    },
+    { key: "items", title: "아이템 관리", subtitle: "아이템을 등록, 조회, 수정, 삭제하세요", action: "미션 시작", color: "red" },
+    { key: "me", title: "내 정보", subtitle: "내 정보를 조회하고 수정하세요", action: "미션 시작", color: "blue" },
+    { key: "history", title: "이력 조회", subtitle: "이력을 확인하세요", action: "미션 시작", color: "yellow" },
+    { key: "categories", title: "카테고리", subtitle: "카테고리를 관리하세요", action: "미션 시작", color: "pink" },
   ];
 
-  const [today, setToday] = useState<TodayMission[]>([
-    { id: "1", title: "칫솔", category: "욕실", desc: "카테고리: 욕실 소모", dueText: "2026-01-16", done: false },
-    { id: "2", title: "칫솔", category: "욕실", desc: "카테고리: 욕실 소모", dueText: "2026-01-18", done: false },
-    { id: "3", title: "칫솔", category: "욕실", desc: "카테고리: 욕실 소모", dueText: "2026-01-20", done: false },
-    { id: "4", title: "칫솔", category: "욕실", desc: "카테고리: 욕실 소모", dueText: "2026-01-22", done: false },
-    { id: "5", title: "칫솔", category: "욕실", desc: "카테고리: 욕실 소모", dueText: "2026-01-24", done: false },
-  ]);
+  // 오른쪽 오늘의 미션(서버에서 받아옴)
+  const [today, setToday] = useState<TodayMission[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const toggleDone = (id: string) => {
-    setToday((prev) => prev.map((m) => (m.id === id ? { ...m, done: !m.done } : m)));
-  };
-
+  // 카드 클릭 -> 해당 페이지 이동
   const onCardClick = (key: MissionKey) => {
     if (key === "items") router.push("/items");
-    if (key === "members") router.push("/members");
+    if (key === "me") router.push("/me");
     if (key === "history") router.push("/history");
     if (key === "categories") router.push("/categories");
   };
+
+  // "로그인 유저의 아이템 목록 조회 -> D-7 이하만 today로 매핑
+  useEffect(() => {
+    (async () => {
+      try {
+        setIsLoading(true);
+        setLoadError(null);
+
+        const res = await fetch("http://localhost:8080/api/v1/items", { method: "GET" });
+        if (!res.ok) throw new Error(`items load failed: ${res.status}`);
+
+        const json = (await res.json()) as RsData<ItemSummaryApi[]>;
+        const items = json?.data ?? [];
+
+        const missions: TodayMission[] = items
+          .filter((it) => it.isActive !== false) // 활성 아이템만
+          .filter((it) => it.dDay <= 7) // D-7 이하
+          .map((it) => ({
+            id: String(it.id),
+            title: it.name,
+            category: it.categoryName ?? "", 
+            desc: it.dDay >= 0 ? `교체까지 ${it.dDay}일 남음` : `교체일 ${Math.abs(it.dDay)}일 지남`,
+            dueText: it.nextReplacementDate ?? "-",
+            dDay: it.dDay,
+          }));
+
+        setToday(missions);
+      } catch (e: any) {
+        setLoadError(e?.message ?? "load error");
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#070a12] text-white">
@@ -200,17 +204,12 @@ export default function Page() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
+          {/* 좌측 블럭 */}
           <section className="grid gap-5">
-            {/* 좌측 블럭 */}
             {cards.map((c) => (
-              <div
-                key={c.key}
-                className={`rounded-2xl bg-black/60 p-6 ring-3 ${COLOR[c.color].ring} ${COLOR[c.color].glow} backdrop-blur`}
-              >
+              <div key={c.key} className={`rounded-2xl bg-black/60 p-6 ring-3 ${COLOR[c.color].ring} ${COLOR[c.color].glow} backdrop-blur`}>
                 <div className="flex justify-start">
-                  <span
-                    className={`inline-flex h-11 w-11 items-center justify-center rounded-full ring-2 ring-white/10 ${COLOR[c.color].iconBg}`}
-                  >
+                  <span className={`inline-flex h-11 w-11 items-center justify-center rounded-full ring-2 ring-white/10 ${COLOR[c.color].iconBg}`}>
                     <MissionIcon kind={c.key} className={`${COLOR[c.color].icon} drop-shadow`} />
                   </span>
                 </div>
@@ -231,7 +230,7 @@ export default function Page() {
           </section>
 
           {/* 우측 블럭 */}
-          <section className="rounded-2xl bg-black/60 p-6 ring-2 ring-emerald-500/60 shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_0_18px_rgba(16,185,129,0.2)] backdrop-blur">
+          <section className="rounded-2xl bg-black/60 p-6 ring-3 ring-emerald-500/60 shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_0_18px_rgba(16,185,129,0.2)] backdrop-blur">
             <div className="flex flex-col items-start">
               <MissionBadgeIcon />
               <div className="mt-3 text-sm font-semibold">오늘의 미션</div>
@@ -242,35 +241,57 @@ export default function Page() {
             </div>
 
             <div className="mt-5 space-y-3">
-              {today.map((m) => (
-                <div key={m.id} className="flex items-center justify-between rounded-xl bg-white/5 p-4 ring-1 ring-white/15">
-                  <div className="flex items-center gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/20 ring-1 ring-emerald-400/50">
-                      <span className="h-3 w-3 rounded-full bg-emerald-200 shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
-                    </span>
+              {/* 로딩/에러/빈 상태 */}
+              {isLoading && (
+                <div className="rounded-xl bg-white/5 p-4 text-sm text-white/60 ring-1 ring-white/15">
+                  불러오는 중...
+                </div>
+              )}
 
-                    <div>
-                      <div className="text-sm font-semibold">{m.title}</div>
-                      <div className="mt-1 text-xs text-white/50">
-                        <span className="text-emerald-100/90">{m.desc}</span>
-                        <span className="mx-2 text-white/25">|</span>
-                        <span>{m.dueText}</span>
+              {loadError && (
+                <div className="rounded-xl bg-red-500/10 p-4 text-sm text-red-200 ring-1 ring-red-500/30">
+                  불러오기 실패: {loadError}
+                </div>
+              )}
+
+              {!isLoading && !loadError && today.length === 0 && (
+                <div className="rounded-xl bg-white/5 p-4 text-sm text-white/60 ring-1 ring-white/15">
+                  D-7 이하 아이템이 없어요.
+                </div>
+              )}
+
+              {/* 리스트 */}
+              {!isLoading &&
+                !loadError &&
+                today.map((m) => (
+                  <div key={m.id} className="flex items-center justify-between rounded-xl bg-white/5 p-4 ring-1 ring-white/15">
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/20 ring-1 ring-emerald-400/50">
+                        <span className="h-3 w-3 rounded-full bg-emerald-200 shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
+                      </span>
+
+                      <div>
+                        <div className="text-sm font-semibold">{m.title}</div>
+
+                        <div className="mt-1 text-xs text-white/50">
+                          {m.category && (
+                            <>
+                              <span className="text-emerald-100/90">{m.category}</span>
+                              <span className="mx-2 text-white/25">|</span>
+                            </>
+                          )}
+                          <span>{m.dueText}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <button
-                    onClick={() => toggleDone(m.id)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${
-                      m.done
-                        ? "bg-emerald-500/25 text-emerald-50 ring-emerald-500/40"
-                        : "bg-emerald-500 text-white ring-emerald-400/80"
-                    }`}
-                  >
-                    {m.done ? "완료" : "D-7"}
-                  </button>
-                </div>
-              ))}
+                    {/* D-day 표시 뱃지 */}
+                    <span className="rounded-full px-3 py-1.5 text-xs font-semibold ring-1 bg-emerald-500/25 text-emerald-50 ring-emerald-500/40">
+                      {m.dDay >= 0 ? `D-${m.dDay}` : `D+${Math.abs(m.dDay)}`}
+                    </span>
+                  </div>
+                ))
+              }
             </div>
           </section>
         </div>
