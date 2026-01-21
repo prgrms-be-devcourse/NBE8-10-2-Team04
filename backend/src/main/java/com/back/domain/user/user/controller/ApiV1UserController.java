@@ -6,6 +6,7 @@ import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -38,6 +39,7 @@ public class ApiV1UserController {
 
     @PostMapping("/signup")
     @Transactional
+    @Operation(summary = "회원가입")
     public RsData<UserDto> join(
             @Valid @RequestBody UserJoinReqBody reqBody
     ) {
@@ -73,9 +75,9 @@ public class ApiV1UserController {
     ) {
     }
 
-
     @PostMapping("/login")
     @Transactional(readOnly = true)
+    @Operation(summary = "로그인")
     public RsData<UserLoginResBody> login(
             @Valid @RequestBody UserLoginReqBody reqBody
     ) {
@@ -104,6 +106,7 @@ public class ApiV1UserController {
     }
 
     @DeleteMapping("/me")
+    @Operation(summary = "탈퇴")
     public RsData<Void> deleteMe() {
         UserDto actor = rq.getActor();
 
@@ -122,6 +125,7 @@ public class ApiV1UserController {
     }
 
     @GetMapping("/me")
+    @Operation(summary = "내 정보 조회")
     public RsData<UserDto> me() {
 //        User actor = userService
 //                .findByLoginId(rq.getActor().id())
@@ -143,6 +147,7 @@ public class ApiV1UserController {
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "로그아웃")
     public RsData<Void> logout() {
         rq.deleteCookie("apiKey");
         rq.deleteCookie("accessToken");
