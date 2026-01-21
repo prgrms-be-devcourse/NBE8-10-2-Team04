@@ -29,4 +29,11 @@ public class MemberService {
     public Optional<Member> findByLoginid(String loginid) {
         return memberRepository.findByLoginid(loginid);
     }
+
+
+    public void deleteById(int id) {
+        memberRepository.findById(id)
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+        memberRepository.deleteById(id);
+    }
 }

@@ -4,16 +4,14 @@ import com.back.domain.member.member.dto.MemberDto;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
 import com.back.global.exception.ServiceException;
+import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/user")
@@ -21,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "ApiV1MemberController", description = "API 회원 컨트롤러") //Swagger 문서 태그용
 public class ApiV1MemberController {
     private final MemberService memberService;
+    private final Rq rq;
 
     //회원가입
     record MemberJoinReqBody(
@@ -88,6 +87,25 @@ public class ApiV1MemberController {
                         new MemberDto(member),
                         member.getApiKey()
                 )
+        );
+    }
+
+    @DeleteMapping("/me")
+    public RsData<Void> deleteMe() {
+        MemberDto actor = rq.getActor();
+
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        memberService.deleteById((int)actor.id()); // Todo: 몇몇은 long이고 몇몇은 int인게 통일이 안되어 있음. 수정 필요.
+
+        rq.setCookie("accessToken", "");
+
+        return new RsData<>(
+                "200-1",
+                "회원탈퇴가 완료되었습니다.",
+                null
         );
     }
 }
