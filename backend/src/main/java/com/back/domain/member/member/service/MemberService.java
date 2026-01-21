@@ -39,10 +39,12 @@ public class MemberService {
     }
 
 
-    public void deleteById(int id) {
+    public void deleteById(Long id) {
         memberRepository.findById(id)
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
         memberRepository.deleteById(id);
+    }
+
     public void checkPassword(Member member, String password) {
         if (!passwordEncoder.matches(password, member.getPassword()))
             throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
