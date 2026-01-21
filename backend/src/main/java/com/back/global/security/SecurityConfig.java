@@ -27,6 +27,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/user/signup", "/api/v1/user/login").permitAll()
                                 // ✅ (개발용) 아이템만 임시 허용
                                 .requestMatchers("/api/v1/items/**").permitAll()
+                                // ✅ (개발용) 카테고리 임시 허용
+                                .requestMatchers("/api/v1/categories/**").permitAll()
 
                                 // 기타 api 요청은 인가 필요 -> 로그인하지 않으면 제한
                                 .requestMatchers("/api/*/**").authenticated()
