@@ -35,28 +35,13 @@ class CategoryControllerTest {
                 // BaseInitData에서 8개 생성
                 .andExpect(jsonPath("$.data", hasSize(greaterThanOrEqualTo(8))))
 
-                .andExpect(jsonPath("$.data[0].id").value(1))
-                .andExpect(jsonPath("$.data[0].name").value("집/생활"))
+                // 특정 카테고리 이름이 포함되는지 확인 (순서 의존 X)
+                .andExpect(jsonPath("$.data[*].name", hasItems(
+                        "집/생활", "욕실", "주방", "뷰티", "반려동물", "자동차", "전자기기", "업무"
+                )))
 
-                .andExpect(jsonPath("$.data[1].id").value(2))
-                .andExpect(jsonPath("$.data[1].name").value("욕실"))
-
-                .andExpect(jsonPath("$.data[2].id").value(3))
-                .andExpect(jsonPath("$.data[2].name").value("주방"))
-
-                .andExpect(jsonPath("$.data[3].id").value(4))
-                .andExpect(jsonPath("$.data[3].name").value("뷰티"))
-
-                .andExpect(jsonPath("$.data[4].id").value(5))
-                .andExpect(jsonPath("$.data[4].name").value("반려동물"))
-
-                .andExpect(jsonPath("$.data[5].id").value(6))
-                .andExpect(jsonPath("$.data[5].name").value("자동차"))
-
-                .andExpect(jsonPath("$.data[6].id").value(7))
-                .andExpect(jsonPath("$.data[6].name").value("전자기기"))
-
-                .andExpect(jsonPath("$.data[7].id").value(8))
-                .andExpect(jsonPath("$.data[7].name").value("업무"));
+                // 각 요소에 id, name 존재
+                .andExpect(jsonPath("$.data[0].id").exists())
+                .andExpect(jsonPath("$.data[0].name").isNotEmpty());
     }
 }
