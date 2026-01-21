@@ -3,6 +3,7 @@ package com.back.domain.item.item.service;
 import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.item.item.dto.ItemCreateRequest;
+import com.back.domain.item.item.dto.ItemUpdateRequest;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -25,6 +27,19 @@ public class ItemService {
 
     public Optional<Item> findById(Long id) {
         return itemRepository.findById(id);
+    }
+
+    // itemId로 아이템을 조회하고 요청자(userId)가 소유자인지 검증한 뒤 실제 삭제 수행
+    @Transactional
+    public void deleteItem(Long userId, Long itemId) {
+        Item item = findItemOrThrow(itemId);
+        item.validateOwner(userId);
+        itemRepository.delete(item);
+    }
+
+    // itemId로 Item 조회
+    private Item findItemOrThrow(Long itemId) {
+        return itemRepository.findById(itemId).orElseThrow(() -> new ServiceException(("400-1"), "존재하지 않는 아이템입니다."));
     }
 
     //목록조회용
@@ -82,16 +97,21 @@ public class ItemService {
         CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
         LocalDate nextReplacementDate = cyclePeriod.addTo(startDate);
 
-        return create(
+        Item item = create(
                 userId,
                 category,
                 request.name(),
                 request.imgUrl(),
                 startDate,
-                request.cycleDays(),          // 원문 저장이 필요하면 유지
+                request.cycleDays(),
                 nextReplacementDate,
                 true
         );
+
+        // 아이템 생성 시 첫 번째 히스토리 생성 (추가)
+        itemHistoryService.createItemHistory(item);
+
+        return item;
     }
 
     public void modifyDate(Item item) {
@@ -106,11 +126,45 @@ public class ItemService {
     }
 
     @Transactional
-    public void replaceItem(Item item) {
+    public Item replaceItem(Long userId, Long itemId) {
+        // 아이템 가져오기
+        Item item = findItemOrThrow(itemId);
+
+        // 아이템 생성자가 아니면 예외 처리(인가)
+        item.validateOwner(userId);
+
         // 아이템 정보 교체
         modifyDate(item);
 
         // 이력 추가
         itemHistoryService.createItemHistory(item);
+
+        return item;
+    }
+
+    @Transactional
+    public Item modify(Long userId, Long itemId, ItemUpdateRequest request) {
+        // 아이템 가져오기
+        Item item = findItemOrThrow(itemId);
+
+        // 아이템 생성자가 아니면 예외 처리(인가)
+        item.validateOwner(userId);
+
+        // 카테고리 존재 여부 확인
+        Category category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 카테고리입니다."));
+
+        // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
+        LocalDate nextReplacementDate = item.getNextReplacementDate();
+        if (!Objects.equals(request.cycleDays(), item.getCycleDays())) {
+            CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
+            nextReplacementDate = cyclePeriod.addTo(item.getStartDate());
+        }
+
+        // 아이템 수정
+        item.modify(category, request.name(), request.imgUrl(), request.cycleDays(), nextReplacementDate,
+                request.isActive());
+
+        return item;
     }
 }

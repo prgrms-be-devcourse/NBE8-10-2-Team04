@@ -3,7 +3,6 @@ package com.back.domain.item.item.controller;
 import com.back.domain.item.item.dto.*;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
-import com.back.domain.member.member.service.MemberService;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,7 +10,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +21,22 @@ import java.util.Map;
 @Tag(name = "ItemController", description = "아이템 컨트롤러")
 public class ItemController {
     private final ItemService itemService;
+
+    @DeleteMapping("/{itemId}")
+    @Operation(summary = "아이템 삭제")
+    public RsData<Void> deleteItem(
+            @RequestHeader(value = "Authorization", required = false) String token, //인증 건너뜀
+            @PathVariable Long itemId
+    ) {
+        Long userId = 1L; // 임시 토큰
+
+        itemService.deleteItem(userId, itemId);
+
+        return new RsData<>(
+                "200-1",
+                "아이템 삭제 성공"
+        );
+    }
 
     @PostMapping
     @Operation(summary = "아이템 등록")
@@ -50,10 +64,9 @@ public class ItemController {
         Long userId = 1L;
         List<Item> items;
 
-        if(categoryId != null) {
+        if (categoryId != null) {
             items = itemService.findAllByUserIdAndCategoryId(userId, categoryId);
-        }
-        else {
+        } else {
             items = itemService.findAllByUserIdOrderByNextReplacementDateAsc(userId);
         }
 
@@ -80,19 +93,33 @@ public class ItemController {
         return new RsData<>("200-1", "아이템 단건 조회 성공", new ItemResponse(item));
     }
 
+    @PutMapping("/{id}")
+    @Operation(summary = "아이템 수정")
+    public RsData<ItemUpdateResponse> modifyItem(@PathVariable Long id,
+                                                 @Valid @RequestBody ItemUpdateRequest request) {
+        // todo: 요청 헤더의 인증 정보를 바탕으로 user_id 받아오기
+        Long userId = 1L; // 임시 값
+
+        // 아이템 수정
+        Item item = itemService.modify(userId, id, request);
+
+        // 응답값 리턴
+        return new RsData<>(
+                "200",
+                "아이템 수정 성공",
+                new ItemUpdateResponse(item)
+        );
+    }
+
 
     @PutMapping("/{id}/replace")
     @Operation(summary = "아이템 교체")
     public RsData<Map<String, ItemReplaceResponse>> replaceItem(@PathVariable Long id) {
         // todo: 요청 헤더의 인증 정보를 바탕으로 user_id 받아오기
-
-        // 아이템 가져오기
-        Item item = itemService.findById(id).get();
-
-        // todo: 아이템 생성자가 아니면 예외 처리(인가)
+        Long userId = 1L; // 임시 값
 
         // 아이템 교체
-        itemService.replaceItem(item);
+        Item item = itemService.replaceItem(userId, id);
 
         // 응답값 리턴
         return new RsData<>(
