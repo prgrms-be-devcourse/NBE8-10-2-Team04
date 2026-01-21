@@ -1,9 +1,13 @@
 package com.back.global.rq;
 
+import com.back.domain.member.member.entity.Member;
+import com.back.global.security.SecurityUser;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -14,6 +18,19 @@ import java.util.Optional;
 public class Rq {
     private final HttpServletRequest req;
     private final HttpServletResponse resp;
+
+    public Member getActor() {
+        return Optional.ofNullable(
+                        SecurityContextHolder
+                                .getContext()
+                                .getAuthentication()
+                )
+                .map(Authentication::getPrincipal)
+                .filter(principal -> principal instanceof SecurityUser)
+                .map(principal -> (SecurityUser) principal)
+                .map(securityUser -> new Member(securityUser.getUsername(), securityUser.getUsername(), securityUser.getEmail()))
+                .orElse(null);
+    }
 
     public String getHeader(String name, String defaultValue) {
         return Optional.ofNullable(req.getHeader(name))
@@ -44,6 +61,9 @@ public class Rq {
         }
 
         resp.addCookie(cookie);
+    }
+    public void deleteCookie(String name) {
+        setCookie(name, null);
     }
 
     public void setHeader(String name, String value) {

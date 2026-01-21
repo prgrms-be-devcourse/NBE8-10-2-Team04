@@ -5,6 +5,7 @@ import com.back.domain.category.category.service.CategoryService;
 import com.back.domain.item.item.service.ItemService;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.service.MemberService;
+import com.back.global.app.AppConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -17,7 +18,7 @@ import java.time.LocalDate;
 
 @Configuration
 @RequiredArgsConstructor
-public class BaseInitData {
+public class    BaseInitData {
     @Autowired
     @Lazy
     private BaseInitData self;
@@ -107,5 +108,12 @@ public class BaseInitData {
                 LocalDate.of(2026, 5, 30),
                 true
         );
+    }
+    @Transactional
+    public void work1() {
+        if (memberService.count() > 0) return;
+
+        Member memberUser1 = memberService.join("user1", "1234", "유저1");
+        if (AppConfig.isNotProd()) memberUser1.modifyApiKey(memberUser1.getLoginid());
     }
 }
