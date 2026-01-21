@@ -3,6 +3,7 @@ package com.back.global.rq;
 import com.back.domain.member.member.entity.Member;
 import com.back.domain.member.member.dto.MemberDto;
 import com.back.domain.member.member.service.MemberService;
+import com.back.global.exception.ServiceException;
 import com.back.global.security.SecurityUser;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -134,7 +135,7 @@ public class Rq {
     public Long getRequiredMemberId() {
         Long memberId = getMemberId();
         if (memberId == null) {
-            throw new RuntimeException("로그인이 필요합니다.");
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
         }
         return memberId;
     }
