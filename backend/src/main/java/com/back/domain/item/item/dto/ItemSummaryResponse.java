@@ -18,7 +18,7 @@ public record ItemSummaryResponse(
         this(
                 item.getId(),
                 item.getName(),
-                item.getCategory().getName(),
+                item.getCategory() == null ? null : item.getCategory().getName(),
                 item.getNextReplacementDate(),
                 item.getImgUrl(),
                 item.getNextReplacementDate() == null

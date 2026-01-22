@@ -27,7 +27,7 @@ public record ItemCreateResponse(
         this(
                 item.getId(),
                 item.getUser().getId(),
-                item.getCategory().getId(),
+                item.getCategory() == null ? null : item.getCategory().getId(),
                 item.getName(),
                 item.getImgUrl(),
                 item.getStartDate(),
