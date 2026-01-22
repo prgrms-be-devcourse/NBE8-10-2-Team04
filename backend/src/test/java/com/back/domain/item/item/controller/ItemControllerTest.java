@@ -2,9 +2,11 @@ package com.back.domain.item.item.controller;
 
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
+import com.back.standard.util.Ut;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
@@ -14,7 +16,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Map;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -28,6 +32,29 @@ public class ItemControllerTest {
     private MockMvc mvc;
     @Autowired
     private ItemService itemService;
+
+    // application.yml 에서 주입받는 JWT 비밀키
+    @Value("${custom.jwt.secretKey}")
+    private String jwtSecret;
+
+    // AccessToken 만료 시간(초 단위)
+    @Value("${custom.accessToken.expirationSeconds}")
+    private int accessTokenExpirationSeconds;
+
+    /**
+     * 테스트용 Access Token 생성 메서드
+     * - 실제 로그인 과정을 거치지 않고
+     * - 컨트롤러 인증/인가 로직만 검증하기 위해 사용
+     */
+    private String generateAccessToken(Long userId, String loginId) {
+        // JWT Payload(claims)에 들어갈 사용자 정보
+        Map<String, Object> claims = Map.of(
+                "id", userId,
+                "loginId", loginId
+        );
+        // JWT 생성 (secretKey + 만료시간 + claims)
+        return Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims);
+    }
 
     @Test
     @DisplayName("아이템 교체")
@@ -209,5 +236,44 @@ public class ItemControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-1"))
                 .andExpect(jsonPath("$.msg").value("cycleDays 형식이 올바르지 않습니다. 예: 30d, 2m, 1y"));
+    }
+
+    @Test
+    @DisplayName("아이템 등록 - 성공")
+    void createItem_success() throws Exception {
+        // 인증이 필요한 API이므로, 테스트용 Access Token 생성
+        String accessToken = generateAccessToken(1L, "user1");
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", "Bearer " + accessToken)
+                                .content("""
+                                        {
+                                            "categoryId": 1,
+                                            "name": "칫솔",
+                                            "imgUrl": "https://example.com/toothbrush.jpg",
+                                            "startDate": "2025-01-01",
+                                            "cycleDays": "90d"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("201-1"))
+                .andExpect(jsonPath("$.msg").value("아이템 등록 성공"))
+                .andExpect(jsonPath("$.data.id").exists())
+                .andExpect(jsonPath("$.data.categoryId").value(1))
+                .andExpect(jsonPath("$.data.name").value("칫솔"))
+                .andExpect(jsonPath("$.data.imgUrl").value("https://example.com/toothbrush.jpg"))
+                .andExpect(jsonPath("$.data.startDate").value("2025-01-01"))
+                .andExpect(jsonPath("$.data.cycleDays").value("90d"))
+                .andExpect(jsonPath("$.data.nextReplacementDate").value("2025-04-01"))
+                .andExpect(jsonPath("$.data.isActive").value(true));
     }
 }
