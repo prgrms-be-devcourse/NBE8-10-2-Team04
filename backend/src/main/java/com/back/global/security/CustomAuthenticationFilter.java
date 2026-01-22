@@ -1,7 +1,7 @@
 package com.back.global.security;
 
-import com.back.domain.member.member.entity.Member;
-import com.back.domain.member.member.repository.MemberRepository;
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.repository.UserRepository;
 import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
@@ -26,7 +26,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final Rq rq;
 
     @Value("${custom.jwt.secretKey}")
@@ -102,7 +102,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         }
 
         // 6) DB에서 실제 회원 조회
-        Member member = memberRepository.findById(id)  //
+        User user = userRepository.findById(id)  //
                 .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 회원입니다."));
 
         // 7) accessToken이 만료되었는지 확인 (선택적 - 만료 시간 체크)
@@ -113,16 +113,17 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
         // 현재는 토큰이 유효하면 그대로 사용
 
         // 9) SecurityContext에 인증 정보 주입
-        UserDetails user = new SecurityUser(
-                member.getId(),
-                member.getLoginId(),
+        UserDetails securityUser = new SecurityUser(
+                user.getId(),
+                user.getLoginId(),
                 "",
-                member.getEmail() != null ? member.getEmail() : "",
+                user.getEmail() != null ? user.getEmail() : "",
                 List.of() // 권한 없으면 빈 리스트
         );
 
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities())
+                new UsernamePasswordAuthenticationToken(securityUser, securityUser.getPassword(),
+                        securityUser.getAuthorities())
         );
 
         filterChain.doFilter(request, response);

@@ -1,7 +1,6 @@
 package com.back.domain.item.item.dto;
 
 import com.back.domain.item.item.entity.Item;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -21,7 +20,7 @@ public record ItemResponse(
     public ItemResponse(Item item) {
         this(
                 item.getId(),
-                item.getUserId(),
+                item.getUser().getId(),
                 item.getCategory() == null ? null : item.getCategory().getId(),
                 item.getName(),
                 item.getImgUrl(),

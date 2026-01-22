@@ -8,6 +8,7 @@ import java.time.temporal.ChronoUnit;
 public record ItemSummaryResponse(
         Long id,
         String name,
+        String categoryName,
         LocalDate nextReplacementDate,
         String imgUrl,
         long dDay,
@@ -17,6 +18,7 @@ public record ItemSummaryResponse(
         this(
                 item.getId(),
                 item.getName(),
+                item.getCategory() == null ? null : item.getCategory().getName(),
                 item.getNextReplacementDate(),
                 item.getImgUrl(),
                 item.getNextReplacementDate() == null
