@@ -3,14 +3,15 @@ package com.back.domain.email.scheduler;
 import com.back.domain.email.service.EmailService;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
-import com.back.domain.item.item.service.ItemService;
-import com.back.domain.member.member.entity.Member;
-import com.back.domain.member.member.repository.MemberRepository;
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -18,7 +19,7 @@ import java.util.List;
 public class DdayEmailScheduler {
 
     private final ItemRepository itemRepository;
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final EmailService emailService;
 
     /**
@@ -27,36 +28,17 @@ public class DdayEmailScheduler {
      * "0 0 9 * * *" = 매일 오전 9시 정각
      */
     @Scheduled(cron = "0 0 9 * * *")
+    @Transactional // Lazy 로딩된 연관 엔티티(User) 접근을 위해 트랜잭션 유지
     public void checkAndSendDdayEmails() {
-
+        // 오늘 날짜
         LocalDate today = LocalDate.now();
 
-        // 오늘이 교체 예정일인 활성화된 아이템들 조회
+        // 교체 예정일이 오늘이고 활성화된 아이템 목록 조회
         List<Item> itemsDueToday = itemRepository.findAllByNextReplacementDateAndIsActive(today, true);
 
         for (Item item : itemsDueToday) {
-            // 아이템 소유자의 이메일 가져오기
-            // getUserId() 대신 직접 필드 접근 (리플렉션 사용)
-            Long userId = item.getUserId();
-            Member member = memberRepository.findById(userId)
-                    .orElse(null);
-
-            // D-Day 알림 이메일 발송
-            emailService.sendDDayNotification(member.getEmail(), item);
+            User member = item.getUser(); // // 아이템과 연관된 사용자 조회
+            emailService.sendDDayNotification(member.getEmail(), item); // // D-Day 알림 이메일 발송
         }
-    }
-
-    /**
-     * 테스트용 메서드 (수동 실행 가능)
-     * 실제 운영에서는 제거하거나 주석 처리
-     */
-    public void sendTestEmail(Long itemId) {
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new RuntimeException("아이템을 찾을 수 없습니다."));
-
-        Member member = memberRepository.findById(item.getUserId())
-                .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
-
-        emailService.sendDDayNotification(member.getEmail(), item);
     }
 }
