@@ -93,8 +93,8 @@ public class BaseInitData {
                 "수세미",
                 "https://example.com/sponge.png",
                 LocalDate.of(2026, 1, 5),
-                "1m",
-                LocalDate.of(2026, 2, 5),
+                "21d",
+                LocalDate.of(2026, 1, 26),
                 true
         );
 

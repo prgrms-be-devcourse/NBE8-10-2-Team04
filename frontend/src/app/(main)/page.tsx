@@ -28,7 +28,7 @@ type ItemSummaryApi = {
   categoryName: string | null;
   nextReplacementDate: string | null; // LocalDate -> "YYYY-MM-DD"
   imgUrl: string | null;
-  dDay: number; // ChronoUnit.DAYS.between(now, nextReplacementDate)
+  dDay: number;
   isActive: boolean;
 };
 
@@ -38,6 +38,8 @@ type RsData<T> = {
   msg: string;
   data: T;
 };
+
+const API_BASE = "http://localhost:8080";
 
 const COLOR = {
   red: {
@@ -102,19 +104,28 @@ export default function Page() {
         setIsLoading(true);
         setLoadError(null);
 
-        const res = await fetch("http://localhost:8080/api/v1/items", { method: "GET" });
+        const res = await fetch(`${API_BASE}/api/v1/items`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (res.status === 401) {
+          router.replace("/login");
+          return;
+        }
+
         if (!res.ok) throw new Error(`items load failed: ${res.status}`);
 
         const json = (await res.json()) as RsData<ItemSummaryApi[]>;
         const items = json?.data ?? [];
 
         const missions: TodayMission[] = items
-          .filter((it) => it.isActive !== false) // 활성 아이템만
-          .filter((it) => it.dDay <= 7) // D-7 이하
+          .filter((it) => it.isActive !== false)
+          .filter((it) => it.dDay <= 7)
           .map((it) => ({
             id: String(it.id),
             title: it.name,
-            category: it.categoryName ?? "", 
+            category: it.categoryName ?? "",
             desc: it.dDay >= 0 ? `교체까지 ${it.dDay}일 남음` : `교체일 ${Math.abs(it.dDay)}일 지남`,
             dueText: it.nextReplacementDate ?? "-",
             dDay: it.dDay,
@@ -127,16 +138,10 @@ export default function Page() {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-[#070a12] text-white">
-      <div className="h-1 w-full bg-gradient-to-r from-red-500 via-blue-500 via-yellow-400 to-pink-500" />
-
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-1/2 top-16 h-[520px] w-[880px] -translate-x-1/2 rounded-full bg-gradient-to-r from-red-500/12 via-blue-500/12 to-pink-500/12 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
-      </div>
 
       <main className="mx-auto w-full max-w-6xl px-6 pb-14 pt-8">
         <div className="mb-8 text-center">
