@@ -104,23 +104,15 @@ export default function Page() {
         setIsLoading(true);
         setLoadError(null);
 
-        // 1) 로그인 체크: /api/v1/user/me
-        const meRes = await fetch(`${API_BASE}/api/v1/user/me`, {
+        const res = await fetch(`${API_BASE}/api/v1/items`, {
           method: "GET",
-          credentials: "include", // ✅ 쿠키 보내기
+          credentials: "include",
         });
 
-        if (!meRes.ok) {
-          // 로그인 안 된 상태면 메인에서 로그인 페이지로 보내기
+        if (res.status === 401) {
           router.replace("/login");
           return;
         }
-
-        // 2) 로그인 된 경우에만 아이템 호출
-        const res = await fetch(`${API_BASE}/api/v1/items`, {
-          method: "GET",
-          credentials: "include", // ✅ 이것도 꼭 필요
-        });
 
         if (!res.ok) throw new Error(`items load failed: ${res.status}`);
 
@@ -150,12 +142,6 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-[#070a12] text-white">
-      <div className="h-1 w-full bg-gradient-to-r from-red-500 via-blue-500 via-yellow-400 to-pink-500" />
-
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute left-1/2 top-16 h-[520px] w-[880px] -translate-x-1/2 rounded-full bg-gradient-to-r from-red-500/12 via-blue-500/12 to-pink-500/12 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.08),transparent_60%)]" />
-      </div>
 
       <main className="mx-auto w-full max-w-6xl px-6 pb-14 pt-8">
         <div className="mb-8 text-center">
