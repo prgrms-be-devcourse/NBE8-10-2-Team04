@@ -58,7 +58,7 @@ export default function Page() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* 아이디 입력 */}
           <div className="flex flex-col gap-1">
-            <label htmlFor="email" className="text-sm font-medium text-gray-700">
+            <label htmlFor="loginId" className="text-sm font-medium text-gray-700">
               아이디
             </label>
             <input

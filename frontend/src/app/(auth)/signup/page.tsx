@@ -93,7 +93,7 @@ export default function SignupPage() {
             </label>
             <input
               id="email"
-              type="text"
+              type="email"
               value={email}
               placeholder="이메일을 입력하세요"
               onChange={(e) => setEmail(e.target.value)}
