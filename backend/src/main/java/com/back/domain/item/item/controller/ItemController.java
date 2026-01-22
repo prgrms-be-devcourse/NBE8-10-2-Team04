@@ -29,7 +29,7 @@ public class ItemController {
     public RsData<Void> deleteItem(
             @PathVariable Long itemId
     ) {
-        Long userId = rq.getRequiredMemberId();
+        Long userId = rq.getMemberId();
 
         itemService.deleteItem(userId, itemId);
 
@@ -44,7 +44,7 @@ public class ItemController {
     public RsData<ItemCreateResponse> createItem(
             @Valid @RequestBody ItemCreateRequest request
     ) {
-        Long userId = rq.getRequiredMemberId();
+        Long userId = rq.getMemberId();
 
         Item item = itemService.createItem(userId, request);
 
@@ -60,7 +60,7 @@ public class ItemController {
     public RsData<List<ItemSummaryResponse>> getItems(
             @RequestParam(required = false) Long categoryId
     ) {
-        Long userId = rq.getRequiredMemberId();
+        Long userId = rq.getMemberId();
         List<Item> items;
 
         if (categoryId != null) {
@@ -79,13 +79,12 @@ public class ItemController {
                 data);
     }
 
-
     @GetMapping("/{itemId}")
     @Operation(summary = "아이템 단건 조회")
     public RsData<ItemResponse> getItem(
             @PathVariable Long itemId
     ) {
-        Long userId = rq.getRequiredMemberId();
+        Long userId = rq.getMemberId();
 
         Item item = itemService.findByIdAndUserId(itemId, userId);
         return new RsData<>("200-1", "아이템 단건 조회 성공", new ItemResponse(item));
@@ -97,7 +96,7 @@ public class ItemController {
             @PathVariable Long id,
             @Valid @RequestBody ItemUpdateRequest request
     ) {
-        Long userId = rq.getRequiredMemberId();
+        Long userId = rq.getMemberId();
 
         // 아이템 수정
         Item item = itemService.modify(userId, id, request);
@@ -110,12 +109,11 @@ public class ItemController {
         );
     }
 
-
     @PutMapping("/{id}/replace")
     @Operation(summary = "아이템 교체")
     public RsData<Map<String, ItemReplaceResponse>> replaceItem(@PathVariable Long id) {
         // todo: 요청 헤더의 인증 정보를 바탕으로 user_id 받아오기
-        Long userId = rq.getRequiredMemberId();
+        Long userId = rq.getMemberId();
 
         // 아이템 교체
         Item item = itemService.replaceItem(userId, id);

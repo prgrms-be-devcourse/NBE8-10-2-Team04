@@ -81,62 +81,26 @@ public class Rq {
         resp.setHeader(name, value);
     }
 
-    // Authorization 헤더에서 JWT 토큰 추출
-    // "Bearer {token}" 형식에서 토큰만 추출
-    public String getAuthorizationToken() {
-        String authorization = req.getHeader("Authorization");
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            return authorization.substring(7); // "Bearer " 제거
-        }
-        return null;
-    }
-
-    // JWT 토큰에서 사용자 ID 추출
-    // Authorization 헤더 또는 쿠키에서 토큰을 찾아 파싱
+    // SecurityContext에서 회원 ID 조회
     public Long getMemberId() {
-        // Authorization 헤더에서 토큰 가져오기
-        String accessToken = getAuthorizationToken();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
-        // 헤더에 없으면 쿠키에서 시도
-        if (accessToken == null) {
-            accessToken = getCookieValue("accessToken", null);
-        }
-
-        // 토큰이 없으면 null 반환
-        if (accessToken == null) {
-            return null;
-        }
-
-        // JWT 토큰 파싱
-        Map<String, Object> payload = memberService.payload(accessToken);
-        if (payload == null) {
-            return null;
-        }
-
-        // id 추출
-        Object idObj = payload.get("id");
-        if (idObj instanceof Number n) {
-            return n.longValue();
-        }
-        return null;
-    }
-
-    // 현재 로그인한 회원 조회
-    public Optional<Member> getMember() {
-        Long id = getMemberId();
-        if (id == null) {
-            return Optional.empty();
-        }
-
-        return memberService.findById(id);
-    }
-
-    // 로그인 필수 - 사용자 ID 반환 (없으면 예외 발생)
-    public Long getRequiredMemberId() {
-        Long memberId = getMemberId();
-        if (memberId == null) {
+        if (auth == null || !auth.isAuthenticated()) {
             throw new ServiceException("401-1", "로그인이 필요합니다.");
         }
-        return memberId;
+
+        Object principal = auth.getPrincipal();
+
+        if (!(principal instanceof SecurityUser)) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        return ((SecurityUser) principal).getId();
+    }
+
+    // SecurityContext에서 현재 로그인한 회원 조회
+    public Optional<Member> getMember() {
+        Long id = getMemberId();
+        return memberService.findById(id);
     }
 }
