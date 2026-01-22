@@ -13,12 +13,8 @@ public class EmailService {
 
     private final JavaMailSender javaMailSender;
 
-    // 기존 메서드
-    public void sendMimeMessage() {
-        // ... 기존 코드 유지
-    }
 
-    // 수정된 메서드: 발송된 이메일 주소 반환
+    //  발송된 이메일 주소 반환
     public String sendDDayNotification(String recipientEmail, Item item) {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
 
