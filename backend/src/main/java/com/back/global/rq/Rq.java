@@ -1,7 +1,6 @@
 package com.back.global.rq;
 
-import com.back.domain.member.member.entity.Member;
-import com.back.domain.member.member.dto.MemberDto;
+import com.back.domain.user.user.dto.UserDto;
 import com.back.global.security.SecurityUser;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +19,7 @@ public class Rq {
     private final HttpServletRequest req;
     private final HttpServletResponse resp;
 
-    public MemberDto getActor() {
+    public UserDto getActor() {
         return Optional.ofNullable(
                         SecurityContextHolder
                                 .getContext()
@@ -30,7 +29,7 @@ public class Rq {
                 .map(Authentication::getPrincipal)
                 .filter(principal -> principal instanceof SecurityUser)
                 .map(principal -> (SecurityUser) principal)
-                .map(securityUser -> new MemberDto(  // MemberDto 생성
+                .map(securityUser -> new UserDto(  // UserDto 생성
                         securityUser.getId(),
                         securityUser.getLoginId(),
                         securityUser.getEmail()
@@ -68,6 +67,7 @@ public class Rq {
 
         resp.addCookie(cookie);
     }
+
     public void deleteCookie(String name) {
         setCookie(name, null);
     }

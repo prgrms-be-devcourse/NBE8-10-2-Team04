@@ -1,6 +1,6 @@
-package com.back.domain.member.member.service;
+package com.back.domain.user.user.service;
 
-import com.back.domain.member.member.entity.Member;
+import com.back.domain.user.user.entity.User;
 import com.back.standard.util.Ut;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,9 +15,9 @@ public class AuthTokenService {
     @Value("${custom.accessToken.expirationSeconds}")
     private int accessTokenExpirationSeconds;
 
-    String genAccessToken(Member member) {
-        long id = member.getId();
-        String loginId = member.getLoginId();
+    String genAccessToken(User user) {
+        long id = user.getId();
+        String loginId = user.getLoginId();
 
         return Ut.jwt.toString(
                 jwtSecretKey,
