@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MissionBadgeIcon, MissionIcon, type MissionKey } from "@/app/components/icons/MissionIcons";
+import { MissionBadgeIcon, MissionIcon, type MissionKey } from "@/components/icons/MissionIcons";
 
 type MissionCard = {
   key: MissionKey;
