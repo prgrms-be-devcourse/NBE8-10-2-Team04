@@ -56,7 +56,7 @@ public class BaseInitData {
     public void createDefaultUsers() {
         // 이미 있으면 스킵, 없으면 생성
         userService.findByLoginId("user1")
-                .orElseGet(() -> userService.join("user1", "1234", "user1@test.com"));
+                .orElseGet(() -> userService.join("user1", "1234", "hhyukk1273@gmail.com"));
 
         userService.findByLoginId("user2")
                 .orElseGet(() -> userService.join("user2", "1234", "user2@test.com"));
@@ -106,6 +106,18 @@ public class BaseInitData {
                 LocalDate.of(2025, 12, 1),
                 "6m",
                 LocalDate.of(2026, 5, 30),
+                true
+        );
+
+        // 테스트용: 교체일이 오늘인 아이템 추가
+        itemService.create(
+                user1.getId(),
+                bathroom,
+                "테스트용 칫솔 (D-Day 0)",
+                "https://example.com/test-toothbrush.png",
+                LocalDate.now().minusMonths(3),  // 3개월 전에 시작
+                "3m",
+                LocalDate.now(),  // 오늘이 교체일
                 true
         );
     }

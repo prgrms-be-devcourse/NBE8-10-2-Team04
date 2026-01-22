@@ -61,6 +61,8 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+
+    implementation("org.springframework.boot:spring-boot-starter-mail") // 메일서버와 연결해서 메일을 발송하는데 필요한 라이브러리
 }
 
 tasks.withType<Test> {
