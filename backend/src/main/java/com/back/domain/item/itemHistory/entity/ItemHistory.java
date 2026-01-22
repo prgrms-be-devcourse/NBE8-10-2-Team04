@@ -8,7 +8,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
-@Entity(name = "item_histories")
+@Entity
+@Table(name = "item_histories") // 테이블명
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public class ItemHistory {
