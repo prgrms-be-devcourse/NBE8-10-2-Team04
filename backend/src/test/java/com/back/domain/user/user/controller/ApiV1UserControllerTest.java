@@ -124,9 +124,9 @@ public class ApiV1UserControllerTest {
     void t4() throws Exception {
         // 1. [준비] BaseInitData의 user1 사용 (없으면 생성)
         // 회원을 가져오는 것만으로는 토큰이 없으므로, 로그인을 해야 함
-        Member member = memberService.findByLoginId("user1")
-                .orElseGet(() -> memberService.join("user1", "1234", "user1@test.com"));
-        String originalEmail = member.getEmail();
+        User user = userService.findByLoginId("user1")
+                .orElseGet(() -> userService.join("user1", "1234", "user1@test.com"));
+        String originalEmail = user.getEmail();
         
         // 2. [준비] 로그인 API 호출하여 쿠키에 accessToken 획득
         ResultActions loginResult = mvc
@@ -166,8 +166,8 @@ public class ApiV1UserControllerTest {
 
         // 4. [검증] 응답 검증
         resultActions
-                .andExpect(handler().handlerType(ApiV1MemberController.class))
-                .andExpect(handler().methodName("updateMember"))
+                .andExpect(handler().handlerType(ApiV1UserController.class))
+                .andExpect(handler().methodName("updateUser"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("200-2"))
                 .andExpect(jsonPath("$.msg").value("회원정보가 수정되었습니다."))
@@ -176,9 +176,9 @@ public class ApiV1UserControllerTest {
                 .andExpect(jsonPath("$.data.email").value("updated@test.com"));
 
         // 5. [검증] DB에서 실제로 수정되었는지 확인
-        Member afterMember = memberService.findByLoginId("user1").orElseThrow();
-        assert !originalEmail.equals(afterMember.getEmail()) : "이메일이 수정되어야 합니다";
-        assert afterMember.getEmail().equals("updated@test.com") : "이메일이 올바르게 수정되어야 합니다";
+        User afterUser = userService.findByLoginId("user1").orElseThrow();
+        assert !originalEmail.equals(afterUser.getEmail()) : "이메일이 수정되어야 합니다";
+        assert afterUser.getEmail().equals("updated@test.com") : "이메일이 올바르게 수정되어야 합니다";
     }
 
 }
