@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -116,6 +117,68 @@ public class ApiV1UserControllerTest {
                 .andExpect(handler().methodName("me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(user.getId()));
+    }
+
+    @Test
+    @DisplayName("회원정보 수정")
+    void t4() throws Exception {
+        // 1. [준비] BaseInitData의 user1 사용 (없으면 생성)
+        // 회원을 가져오는 것만으로는 토큰이 없으므로, 로그인을 해야 함
+        Member member = memberService.findByLoginId("user1")
+                .orElseGet(() -> memberService.join("user1", "1234", "user1@test.com"));
+        String originalEmail = member.getEmail();
+        
+        // 2. [준비] 로그인 API 호출하여 쿠키에 accessToken 획득
+        ResultActions loginResult = mvc
+                .perform(
+                        post("/api/v1/user/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "loginId": "user1",
+                                            "password": "1234"
+                                        }
+                                        """.stripIndent())
+                );
+        
+        // 로그인 응답의 쿠키에서 accessToken 추출
+        jakarta.servlet.http.Cookie accessTokenCookie = loginResult
+                .andReturn()
+                .getResponse()
+                .getCookie("accessToken");
+
+        // 3. [요청] 회원정보 수정 (쿠키에 있는 토큰 사용)
+        ResultActions resultActions = mvc
+                .perform(
+                        put("/api/v1/user/modify")
+                                .with(csrf())
+                                .cookie(accessTokenCookie)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "email": "updated@test.com",
+                                            "password": "newpassword123"
+                                        }
+                                        """.stripIndent())
+                )
+                .andDo(print());
+
+        // 4. [검증] 응답 검증
+        resultActions
+                .andExpect(handler().handlerType(ApiV1MemberController.class))
+                .andExpect(handler().methodName("updateMember"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-2"))
+                .andExpect(jsonPath("$.msg").value("회원정보가 수정되었습니다."))
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data.loginId").value("user1"))
+                .andExpect(jsonPath("$.data.email").value("updated@test.com"));
+
+        // 5. [검증] DB에서 실제로 수정되었는지 확인
+        Member afterMember = memberService.findByLoginId("user1").orElseThrow();
+        assert !originalEmail.equals(afterMember.getEmail()) : "이메일이 수정되어야 합니다";
+        assert afterMember.getEmail().equals("updated@test.com") : "이메일이 올바르게 수정되어야 합니다";
     }
 
 }
