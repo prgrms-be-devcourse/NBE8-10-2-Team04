@@ -2,6 +2,7 @@ package com.back.global.security;
 
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.repository.UserRepository;
+import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
@@ -28,6 +29,7 @@ import java.util.List;
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final Rq rq;
+    private final UserService userService;
 
     @Value("${custom.jwt.secretKey}")
     private String jwtSecret;
@@ -68,42 +70,72 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 3) Authorization 헤더에서 accessToken 추출
-        String accessToken = null;
+        // 3) apiKey, accessToken 추출
+        String apiKey;
+        String accessToken;
         String headerAuthorization = rq.getHeader("Authorization", "");
 
+        // 3-1) Authorization 헤더일 때
         if (!headerAuthorization.isBlank()) {
             if (!headerAuthorization.startsWith("Bearer ")) {
                 throw new ServiceException("401-2", "Authorization 헤더가 Bearer 형식이 아닙니다.");
             }
-            accessToken = headerAuthorization.substring("Bearer ".length()).trim();
+            String[] headerAuthorizationBits = headerAuthorization.split(" ", 3);
+
+            apiKey = headerAuthorizationBits[1];
+            accessToken = headerAuthorizationBits.length == 3 ? headerAuthorizationBits[2] : "";
         } else {
+            // 3-2) 쿠키일 때
+            apiKey = rq.getCookieValue("apiKey", "");
             accessToken = rq.getCookieValue("accessToken", "");
         }
 
-        // accessToken이 없으면 통과 (익명 요청)
-        if (accessToken == null || accessToken.isBlank()) {
+        // apikey, accessToken이 모두 없으면 통과 (익명 요청)
+        boolean isApiKeyExists = !apiKey.isBlank();
+        boolean isAccessTokenExists = !accessToken.isBlank();
+        if (!isApiKeyExists && !isAccessTokenExists) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 4) accessToken 검증 및 파싱
-        Claims claims = Ut.jwt.payload(jwtSecret, accessToken);
-        if (claims == null) {
-            throw new ServiceException("401-1", "유효하지 않은 토큰입니다.");
+        // 4) accessToken, apiKey 둘 중 하나라도 있다면 인증/인가 수행
+        User user = null;
+
+        // 4-1) accessToken 우선 검증 및 파싱
+        boolean isAccessTokenValid = false;
+        if (isAccessTokenExists) {
+            Claims claims = Ut.jwt.payload(jwtSecret, accessToken);
+            if (claims != null) {
+                // 5) 토큰에서 회원 ID 추출
+                Long id = claims.get("id", Long.class);
+                String loginId = claims.get("loginId", String.class);
+
+                // 클레임 유효성 검사
+                if (id == null || loginId == null) {
+                    throw new ServiceException("401-1", "토큰 클레임이 올바르지 않습니다.");
+                }
+
+                // DB에서 실제 회원 조회
+                user = userRepository.findById(id)
+                        .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 회원입니다."));
+
+                isAccessTokenValid = true;
+            }
         }
 
-        // 5) 토큰에서 회원 ID 추출
-        Long id = claims.get("id", Long.class);
-        String loginId = claims.get("loginId", String.class);
-
-        if (id == null || loginId == null) {
-            throw new ServiceException("401-1", "토큰 클레임이 올바르지 않습니다.");
+        // 4-2) accessToken이 없으면 apiKey 탐색
+        if (user == null) {
+            user = userService.findByApiKey(apiKey)
+                    .orElseThrow(() -> new ServiceException("401-3", "API 키가 유효하지 않습니다."));
         }
 
-        // 6) DB에서 실제 회원 조회
-        User user = userRepository.findById(id)  //
-                .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 회원입니다."));
+        // accessToken이 만료되었거나 유효하지 않다면 apiKey를 통해서 재발급
+        if (isAccessTokenExists && !isAccessTokenValid) {
+            String userAccessToken = userService.genAccessToken(user);
+
+            rq.setCookie("accessToken", userAccessToken);
+            rq.setHeader("Authorization", userAccessToken);
+        }
 
         // 7) accessToken이 만료되었는지 확인 (선택적 - 만료 시간 체크)
         // 현재는 토큰이 유효하면 통과, 만료되면 위에서 이미 null 반환됨
@@ -126,6 +158,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                         securityUser.getAuthorities())
         );
 
+        // 10) 다음 필터로 넘김
         filterChain.doFilter(request, response);
     }
 }
