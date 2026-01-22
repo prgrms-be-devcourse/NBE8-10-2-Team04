@@ -1,5 +1,7 @@
 package com.back.global.security;
 
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.repository.UserRepository;
 import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
@@ -20,13 +22,18 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+
 @Component
 @RequiredArgsConstructor
 public class CustomAuthenticationFilter extends OncePerRequestFilter {
+    private final UserRepository userRepository;
     private final Rq rq;
 
     @Value("${custom.jwt.secretKey}")
     private String jwtSecret;
+
+    @Value("${custom.accessToken.expirationSeconds}")
+    private int accessTokenExpirationSeconds;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -51,64 +58,74 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 2) 인증/인가가 필요없는 API 요청 패스 (TODO: 실제 경로로 수정)
+        // 2) 인증/인가가 필요없는 API 요청 패스
         if (List.of(
-                "/api/v1/member/login",
-                "/api/v1/member/logout",
-                "/api/v1/member/join"
+                "/api/v1/user/login",
+                "/api/v1/user/signup",
+                "/api/v1/user/refresh"
         ).contains(request.getRequestURI())) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 3) accessToken 추출(헤더 우선, 없으면 쿠키)
-        String accessToken;
+        // 3) Authorization 헤더에서 accessToken 추출
+        String accessToken = null;
         String headerAuthorization = rq.getHeader("Authorization", "");
 
         if (!headerAuthorization.isBlank()) {
-            if (!headerAuthorization.startsWith("Bearer "))
+            if (!headerAuthorization.startsWith("Bearer ")) {
                 throw new ServiceException("401-2", "Authorization 헤더가 Bearer 형식이 아닙니다.");
-
+            }
             accessToken = headerAuthorization.substring("Bearer ".length()).trim();
         } else {
             accessToken = rq.getCookieValue("accessToken", "");
         }
 
-        // accessToken 없으면 통과(이후 SecurityConfig의 authenticated가 막을 것)
-        if (accessToken.isBlank()) {
+        // accessToken이 없으면 통과 (익명 요청)
+        if (accessToken == null || accessToken.isBlank()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 4) JWT 검증/파싱 (Claims)
+        // 4) accessToken 검증 및 파싱
         Claims claims = Ut.jwt.payload(jwtSecret, accessToken);
         if (claims == null) {
             throw new ServiceException("401-1", "유효하지 않은 토큰입니다.");
         }
 
-        // 5) SecurityContext 주입 (Member 엔티티 기준: id, loginid, email)
+        // 5) 토큰에서 회원 ID 추출
         Long id = claims.get("id", Long.class);
-        String loginid = claims.get("loginid", String.class);
-        String email = claims.get("email", String.class);
+        String loginId = claims.get("loginId", String.class);
 
-        if (id == null || loginid == null) {
+        if (id == null || loginId == null) {
             throw new ServiceException("401-1", "토큰 클레임이 올바르지 않습니다.");
         }
 
-        UserDetails user = new SecurityUser(
-                id,
-                loginid,
-                "",     // 토큰 인증에서는 비번 검증 안 함
-                email,
+        // 6) DB에서 실제 회원 조회
+        User user = userRepository.findById(id)  //
+                .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 회원입니다."));
+
+        // 7) accessToken이 만료되었는지 확인 (선택적 - 만료 시간 체크)
+        // 현재는 토큰이 유효하면 통과, 만료되면 위에서 이미 null 반환됨
+
+        // 8) accessToken이 유효하지만 만료 시간이 가까우면 새로 발급 (선택적)
+        // 필요시 토큰 만료 시간을 체크하여 재발급할 수 있음
+        // 현재는 토큰이 유효하면 그대로 사용
+
+        // 9) SecurityContext에 인증 정보 주입
+        UserDetails securityUser = new SecurityUser(
+                user.getId(),
+                user.getLoginId(),
+                "",
+                user.getEmail() != null ? user.getEmail() : "",
                 List.of() // 권한 없으면 빈 리스트
         );
 
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(user, user.getPassword(), user.getAuthorities())
+                new UsernamePasswordAuthenticationToken(securityUser, securityUser.getPassword(),
+                        securityUser.getAuthorities())
         );
 
         filterChain.doFilter(request, response);
-
-        // TODO(다음 단계): refresh(apiKey)로 사용자 조회 + accessToken 재발급
     }
 }

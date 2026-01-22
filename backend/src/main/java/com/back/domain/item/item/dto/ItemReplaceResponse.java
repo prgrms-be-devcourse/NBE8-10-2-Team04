@@ -1,0 +1,29 @@
+package com.back.domain.item.item.dto;
+
+import com.back.domain.item.item.entity.Item;
+
+import java.time.LocalDate;
+
+public record ItemReplaceResponse(
+        Long id,
+        Long userId,
+        Long categoryId,
+        String name,
+        String imgUrl,
+        LocalDate startDate,
+        String cycleDays,
+        LocalDate nextReplacementDate
+) {
+    public ItemReplaceResponse(Item item) {
+        this(
+                item.getId(),
+                item.getUser().getId(),
+                item.getCategory() == null ? null : item.getCategory().getId(),
+                item.getName(),
+                item.getImgUrl(),
+                item.getStartDate(),
+                item.getCycleDays(),
+                item.getNextReplacementDate()
+        );
+    }
+}

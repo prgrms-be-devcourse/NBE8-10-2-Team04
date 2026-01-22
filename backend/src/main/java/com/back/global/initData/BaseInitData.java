@@ -3,6 +3,9 @@ package com.back.global.initData;
 import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.service.CategoryService;
 import com.back.domain.item.item.service.ItemService;
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.service.UserService;
+import com.back.global.app.AppConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -22,11 +25,13 @@ public class BaseInitData {
 
     private final CategoryService categoryService;
     private final ItemService itemService;
+    private final UserService userService;
 
     @Bean
     ApplicationRunner baseInitDataApplicationRunner() {
         return args -> {
             self.createDefaultCategory();
+            self.createDefaultUsers();
             self.initItems();
         };
     }
@@ -48,13 +53,23 @@ public class BaseInitData {
     }
 
     @Transactional
+    public void createDefaultUsers() {
+        // 이미 있으면 스킵, 없으면 생성
+        userService.findByLoginId("user1")
+                .orElseGet(() -> userService.join("user1", "1234", "user1@test.com"));
+
+        userService.findByLoginId("user2")
+                .orElseGet(() -> userService.join("user2", "1234", "user2@test.com"));
+    }
+
+    @Transactional
     public void initItems() {
         // 이미 아이템이 있으면 스킵
         if (itemService.count() > 0) return;
 
-        // TODO: User 엔티티 붙으면 userId 대신 memberId/user 엔티티로 교체
-        Long user1 = 1L;
-        Long user2 = 2L;
+        // TODO: User 엔티티 붙으면 userId 대신 userId/user 엔티티로 교체
+        User user1 = userService.findByLoginId("user1").orElseThrow();
+        User user2 = userService.findByLoginId("user2").orElseThrow();
 
         Category bathroom = categoryService.findByName("욕실").orElseThrow();
         Category kitchen = categoryService.findByName("주방").orElseThrow();
@@ -62,7 +77,7 @@ public class BaseInitData {
 
 
         itemService.create(
-                user1,
+                user1.getId(),
                 bathroom,
                 "칫솔",
                 "https://example.com/toothbrush.png",
@@ -73,7 +88,7 @@ public class BaseInitData {
         );
 
         itemService.create(
-                user1,
+                user1.getId(),
                 kitchen,
                 "수세미",
                 "https://example.com/sponge.png",
@@ -84,7 +99,7 @@ public class BaseInitData {
         );
 
         itemService.create(
-                user2,
+                user2.getId(),
                 car,
                 "엔진오일",
                 "https://example.com/engineoil.png",
@@ -93,5 +108,13 @@ public class BaseInitData {
                 LocalDate.of(2026, 5, 30),
                 true
         );
+    }
+
+    @Transactional
+    public void work1() {
+        if (userService.count() > 0) return;
+
+        User user1 = userService.join("user1", "1234", "유저1");
+        if (AppConfig.isNotProd()) user1.modifyApiKey(user1.getLoginId());
     }
 }

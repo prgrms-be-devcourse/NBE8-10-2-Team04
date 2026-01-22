@@ -8,21 +8,23 @@ import java.time.temporal.ChronoUnit;
 public record ItemSummaryResponse(
         Long id,
         String name,
+        String categoryName,
         LocalDate nextReplacementDate,
         String imgUrl,
         long dDay,
-        boolean isActive
+        Boolean isActive
 ) {
     public ItemSummaryResponse(Item item) {
         this(
                 item.getId(),
                 item.getName(),
+                item.getCategory() == null ? null : item.getCategory().getName(),
                 item.getNextReplacementDate(),
                 item.getImgUrl(),
                 item.getNextReplacementDate() == null
                         ? 0
                         : ChronoUnit.DAYS.between(LocalDate.now(), item.getNextReplacementDate()),
-                item.getIsActive() != null && item.getIsActive()
+                item.getIsActive()
         );
     }
 }

@@ -3,15 +3,19 @@ package com.back.global.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final CustomAuthenticationFilter CustomAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -25,6 +29,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/v1/user/signup", "/api/v1/user/login").permitAll()
                                 // ✅ (개발용) 아이템만 임시 허용
                                 .requestMatchers("/api/v1/items/**").permitAll()
+                                // ✅ (개발용) 카테고리 임시 허용
+                                .requestMatchers("/api/v1/categories/**").permitAll()
 
                                 // 기타 api 요청은 인가 필요 -> 로그인하지 않으면 제한
                                 .requestMatchers("/api/*/**").authenticated()
@@ -40,6 +46,7 @@ public class SecurityConfig {
                         // CSRF 비활성화
                         AbstractHttpConfigurer::disable
                 )
+                .addFilterBefore(CustomAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         ;
 
         return http.build();
