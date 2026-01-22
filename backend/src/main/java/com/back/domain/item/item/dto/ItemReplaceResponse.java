@@ -17,7 +17,7 @@ public record ItemReplaceResponse(
     public ItemReplaceResponse(Item item) {
         this(
                 item.getId(),
-                item.getUserId(),
+                item.getUser().getId(),
                 item.getCategory().getId(),
                 item.getName(),
                 item.getImgUrl(),

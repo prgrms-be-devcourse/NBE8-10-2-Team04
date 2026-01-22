@@ -8,6 +8,8 @@ import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
 import com.back.domain.item.itemHistory.service.ItemHistoryService;
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class ItemService {
+    private final UserService userService;
     private final ItemHistoryService itemHistoryService;
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
@@ -69,6 +72,12 @@ public class ItemService {
         return itemRepository.count();
     }
 
+    // userId로 User 조회
+    private User findUserOrThrow(Long userId) {
+        return userService.findById(userId)
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 유저입니다."));
+    }
+
     @Transactional
     public Item create(
             Long userId,
@@ -80,8 +89,9 @@ public class ItemService {
             LocalDate nextReplacementDate,
             Boolean isActive
     ) {
+        User user = findUserOrThrow(userId);
         Item item = new Item(
-                userId, category, name, imgUrl,
+                user, category, name, imgUrl,
                 startDate, cycleDays, nextReplacementDate, isActive
         );
 
