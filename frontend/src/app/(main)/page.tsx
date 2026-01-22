@@ -28,7 +28,7 @@ type ItemSummaryApi = {
   categoryName: string | null;
   nextReplacementDate: string | null; // LocalDate -> "YYYY-MM-DD"
   imgUrl: string | null;
-  dDay: number; // ChronoUnit.DAYS.between(now, nextReplacementDate)
+  dDay: number;
   isActive: boolean;
 };
 
@@ -38,6 +38,8 @@ type RsData<T> = {
   msg: string;
   data: T;
 };
+
+const API_BASE = "http://localhost:8080";
 
 const COLOR = {
   red: {
@@ -102,19 +104,36 @@ export default function Page() {
         setIsLoading(true);
         setLoadError(null);
 
-        const res = await fetch("http://localhost:8080/api/v1/items", { method: "GET" });
+        // 1) 로그인 체크: /api/v1/user/me
+        const meRes = await fetch(`${API_BASE}/api/v1/user/me`, {
+          method: "GET",
+          credentials: "include", // ✅ 쿠키 보내기
+        });
+
+        if (!meRes.ok) {
+          // 로그인 안 된 상태면 메인에서 로그인 페이지로 보내기
+          router.replace("/login");
+          return;
+        }
+
+        // 2) 로그인 된 경우에만 아이템 호출
+        const res = await fetch(`${API_BASE}/api/v1/items`, {
+          method: "GET",
+          credentials: "include", // ✅ 이것도 꼭 필요
+        });
+
         if (!res.ok) throw new Error(`items load failed: ${res.status}`);
 
         const json = (await res.json()) as RsData<ItemSummaryApi[]>;
         const items = json?.data ?? [];
 
         const missions: TodayMission[] = items
-          .filter((it) => it.isActive !== false) // 활성 아이템만
-          .filter((it) => it.dDay <= 7) // D-7 이하
+          .filter((it) => it.isActive !== false)
+          .filter((it) => it.dDay <= 7)
           .map((it) => ({
             id: String(it.id),
             title: it.name,
-            category: it.categoryName ?? "", 
+            category: it.categoryName ?? "",
             desc: it.dDay >= 0 ? `교체까지 ${it.dDay}일 남음` : `교체일 ${Math.abs(it.dDay)}일 지남`,
             dueText: it.nextReplacementDate ?? "-",
             dDay: it.dDay,
@@ -127,7 +146,7 @@ export default function Page() {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-[#070a12] text-white">
