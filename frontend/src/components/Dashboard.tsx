@@ -1,6 +1,6 @@
 import { User, Package, History, Grid, LogOut, UserCircle } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Button } from '@/app/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface DashboardProps {
   user: { name: string; email: string } | null;
