@@ -69,7 +69,7 @@ public class ApiV1UserController {
     }
 
     record UserLoginResBody(
-            UserDto item,
+            UserDto userDto,
             String apiKey,
             String accessToken
     ) {
