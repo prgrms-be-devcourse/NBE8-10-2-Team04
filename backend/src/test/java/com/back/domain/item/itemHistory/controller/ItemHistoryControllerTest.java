@@ -4,7 +4,6 @@ import com.back.domain.item.itemHistory.dto.ItemAllHistoryResponse;
 import com.back.domain.item.itemHistory.service.ItemHistoryService;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,11 +37,12 @@ public class ItemHistoryControllerTest {
     @DisplayName("전체 아이템 이력 조회")
     void getAllItemHistories_success() throws Exception {
         User user = userService.findByLoginId("user1").get();
+        String apiKey = user.getApiKey();
 
         ResultActions resultActions = mvc
                 .perform(
                         get("/api/v1/items/histories")
-                                .cookie(new Cookie("apiKey", user.getApiKey()))
+                                .header("Authorization", "Bearer " + apiKey)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print());
