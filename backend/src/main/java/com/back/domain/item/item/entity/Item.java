@@ -1,6 +1,7 @@
 package com.back.domain.item.item.entity;
 
 import com.back.domain.category.category.entity.Category;
+import com.back.domain.item.itemHistory.entity.ItemHistory;
 import com.back.domain.user.user.entity.User;
 import com.back.global.exception.ServiceException;
 import jakarta.persistence.*;
@@ -9,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 
 @Getter
@@ -37,6 +39,9 @@ public class Item {
     private LocalDate nextReplacementDate;
 
     private Boolean isActive;
+
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true) // item(1) : item_history(N)
+    List<ItemHistory> itemHistories;
 
     public Item(
             User user,
