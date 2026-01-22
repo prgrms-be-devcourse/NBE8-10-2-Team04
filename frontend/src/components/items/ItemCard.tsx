@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Box, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -21,7 +22,7 @@ function dDayLabel(dDay: number) {
 }
 
 function dDayBadgeClass(isActive: boolean) {
-  // 너 스샷 기준: 활성은 초록, 비활성은 흐린 회색
+  // 활성은 초록, 비활성은 흐린 회색
   if (!isActive) return "bg-white/15 text-white/70";
   return "bg-green-500/90 text-white";
 }
@@ -39,11 +40,20 @@ export function ItemCard({
   onDelete: (id: number) => void;
   onEdit: (id: number) => void;
 }) {
+  const router = useRouter();
   const disabled = !item.isActive;
 
-  return (
+  const goDetail = () => router.push(`/items/${item.id}`);
+
+return (
     <div
-      className={`rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${
+      role="button"
+      tabIndex={0}
+      onClick={goDetail}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") goDetail();
+      }}
+      className={`cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${
         disabled ? "opacity-70" : ""
       }`}
     >
@@ -79,7 +89,6 @@ export function ItemCard({
 
       {/* 날짜 */}
       <div className="mt-3 space-y-1 text-xs text-white/60">
-        {/* 목록 DTO에 lastReplacementDate가 없어서 '-' 처리 */}
         <div>
           최근 교체일: <span className="text-white/80">-</span>
         </div>
@@ -91,7 +100,11 @@ export function ItemCard({
 
       {/* 토글 + 수정/삭제 */}
       <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <div
+          className="flex items-center gap-2"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <span className="text-xs text-white/70">활성화</span>
           <Switch
             checked={item.isActive}
@@ -99,7 +112,11 @@ export function ItemCard({
           />
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-white/70">
+        <div
+          className="flex items-center gap-3 text-xs text-white/70"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
           <button
             onClick={() => onEdit(item.id)}
             className="inline-flex items-center gap-1 hover:text-white"
@@ -121,7 +138,7 @@ export function ItemCard({
       </div>
 
       {/* 교체 버튼 */}
-      <div className="mt-4">
+      <div className="mt-4" onClick={(e) => e.stopPropagation()}>
         <Button
           className={`h-9 w-full rounded-md font-semibold ${
             disabled

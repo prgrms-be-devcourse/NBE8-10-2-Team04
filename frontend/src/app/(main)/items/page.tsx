@@ -98,43 +98,20 @@ export default function Page() {
 
   // 교체: PUT /api/v1/items/{id}/replace → 성공하면 목록 다시 불러오기
   const handleReplace = async (id: number) => {
-    try {
-      const res = await fetch(`/api/v1/items/${id}/replace`, {
-        method: "PUT",
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error();
-
-      const data = await fetchItems(selectedCategoryId);
-      setItems(data);
-    } catch {
-      alert("교체 실패");
-    }
+    // TODO : 교체
   };
 
   // 삭제: DELETE /api/v1/items/{id}
   const handleDelete = async (id: number) => {
     if (!confirm("삭제할까요?")) return;
 
-    try {
-      const res = await fetch(`/api/v1/items/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error();
-
-      // 낙관적 업데이트
-      setItems((prev) => prev.filter((i) => i.id !== id));
-    } catch {
-      alert("삭제 실패");
-    }
+    // TODO : 삭제
   };
 
   // ✅ 수정 (일단 알림)
   const handleEdit = (id: number) => {
     alert(`수정 클릭: ${id}`);
+    // TODO: 수정 모달
   };
 
   // ✅ isActive 토글은 지금 백에 API가 없으니 UI만 반영(원하면 버튼 숨겨도 됨)
