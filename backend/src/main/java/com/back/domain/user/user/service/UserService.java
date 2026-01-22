@@ -3,6 +3,9 @@ package com.back.domain.user.user.service;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.repository.UserRepository;
 import com.back.global.exception.ServiceException;
+import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -64,5 +67,20 @@ public class UserService {
 
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
+    }
+
+    @Transactional
+    public User updateUser(
+            long id,
+            @NotBlank @Size(min = 2, max = 30) String email,
+            @NotBlank @Size(min = 2, max = 20) String password)
+    {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        String encodedPassword = passwordEncoder.encode(password);
+        user.modifyUser(email, encodedPassword);
+
+        return user;
     }
 }

@@ -1,6 +1,8 @@
 package com.back.domain.user.user.controller;
 
 import com.back.domain.user.user.dto.UserDto;
+import com.back.domain.user.user.dto.UserUpdateRequest;
+import com.back.domain.user.user.dto.UserUpdateResponse;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
@@ -156,5 +158,32 @@ public class ApiV1UserController {
                 "200-1",
                 "로그아웃 되었습니다."
         );
+    }
+
+    @PutMapping("/modify")
+    public RsData<UserUpdateResponse> updateUser(
+            @Valid @RequestBody UserUpdateRequest request
+    ) {
+        UserDto actor = rq.getActor();
+
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        User updatedUser = userService.updateUser(
+                actor.id(),
+                request.email(),
+                request.password()
+        );
+
+        String newAccessToken = userService.genAccessToken(updatedUser);
+        rq.setCookie("accessToken", newAccessToken);
+
+        return new RsData<>(
+                "200-2",
+                "회원정보가 수정되었습니다.",
+                new UserUpdateResponse(updatedUser)
+        );
+
     }
 }
