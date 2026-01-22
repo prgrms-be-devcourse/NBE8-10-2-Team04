@@ -4,6 +4,7 @@ import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -177,8 +178,8 @@ public class ApiV1UserControllerTest {
 
         // 5. [검증] DB에서 실제로 수정되었는지 확인
         User afterUser = userService.findByLoginId("user1").orElseThrow();
-        assert !originalEmail.equals(afterUser.getEmail()) : "이메일이 수정되어야 합니다";
-        assert afterUser.getEmail().equals("updated@test.com") : "이메일이 올바르게 수정되어야 합니다";
+        assertNotEquals(originalEmail, afterUser.getEmail(), "이메일이 수정되어야 합니다");
+        assertEquals("updated@test.com", afterUser.getEmail(), "이메일이 올바르게 수정되어야 합니다");
     }
 
 }
