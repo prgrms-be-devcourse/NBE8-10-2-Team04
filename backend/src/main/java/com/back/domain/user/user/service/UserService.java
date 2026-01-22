@@ -81,6 +81,6 @@ public class UserService {
         String encodedPassword = passwordEncoder.encode(password);
         user.modifyUser(email, encodedPassword);
 
-        return userRepository.save(user);
+        return user;
     }
 }
