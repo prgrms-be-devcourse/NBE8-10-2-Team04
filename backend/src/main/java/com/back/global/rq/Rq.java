@@ -1,8 +1,8 @@
 package com.back.global.rq;
 
-import com.back.domain.member.member.entity.Member;
-import com.back.domain.member.member.dto.MemberDto;
-import com.back.domain.member.member.service.MemberService;
+import com.back.domain.user.user.dto.UserDto;
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
 import com.back.global.security.SecurityUser;
 import jakarta.servlet.http.Cookie;
@@ -14,7 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -22,9 +21,9 @@ import java.util.Optional;
 public class Rq {
     private final HttpServletRequest req;
     private final HttpServletResponse resp;
-    private final MemberService memberService;
+    private final UserService userService;
 
-    public MemberDto getActor() {
+    public UserDto getActor() {
         return Optional.ofNullable(
                         SecurityContextHolder
                                 .getContext()
@@ -34,7 +33,7 @@ public class Rq {
                 .map(Authentication::getPrincipal)
                 .filter(principal -> principal instanceof SecurityUser)
                 .map(principal -> (SecurityUser) principal)
-                .map(securityUser -> new MemberDto(  // MemberDto 생성
+                .map(securityUser -> new UserDto(  // UserDto 생성
                         securityUser.getId(),
                         securityUser.getLoginId(),
                         securityUser.getEmail()
@@ -72,7 +71,6 @@ public class Rq {
 
         resp.addCookie(cookie);
     }
-
     public void deleteCookie(String name) {
         setCookie(name, null);
     }
@@ -99,8 +97,8 @@ public class Rq {
     }
 
     // SecurityContext에서 현재 로그인한 회원 조회
-    public Optional<Member> getMember() {
+    public Optional<User> getMember() {
         Long id = getMemberId();
-        return memberService.findById(id);
+        return userService.findById(id);
     }
 }

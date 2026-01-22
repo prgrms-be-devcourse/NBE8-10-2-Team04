@@ -18,8 +18,8 @@ public record ItemUpdateResponse(
     public ItemUpdateResponse(Item item) {
         this(
                 item.getId(),
-                item.getUserId(),
-                item.getCategory().getId(),
+                item.getUser().getId(),
+                item.getCategory() == null ? null : item.getCategory().getId(),
                 item.getName(),
                 item.getImgUrl(),
                 item.getStartDate(),

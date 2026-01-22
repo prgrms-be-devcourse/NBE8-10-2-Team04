@@ -1,8 +1,8 @@
 package com.back.global.security;
 
-import com.back.domain.member.member.entity.Member;
-import com.back.domain.member.member.repository.MemberRepository;
-import com.back.domain.member.member.service.MemberService;
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.repository.UserRepository;
+import com.back.domain.user.user.service.UserService;
 import com.back.standard.util.Ut;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
@@ -35,10 +35,10 @@ class SecurityIntegrationTest {
     private MockMvc mvc;
 
     @Autowired
-    private MemberService memberService;
+    private UserService userService;
 
     @Autowired
-    private MemberRepository memberRepository;
+    private UserRepository userRepository;
 
     @Value("${custom.jwt.secretKey}")
     private String jwtSecret;
@@ -94,7 +94,7 @@ class SecurityIntegrationTest {
     @DisplayName("테스트 3: 인증 불필요한 엔드포인트는 토큰 없이 접근 가능")
     void t3_publicEndpointAccessWithoutToken() throws Exception {
         // Given
-        Member member = memberService.join("testuser", "1234", "test@test.com");
+        User user = userService.join("testuser", "1234", "test@test.com");
 
         // When
         ResultActions resultActions = mvc.perform(
@@ -171,12 +171,12 @@ class SecurityIntegrationTest {
     @DisplayName("테스트 6: 유효한 JWT 토큰으로 인증 성공")
     void t6_validJwtTokenAuthenticationSuccess() throws Exception {
         // Given
-        Member member = memberService.join("testuser", "1234", "test@test.com");
+        User user = userService.join("testuser", "1234", "test@test.com");
 
         Map<String, Object> claims = Map.of(
-                "id", member.getId(),
-                "loginId", member.getLoginId(),
-                "email", member.getEmail() != null ? member.getEmail() : ""
+                "id", user.getId(),
+                "loginId", user.getLoginId(),
+                "email", user.getEmail() != null ? user.getEmail() : ""
         );
 
         String accessToken = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims);
@@ -207,7 +207,7 @@ class SecurityIntegrationTest {
     // ============================================
     @Test
     @DisplayName("테스트 7: 존재하지 않는 회원 ID로 토큰 생성 시 401")
-    void t7_nonexistentMemberIdReturns401() throws Exception {
+    void t7_nonexistentUserIdReturns401() throws Exception {
         // Given - 존재하지 않는 회원 ID로 토큰 생성
         Map<String, Object> claims = Map.of(
                 "id", 99999L,
@@ -270,12 +270,12 @@ class SecurityIntegrationTest {
     @DisplayName("테스트 9: 쿠키에서 accessToken 추출")
     void t9_accessTokenFromCookie() throws Exception {
         // Given
-        Member member = memberService.join("testuser", "1234", "test@test.com");
+        User user = userService.join("testuser", "1234", "test@test.com");
 
         Map<String, Object> claims = Map.of(
-                "id", member.getId(),
-                "loginId", member.getLoginId(),
-                "email", member.getEmail() != null ? member.getEmail() : ""
+                "id", user.getId(),
+                "loginId", user.getLoginId(),
+                "email", user.getEmail() != null ? user.getEmail() : ""
         );
 
         String accessToken = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims);
@@ -332,7 +332,7 @@ class SecurityIntegrationTest {
      * TODO: 테스트 13 - 실제 보호된 엔드포인트 테스트
      * - SecurityConfig에서 authenticated()로 설정된 엔드포인트
      * - 토큰 없이 접근 시 Spring Security가 401 반환하는지 확인
-     * - 예: GET /api/v1/member/me 같은 엔드포인트
+     * - 예: GET /api/v1/user/me 같은 엔드포인트
      *
      * TODO: 테스트 14 - SecurityContext 인증 정보 검증
      * - 필터 통과 후 SecurityContext에 SecurityUser가 제대로 주입되었는지 확인

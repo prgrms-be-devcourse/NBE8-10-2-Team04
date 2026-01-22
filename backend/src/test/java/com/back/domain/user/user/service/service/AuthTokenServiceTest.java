@@ -1,5 +1,6 @@
-package com.back.domain.member.member.service;
+package com.back.domain.user.user.service.service;
 
+import com.back.domain.user.user.service.AuthTokenService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.DisplayName;
@@ -10,7 +11,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
@@ -29,13 +29,15 @@ public class AuthTokenServiceTest {
     void t1() {
         assertThat(authTokenService).isNotNull();
     }
+
     @Test
     @DisplayName("jjwt 최신 방식으로 JWT 생성, {name=\"Paul\", age=23}")
     void t2() {
         // 토큰 만료기간: 1년
         long expireMillis = 1000L * 60 * 60 * 24 * 365;
 
-        byte[] keyBytes = "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890".getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes =
+                "abcdefghijklmnopqrstuvwxyz1234567890abcdefghijklmnopqrstuvwxyz1234567890".getBytes(StandardCharsets.UTF_8);
         SecretKey secretKey = Keys.hmacShaKeyFor(keyBytes);
 
         // 발행 시간과 만료 시간 설정

@@ -107,7 +107,7 @@ public class ItemControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("200"))
                 .andExpect(jsonPath("$.msg").value("아이템 수정 성공"))
                 .andExpect(jsonPath("$.data.id").value(item.getId()))
-                .andExpect(jsonPath("$.data.userId").value(item.getUserId()))
+                .andExpect(jsonPath("$.data.userId").value(item.getUser().getId()))
                 .andExpect(jsonPath("$.data.categoryId").value(item.getCategory().getId()))
                 .andExpect(jsonPath("$.data.name").value(item.getName()))
                 .andExpect(jsonPath("$.data.imgUrl").value(item.getImgUrl()))
