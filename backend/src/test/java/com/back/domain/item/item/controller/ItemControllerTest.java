@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -38,17 +39,67 @@ public class ItemControllerTest {
     }
 
     @Test
+    @DisplayName("아이템 단건 조회")
+    void getItem_success() throws Exception {
+        User user = userService.findByLoginId("user1").get();
+        Long id = 1L;
+        Item item = itemService.findById(id).get();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/v1/items/" + id)
+                                .header("Authorization", getAuthHeader(user))
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("getItem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("아이템 단건 조회 성공"))
+                .andExpect(jsonPath("$.data.id").value(item.getId()))
+                .andExpect(jsonPath("$.data.userId").value(user.getId()))
+                .andExpect(jsonPath("$.data.categoryName").value(item.getCategory().getName()))
+                .andExpect(jsonPath("$.data.dDay").value(ChronoUnit.DAYS.between(LocalDate.now(),
+                        item.getNextReplacementDate())));
+    }
+
+    @Test
+    @DisplayName("아이템 단건 조회 - 없는 아이템")
+    void getItem_itemNotFound() throws Exception {
+        User user = userService.findByLoginId("user1").get();
+        Long id = 99L;
+
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/v1/items/" + id)
+                                .header("Authorization", getAuthHeader(user))
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("getItem"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.resultCode").value("404-1"))
+                .andExpect(jsonPath("$.msg").value("존재하지 않는 아이템입니다."));
+    }
+
+
+    @Test
     @DisplayName("아이템 교체")
     void replaceItem_success() throws Exception {
         User user = userService.findByLoginId("user1").get();
-        String apiKey = user.getApiKey();
         Long id = 1L;
         Item item = itemService.findById(id).get();
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/%d/replace".formatted(id))
-                                .header("Authorization", "Bearer " + apiKey)
+                                .header("Authorization", getAuthHeader(user))
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print());
@@ -67,13 +118,12 @@ public class ItemControllerTest {
     @DisplayName("아이템 교체 - 작성자가 아닐 때")
     void replaceItem_notOwner() throws Exception {
         User user = userService.findByLoginId("user2").get();
-        String apiKey = user.getApiKey();
         Long id = 1L;
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/%d/replace".formatted(id))
-                                .header("Authorization", "Bearer " + apiKey)
+                                .header("Authorization", getAuthHeader(user))
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print());
@@ -90,14 +140,13 @@ public class ItemControllerTest {
     @DisplayName("아이템 수정")
     void modifyItem_success() throws Exception {
         User user = userService.findByLoginId("user1").get();
-        String apiKey = user.getApiKey();
         Long id = 1L;
         Item item = itemService.findById(id).get();
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/" + id)
-                                .header("Authorization", "Bearer " + apiKey)
+                                .header("Authorization", getAuthHeader(user))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -132,13 +181,12 @@ public class ItemControllerTest {
     @DisplayName("아이템 수정 - 작성자가 아닐 때")
     void modifyItem_notOwner() throws Exception {
         User user = userService.findByLoginId("user2").get();
-        String apiKey = user.getApiKey();
         Long id = 1L;
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/" + id)
-                                .header("Authorization", "Bearer " + apiKey)
+                                .header("Authorization", getAuthHeader(user))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -164,13 +212,12 @@ public class ItemControllerTest {
     @DisplayName("아이템 수정 - 존재하지 않는 카테고리")
     void modifyItem_categoryNotFound() throws Exception {
         User user = userService.findByLoginId("user1").get();
-        String apiKey = user.getApiKey();
         Long id = 1L;
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/" + id)
-                                .header("Authorization", "Bearer " + apiKey)
+                                .header("Authorization", getAuthHeader(user))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -197,13 +244,12 @@ public class ItemControllerTest {
     @DisplayName("아이템 수정 - 유효하지 않은 주기 입력")
     void modifyItem_InvalidCycleDate() throws Exception {
         User user = userService.findByLoginId("user1").get();
-        String apiKey = user.getApiKey();
         Long id = 1L;
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/" + id)
-                                .header("Authorization", "Bearer " + apiKey)
+                                .header("Authorization", getAuthHeader(user))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
