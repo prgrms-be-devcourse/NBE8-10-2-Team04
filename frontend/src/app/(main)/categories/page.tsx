@@ -43,7 +43,7 @@ type CategoryUI = {
 function getIndexById(id: number | string, length: number) {
   const n = Number(id);
   if (Number.isNaN(n)) return 0;
-  return (n - 1) % length; 
+  return (n - 1) % length;
 }
 
 const COLOR_PALETTE = [
