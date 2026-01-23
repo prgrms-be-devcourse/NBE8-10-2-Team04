@@ -1,4 +1,16 @@
 spring:
+  mail:
+    host: smtp.gmail.com # SMTP 서버 호스트
+    port: 587 # SMTP 서버 포트
+    username: flsemfur # SMTP 서버 로그인 아이디: 발신자
+    password: jkmdohrfdwsrivhw # SMTP 서버 로그인 패스워드
+    properties:
+      mail:
+        smtp:
+          auth: true # 사용자 인증 시도 여부
+          timeout: 5000 # Socket Read Timeout 시간(ms)
+          starttls:
+            enable: true # StartTLS 활성화 여부
   application:
     name: back
   profiles:

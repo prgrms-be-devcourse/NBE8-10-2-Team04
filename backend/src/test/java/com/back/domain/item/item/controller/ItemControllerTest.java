@@ -2,6 +2,8 @@ package com.back.domain.item.item.controller;
 
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,18 +30,21 @@ public class ItemControllerTest {
     private MockMvc mvc;
     @Autowired
     private ItemService itemService;
+    @Autowired
+    private UserService userService;
 
     @Test
     @DisplayName("아이템 교체")
     void replaceItem_success() throws Exception {
-        // todo: User 객체로 변경
-        Long userId = 1L;
+        User user = userService.findByLoginId("user1").get();
+        String apiKey = user.getApiKey();
         Long id = 1L;
         Item item = itemService.findById(id).get();
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/%d/replace".formatted(id))
+                                .header("Authorization", "Bearer " + apiKey)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print());
@@ -57,13 +62,14 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 교체 - 작성자가 아닐 때")
     void replaceItem_notOwner() throws Exception {
-        // todo: User 객체로 변경
-        Long userId = 13L;
+        User user = userService.findByLoginId("user2").get();
+        String apiKey = user.getApiKey();
         Long id = 1L;
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/%d/replace".formatted(id))
+                                .header("Authorization", "Bearer " + apiKey)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andDo(print());
@@ -79,14 +85,15 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 수정")
     void modifyItem_success() throws Exception {
-        // todo: User 객체로 변경
-        Long userId = 1L;
+        User user = userService.findByLoginId("user1").get();
+        String apiKey = user.getApiKey();
         Long id = 1L;
         Item item = itemService.findById(id).get();
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/" + id)
+                                .header("Authorization", "Bearer " + apiKey)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -120,13 +127,14 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 수정 - 작성자가 아닐 때")
     void modifyItem_notOwner() throws Exception {
-        // todo: User 객체로 변경
-        Long userId = 1L;
+        User user = userService.findByLoginId("user2").get();
+        String apiKey = user.getApiKey();
         Long id = 1L;
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/" + id)
+                                .header("Authorization", "Bearer " + apiKey)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -151,13 +159,14 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 수정 - 존재하지 않는 카테고리")
     void modifyItem_categoryNotFound() throws Exception {
-        // todo: User 객체로 변경
-        Long userId = 1L;
+        User user = userService.findByLoginId("user1").get();
+        String apiKey = user.getApiKey();
         Long id = 1L;
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/" + id)
+                                .header("Authorization", "Bearer " + apiKey)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
@@ -183,13 +192,14 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 수정 - 유효하지 않은 주기 입력")
     void modifyItem_InvalidCycleDate() throws Exception {
-        // todo: User 객체로 변경
-        Long userId = 1L;
+        User user = userService.findByLoginId("user1").get();
+        String apiKey = user.getApiKey();
         Long id = 1L;
 
         ResultActions resultActions = mvc
                 .perform(
                         put("/api/v1/items/" + id)
+                                .header("Authorization", "Bearer " + apiKey)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {

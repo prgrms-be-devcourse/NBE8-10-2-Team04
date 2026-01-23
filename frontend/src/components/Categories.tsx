@@ -1,6 +1,6 @@
 import { ArrowLeft, Grid, Package, Sword, Shield, Zap, Star } from 'lucide-react';
-import { Button } from '@/app/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface CategoriesProps {
   onBack: () => void;

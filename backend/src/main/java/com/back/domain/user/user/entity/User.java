@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
-@Entity(name = "users")
+@Entity
+@Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
@@ -36,5 +37,15 @@ public class User {
 
     public void modifyApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public void modifyMember(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
+    public void modifyUser(String email, String password) {
+        this.email = email;
+        this.password = password;
     }
 }
