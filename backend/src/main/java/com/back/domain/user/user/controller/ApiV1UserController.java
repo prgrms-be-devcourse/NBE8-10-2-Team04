@@ -1,7 +1,8 @@
 package com.back.domain.user.user.controller;
 
+import com.back.domain.user.user.dto.PasswordChangeRequest;
 import com.back.domain.user.user.dto.UserDto;
-import com.back.domain.user.user.dto.UserUpdateRequest;
+import com.back.domain.user.user.dto.UserProfileUpdateRequest;
 import com.back.domain.user.user.dto.UserUpdateResponse;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
@@ -160,22 +161,17 @@ public class ApiV1UserController {
         );
     }
 
-    @PutMapping("/modify")
-    public RsData<UserUpdateResponse> updateUser(
-            @Valid @RequestBody UserUpdateRequest request
+    @PatchMapping("/me")
+    @Operation(summary = "프로필(이메일) 수정")
+    public RsData<UserUpdateResponse> updateProfile(
+            @Valid @RequestBody UserProfileUpdateRequest request
     ) {
         UserDto actor = rq.getActor();
-
         if (actor == null) {
             throw new ServiceException("401-1", "로그인이 필요합니다.");
         }
 
-        User updatedUser = userService.updateUser(
-                actor.id(),
-                request.email(),
-                request.password()
-        );
-
+        User updatedUser = userService.updateProfile(actor.id(), request.email());
         String newAccessToken = userService.genAccessToken(updatedUser);
         rq.setCookie("accessToken", newAccessToken);
 
@@ -184,6 +180,30 @@ public class ApiV1UserController {
                 "회원정보가 수정되었습니다.",
                 new UserUpdateResponse(updatedUser)
         );
+    }
 
+    @PatchMapping("/me/password")
+    @Operation(summary = "비밀번호 변경")
+    public RsData<UserUpdateResponse> changePassword(
+            @Valid @RequestBody PasswordChangeRequest request
+    ) {
+        UserDto actor = rq.getActor();
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        User updatedUser = userService.changePassword(
+                actor.id(),
+                request.currentPassword(),
+                request.newPassword()
+        );
+        String newAccessToken = userService.genAccessToken(updatedUser);
+        rq.setCookie("accessToken", newAccessToken);
+
+        return new RsData<>(
+                "200-2",
+                "비밀번호가 변경되었습니다.",
+                new UserUpdateResponse(updatedUser)
+        );
     }
 }
