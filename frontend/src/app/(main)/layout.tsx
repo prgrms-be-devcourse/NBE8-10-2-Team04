@@ -45,7 +45,7 @@ export default async function MainLayout({
   }
 
   const loginId = payload.loginId ?? payload.sub ?? "사용자";
-  const email = payload.email; // 토큰에 없으면 표시 안 함
+  const email = payload.email ?? ""; // 토큰에 없으면 표시 안 함
 
   return (
     <div>
@@ -63,7 +63,7 @@ export default async function MainLayout({
               <span className="hidden sm:inline">
                 {loginId} 레인저
               </span>
-              
+
               {email ? (
                 <span className="rounded-full bg-white/10 px-3 py-1 ring-1 ring-white/15">
                   {email}
