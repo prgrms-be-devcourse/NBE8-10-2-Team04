@@ -17,8 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -518,5 +517,71 @@ public class ItemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("201-1"))
                 .andExpect(jsonPath("$.data.imgUrl").isEmpty());
+    }
+
+    @Test
+    @DisplayName("아이템 삭제 - 성공")
+    void deleteItem_success() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+        Long id = 1L;
+
+        ResultActions resultActions = mvc
+                .perform(
+                        delete("/api/v1/items/" + id)
+                                .header("Authorization", getAuthHeader(user))
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("deleteItem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("아이템 삭제 성공"));
+    }
+
+    @Test
+    @DisplayName("아이템 삭제 - 작성자가 아닐 때")
+    void deleteItem_notOwner() throws Exception {
+        User user = userService.findById(2L).orElseThrow();
+        Long id = 1L;
+
+        ResultActions resultActions = mvc
+                .perform(
+                        delete("/api/v1/items/" + id)
+                                .header("Authorization", getAuthHeader(user))
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("deleteItem"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.resultCode").value("403-1"))
+                .andExpect(jsonPath("$.msg").value("%d번 아이템에 대한 권한이 없습니다.".formatted(id)));
+    }
+
+    @Test
+    @DisplayName("아이템 삭제 - 존재하지 않는 아이템")
+    void deleteItem_itemNotFound() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+        Long nonExistentId = 9999L;
+
+        ResultActions resultActions = mvc
+                .perform(
+                        delete("/api/v1/items/" + nonExistentId)
+                                .header("Authorization", getAuthHeader(user))
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("deleteItem"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-1"))
+                .andExpect(jsonPath("$.msg").value("존재하지 않는 아이템입니다."));
     }
 }
