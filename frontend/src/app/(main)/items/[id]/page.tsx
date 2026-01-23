@@ -49,9 +49,12 @@ const mockItem: ItemDetail = {
 export default function ItemPage() {
   const router = useRouter();
   const { id: idStr } = useParams<{ id: string }>();
+  const id = parseInt(idStr);
+
   const [item, setItem] = useState<ItemDetail | null>(null);
   const [itemHistories, setItemHistories] = useState<ItemHistory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isItemLoading, setIsItemLoading] = useState(true);
+  const [isItemHistoryLoading, setIsItemHistoryLoading] = useState(true);
 
   // cycleDays 변환
   const formatCycle = (cycle: string | null) => {
@@ -110,21 +113,44 @@ export default function ItemPage() {
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        // 실제 API 연동 시 주석 해제
-        // const res = await fetch(`/api/v1/items/${idStr}`);
-        // ...
-        setItem(mockItem);
-        setItemHistories(mockItemHistories);
+        const response = await fetch(`http://localhost:8080/api/v1/items/${id}`, {
+          method: "GET",
+          credentials: "include",
+        });
+        if (response.ok) {
+          const msg = await response.json();
+          setItem(msg.data);
+          setItemHistories(mockItemHistories);
+        }
       } catch (error) {
         console.error('Error fetching item:', error);
       } finally {
-        setLoading(false);
+        setIsItemLoading(false);
       }
-    };
+    }
+
+    const fetchItemHistories = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/api/v1/items/${id}/histories`, {
+          method: "GET",
+          credentials: "include",
+        });
+        if (response.ok) {
+          const msg = await response.json();
+          setItemHistories(msg);
+        }
+      } catch (error) {
+        console.error('Error fetching itemHistories:', error);
+      } finally {
+        setIsItemHistoryLoading(false);
+      }
+    }
+
     fetchItem();
+    fetchItemHistories();
   }, [idStr]);
 
-  if (loading) return <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">로딩 중...</div>;
+  if (isItemLoading) return <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">로딩 중...</div>;
   if (!item) return <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">아이템을 찾을 수 없습니다</div>;
 
   return (
@@ -240,6 +266,14 @@ export default function ItemPage() {
               <span className="font-semibold">교체 이력</span>
             </div>
             <div className="space-y-3">
+              {/* 로딩 중 */}
+              {isItemHistoryLoading && (
+                <div className="rounded-xl bg-white/5 p-4 text-sm text-white/60 ring-1 ring-white/15">
+                  불러오는 중...
+                </div>
+              )}
+
+              {/* 로딩 완료 */}
               {calculatedHistories.length > 0 ? (
                 calculatedHistories.map((history) => (
                   <div key={history.id} className="bg-[#0B0E14] border border-white/5 rounded-xl p-5">
