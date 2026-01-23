@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -32,6 +33,10 @@ public class ItemControllerTest {
     private ItemService itemService;
     @Autowired
     private UserService userService;
+
+    private String getAuthHeader(User user) {
+        return "Bearer " + user.getApiKey();
+    }
 
     @Test
     @DisplayName("아이템 교체")
@@ -219,5 +224,299 @@ public class ItemControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resultCode").value("400-1"))
                 .andExpect(jsonPath("$.msg").value("cycleDays 형식이 올바르지 않습니다. 예: 30d, 2m, 1y"));
+    }
+
+    @Test
+    @DisplayName("아이템 등록 - 성공")
+    void createItem_success() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "categoryId": 1,
+                                            "name": "칫솔",
+                                            "imgUrl": "https://example.com/toothbrush.jpg",
+                                            "startDate": "2025-01-01",
+                                            "cycleDays": "90d"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("201-1"))
+                .andExpect(jsonPath("$.msg").value("아이템 등록 성공"))
+                .andExpect(jsonPath("$.data.id").exists())
+                .andExpect(jsonPath("$.data.categoryId").value(1))
+                .andExpect(jsonPath("$.data.name").value("칫솔"))
+                .andExpect(jsonPath("$.data.imgUrl").value("https://example.com/toothbrush.jpg"))
+                .andExpect(jsonPath("$.data.startDate").value("2025-01-01"))
+                .andExpect(jsonPath("$.data.cycleDays").value("90d"))
+                .andExpect(jsonPath("$.data.nextReplacementDate").value("2025-04-01"))
+                .andExpect(jsonPath("$.data.isActive").value(true));
+    }
+
+    @Test
+    @DisplayName("아이템 등록 - 월 단위 주기")
+    void createItem_withMonthCycle() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "categoryId": 2,
+                                            "name": "필터",
+                                            "imgUrl": "https://example.com/filter.jpg",
+                                            "startDate": "2025-01-15",
+                                            "cycleDays": "6m"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("201-1"))
+                .andExpect(jsonPath("$.data.cycleDays").value("6m"))
+                .andExpect(jsonPath("$.data.startDate").value("2025-01-15"))
+                .andExpect(jsonPath("$.data.nextReplacementDate").value("2025-07-15"));
+    }
+
+    @Test
+    @DisplayName("아이템 등록 - 년 단위 주기")
+    void createItem_withYearCycle() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "categoryId": 3,
+                                            "name": "매트리스",
+                                            "imgUrl": "https://example.com/mattress.jpg",
+                                            "startDate": "2024-01-01",
+                                            "cycleDays": "1y"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("201-1"))
+                .andExpect(jsonPath("$.data.cycleDays").value("1y"))
+                .andExpect(jsonPath("$.data.nextReplacementDate").value("2025-01-01"));
+    }
+
+    @Test
+    @DisplayName("아이템 등록 실패 - categoryId 누락")
+    void createItem_missingCategoryId() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "name": "칫솔",
+                                            "imgUrl": "https://example.com/toothbrush.jpg",
+                                            "cycleDays": "90d"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("아이템 등록 실패 - name 누락")
+    void createItem_missingName() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "categoryId": 1,
+                                            "imgUrl": "https://example.com/toothbrush.jpg",
+                                            "cycleDays": "90d"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("아이템 등록 실패 - cycleDays 누락")
+    void createItem_missingCycleDays() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "categoryId": 1,
+                                            "name": "칫솔",
+                                            "imgUrl": "https://example.com/toothbrush.jpg"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("아이템 등록 실패 - 잘못된 cycleDays 형식")
+    void createItem_invalidCycleDaysFormat() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "categoryId": 1,
+                                            "name": "칫솔",
+                                            "imgUrl": "https://example.com/toothbrush.jpg",
+                                            "cycleDays": "invalid"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-1"))
+                .andExpect(jsonPath("$.msg").value("cycleDays 형식이 올바르지 않습니다. 예: 30d, 2m, 1y"));
+    }
+
+    @Test
+    @DisplayName("아이템 등록 실패 - 존재하지 않는 카테고리")
+    void createItem_categoryNotFound() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "categoryId": 9999,
+                                            "name": "칫솔",
+                                            "imgUrl": "https://example.com/toothbrush.jpg",
+                                            "cycleDays": "90d"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-1"));
+    }
+
+    @Test
+    @DisplayName("아이템 등록 실패 - cycleDays 값이 0 이하")
+    void createItem_invalidCycleDaysValue() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "categoryId": 1,
+                                            "name": "칫솔",
+                                            "imgUrl": "https://example.com/toothbrush.jpg",
+                                            "cycleDays": "0d"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-1"))
+                .andExpect(jsonPath("$.msg").value("cycleDays 값은 1 이상이어야 합니다."));
+    }
+
+    @Test
+    @DisplayName("아이템 등록 - imgUrl 없이 등록")
+    void createItem_withoutImgUrl() throws Exception {
+        User user = userService.findById(1L).orElseThrow();
+
+        ResultActions resultActions = mvc
+                .perform(
+                        post("/api/v1/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", getAuthHeader(user))
+                                .content("""
+                                        {
+                                            "categoryId": 1,
+                                            "name": "칫솔",
+                                            "startDate": "2025-01-01",
+                                            "cycleDays": "90d"
+                                        }
+                                        """)
+                )
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ItemController.class))
+                .andExpect(handler().methodName("createItem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("201-1"))
+                .andExpect(jsonPath("$.data.imgUrl").isEmpty());
     }
 }
