@@ -4,11 +4,9 @@ import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.service.ItemService;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
-import com.back.standard.util.Ut;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
@@ -18,7 +16,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -37,27 +34,8 @@ public class ItemControllerTest {
     @Autowired
     private UserService userService;
 
-    // application.yml 에서 주입받는 JWT 비밀키
-    @Value("${custom.jwt.secretKey}")
-    private String jwtSecret;
-
-    // AccessToken 만료 시간(초 단위)
-    @Value("${custom.accessToken.expirationSeconds}")
-    private int accessTokenExpirationSeconds;
-
-    /**
-     * 테스트용 Access Token 생성 메서드
-     * - 실제 로그인 과정을 거치지 않고
-     * - 컨트롤러 인증/인가 로직만 검증하기 위해 사용
-     */
-    private String generateAccessToken(Long userId, String loginId) {
-        // JWT Payload(claims)에 들어갈 사용자 정보
-        Map<String, Object> claims = Map.of(
-                "id", userId,
-                "loginId", loginId
-        );
-        // JWT 생성 (secretKey + 만료시간 + claims)
-        return Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims);
+    private String getAuthHeader(User user) {
+        return "Bearer " + user.getApiKey();
     }
 
     @Test
@@ -251,14 +229,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 - 성공")
     void createItem_success() throws Exception {
-        // 인증이 필요한 API이므로, 테스트용 Access Token 생성
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "categoryId": 1,
@@ -290,13 +267,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 - 월 단위 주기")
     void createItem_withMonthCycle() throws Exception {
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "categoryId": 2,
@@ -322,13 +299,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 - 년 단위 주기")
     void createItem_withYearCycle() throws Exception {
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "categoryId": 3,
@@ -353,13 +330,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - categoryId 누락")
     void createItem_missingCategoryId() throws Exception {
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "name": "칫솔",
@@ -379,13 +356,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - name 누락")
     void createItem_missingName() throws Exception {
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "categoryId": 1,
@@ -405,13 +382,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - cycleDays 누락")
     void createItem_missingCycleDays() throws Exception {
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "categoryId": 1,
@@ -431,13 +408,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - 잘못된 cycleDays 형식")
     void createItem_invalidCycleDaysFormat() throws Exception {
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "categoryId": 1,
@@ -460,13 +437,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - 존재하지 않는 카테고리")
     void createItem_categoryNotFound() throws Exception {
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "categoryId": 9999,
@@ -488,13 +465,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 실패 - cycleDays 값이 0 이하")
     void createItem_invalidCycleDaysValue() throws Exception {
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "categoryId": 1,
@@ -517,13 +494,13 @@ public class ItemControllerTest {
     @Test
     @DisplayName("아이템 등록 - imgUrl 없이 등록")
     void createItem_withoutImgUrl() throws Exception {
-        String accessToken = generateAccessToken(1L, "user1");
+        User user = userService.findById(1L).orElseThrow();
 
         ResultActions resultActions = mvc
                 .perform(
                         post("/api/v1/items")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .header("Authorization", "Bearer " + accessToken)
+                                .header("Authorization", getAuthHeader(user))
                                 .content("""
                                         {
                                             "categoryId": 1,
@@ -542,6 +519,4 @@ public class ItemControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("201-1"))
                 .andExpect(jsonPath("$.data.imgUrl").isEmpty());
     }
-
-
 }
