@@ -134,7 +134,7 @@ public class ApiV1UserControllerTest {
                 .perform(
                         post("/api/v1/user/logout")
                                 .with(csrf())
-                                .cookie(accessTokenCookie) // 중요: 로그인 토큰 전달
+                                .cookie(accessTokenCookie)
                 )
                 .andDo(print());
 
@@ -188,7 +188,7 @@ public class ApiV1UserControllerTest {
                 .andExpect(handler().handlerType(ApiV1UserController.class))
                 .andExpect(handler().methodName("me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.resultCode").value("200-1")) // 성공 코드 (프로젝트 규칙에 맞게 수정 필요)
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
                 .andExpect(jsonPath("$.data").exists())
                 .andExpect(jsonPath("$.data.id").value(user.getId()))
                 .andExpect(jsonPath("$.data.loginId").value("user1"))
