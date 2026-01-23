@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import LogoutButton from "@/components/LogoutButton";
 
 
 type JwtPayload = {
@@ -69,11 +70,9 @@ export default async function MainLayout({
                   {email}
                 </span>
               ) : null}
-              <form action="/api/auth/logout" method="POST">
-                <button className="rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white">
-                  로그아웃
-                </button>
-              </form>
+
+              <LogoutButton />
+              
             </div>
           </div>
         </header>
