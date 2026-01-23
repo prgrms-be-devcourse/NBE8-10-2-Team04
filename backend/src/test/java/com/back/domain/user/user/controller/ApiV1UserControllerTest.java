@@ -4,7 +4,9 @@ import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -102,33 +104,57 @@ public class ApiV1UserControllerTest {
     }
 
     @Test
-    @DisplayName("내 정보")
-    @WithUserDetails("user1")
-    void t3() throws Exception {
-        ResultActions resultActions = mvc
+    @DisplayName("로그아웃")
+    void t2_1() throws Exception {
+        // 1. [준비] 회원 생성
+        User user = userService.join("usernew", "1234", "test@test.com");
+
+        // 2. [로그인] accessToken 쿠키 획득
+        ResultActions loginResult = mvc
                 .perform(
-                        get("/api/v1/user/me")
+                        post("/api/v1/user/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "loginId": "usernew",
+                                            "password": "1234"
+                                        }
+                                        """.stripIndent())
+                );
+
+        // 로그인 결과에서 쿠키 추출
+        jakarta.servlet.http.Cookie accessTokenCookie = loginResult
+                .andReturn()
+                .getResponse()
+                .getCookie("accessToken");
+
+        // 3. [로그아웃] 쿠키를 가지고 요청
+        ResultActions logoutResult = mvc
+                .perform(
+                        post("/api/v1/user/logout")
+                                .with(csrf())
+                                .cookie(accessTokenCookie) // 중요: 로그인 토큰 전달
                 )
                 .andDo(print());
 
-        User user = userService.findByLoginId("user1").get();
-
-        resultActions
+        // 4. [검증]
+        logoutResult
                 .andExpect(handler().handlerType(ApiV1UserController.class))
-                .andExpect(handler().methodName("me"))
+                .andExpect(handler().methodName("logout"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(user.getId()));
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("로그아웃 되었습니다."))
+                .andExpect(cookie().maxAge("accessToken", 0));
     }
 
     @Test
-    @DisplayName("회원정보 수정")
-    void t4() throws Exception {
+    @DisplayName("내 정보")
+    void t3() throws Exception {
         // 1. [준비] BaseInitData의 user1 사용 (없으면 생성)
-        // 회원을 가져오는 것만으로는 토큰이 없으므로, 로그인을 해야 함
         User user = userService.findByLoginId("user1")
                 .orElseGet(() -> userService.join("user1", "1234", "user1@test.com"));
-        String originalEmail = user.getEmail();
-        
+
         // 2. [준비] 로그인 API 호출하여 쿠키에 accessToken 획득
         ResultActions loginResult = mvc
                 .perform(
@@ -142,7 +168,56 @@ public class ApiV1UserControllerTest {
                                         }
                                         """.stripIndent())
                 );
-        
+
+        // 로그인 응답의 쿠키에서 accessToken 추출
+        jakarta.servlet.http.Cookie accessTokenCookie = loginResult
+                .andReturn()
+                .getResponse()
+                .getCookie("accessToken");
+
+        // 3. [요청] 내 정보 조회 (쿠키에 있는 토큰 사용)
+        ResultActions resultActions = mvc
+                .perform(
+                        get("/api/v1/user/me")
+                                .cookie(accessTokenCookie) // 중요: 획득한 토큰 쿠키 전달
+                )
+                .andDo(print());
+
+        // 4. [검증] 응답 검증
+        resultActions
+                .andExpect(handler().handlerType(ApiV1UserController.class))
+                .andExpect(handler().methodName("me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1")) // 성공 코드 (프로젝트 규칙에 맞게 수정 필요)
+                .andExpect(jsonPath("$.data").exists())
+                .andExpect(jsonPath("$.data.id").value(user.getId()))
+                .andExpect(jsonPath("$.data.loginId").value("user1"))
+                .andExpect(jsonPath("$.data.email").value(user.getEmail()));
+    }
+
+    @Test
+    @DisplayName("회원정보 수정")
+    void t4() throws Exception {
+        // 1. [준비] BaseInitData의 user1 사용 (없으면 생성)
+        // 회원을 가져오는 것만으로는 토큰이 없으므로, 로그인을 해야 함
+        User user = userService.findByLoginId("user1")
+                .orElseGet(() -> userService.join("user1", "1234", "user1@test.com"));
+        String originalEmail = user.getEmail();
+
+        // 2. [준비] 로그인 API 호출하여 쿠키에 accessToken 획득
+        ResultActions loginResult = mvc
+                .perform(
+                        post("/api/v1/user/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "loginId": "user1",
+                                            "password": "1234"
+                                        }
+                                        """.stripIndent())
+                );
+
         // 로그인 응답의 쿠키에서 accessToken 추출
         jakarta.servlet.http.Cookie accessTokenCookie = loginResult
                 .andReturn()
