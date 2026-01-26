@@ -16,15 +16,21 @@ export type ItemSummary = {
 };
 
 function dDayLabel(dDay: number) {
-  if (dDay === 0) return "D-0";
+  if (dDay === 0) return "D-Day";
   if (dDay > 0) return `D-${dDay}`;
   return `D+${Math.abs(dDay)}`;
 }
 
-function dDayBadgeClass(isActive: boolean) {
-  // 활성은 초록, 비활성은 흐린 회색
-  if (!isActive) return "bg-white/15 text-white/70";
-  return "bg-green-500/90 text-white";
+function dDayBadgeClass(isActive: boolean, isDDayOver: boolean) {
+  // 1. 비활성은 흐린 회색
+  if (!isActive) {
+    return "bg-white/15 text-white/70";
+  }
+  // 2. 활성
+  // 2-1. d-day에 도래하지 않으면 초록색
+  if (!isDDayOver) return "bg-green-500/90 text-white";
+  // 2-2. d-day에 도래했거나 지났으면 빨간색
+  return "bg-red-500/90 text-white";
 }
 
 export function ItemCard({
@@ -71,7 +77,7 @@ export function ItemCard({
 
         <span
           className={`rounded-md px-2 py-1 text-xs font-semibold ${dDayBadgeClass(
-            item.isActive
+            item.isActive, item.dDay < 0
           )}`}
         >
           {dDayLabel(item.dDay)}
