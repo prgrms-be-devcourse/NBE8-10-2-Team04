@@ -45,7 +45,7 @@ export function ItemCard({
 
   const goDetail = () => router.push(`/items/${item.id}`);
 
-return (
+  return (
     <div
       role="button"
       tabIndex={0}
@@ -53,17 +53,15 @@ return (
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") goDetail();
       }}
-      className={`cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${
-        disabled ? "opacity-70" : ""
-      }`}
+      className={`cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${disabled ? "opacity-70" : ""
+        }`}
     >
       {/* 상단 */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div
-            className={`flex h-9 w-9 items-center justify-center rounded-full ${
-              item.isActive ? "bg-red-600" : "bg-white/20"
-            }`}
+            className={`flex h-9 w-9 items-center justify-center rounded-full ${item.isActive ? "bg-red-600" : "bg-white/20"
+              }`}
           >
             <Box className="h-5 w-5 text-white" />
           </div>
@@ -119,7 +117,7 @@ return (
         >
           <button
             onClick={() => onEdit(item.id)}
-            className="inline-flex items-center gap-1 hover:text-white"
+            className="inline-flex items-center gap-1 hover:text-white cursor-pointer"
             type="button"
           >
             <Pencil className="h-4 w-4" />
@@ -128,7 +126,7 @@ return (
 
           <button
             onClick={() => onDelete(item.id)}
-            className="inline-flex items-center gap-1 hover:text-white"
+            className="inline-flex items-center gap-1 hover:text-white cursor-pointer"
             type="button"
           >
             <Trash2 className="h-4 w-4" />
@@ -140,11 +138,10 @@ return (
       {/* 교체 버튼 */}
       <div className="mt-4" onClick={(e) => e.stopPropagation()}>
         <Button
-          className={`h-9 w-full rounded-md font-semibold ${
-            disabled
-              ? "bg-white/15 text-white/70 hover:bg-white/15"
-              : "bg-purple-600 hover:bg-purple-700"
-          }`}
+          className={`h-9 w-full rounded-md font-semibold cursor-pointer ${disabled
+            ? "bg-white/15 text-white/70 hover:bg-white/15"
+            : "bg-purple-600 hover:bg-purple-700"
+            }`}
           onClick={() => onReplace(item.id)}
           disabled={disabled}
         >
