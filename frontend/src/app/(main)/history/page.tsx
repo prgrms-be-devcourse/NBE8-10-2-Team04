@@ -71,7 +71,7 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
-      {/* Header - 리팩토링된 컴포넌트 사용 */}
+      {/* Header */}
       <PageHeader variant="yellow" />
 
       {/* Main */}
