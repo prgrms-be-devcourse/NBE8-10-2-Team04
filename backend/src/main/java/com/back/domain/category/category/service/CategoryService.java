@@ -24,6 +24,7 @@ public class CategoryService {
         return categoryRepository.findByName(name);
     }
 
+    //BaseInitData용
     @Transactional
     public Category create(String name) {
         Category category = new Category(name);
