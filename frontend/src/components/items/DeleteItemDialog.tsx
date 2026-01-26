@@ -1,4 +1,6 @@
-// components/items/DeleteItemDialog.tsx
+/**
+ * 아이템 삭제 확인 다이얼로그 컴포넌트
+ */
 import {
   AlertDialog,
   AlertDialogAction,

@@ -1,8 +1,10 @@
-// hooks/useItems.ts
+/**
+ * 아이템 목록을 조회하고 관리하는 커스텀 훅
+ */
 import { useState, useEffect, useCallback } from 'react';
 import type { ItemSummary } from '@/components/items/ItemCard';
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE_URL = 'http://localhost:8080';
 
 type RsData<T> = {
   resultCode: string;
@@ -21,7 +23,7 @@ export function useItems(categoryId: number | null) {
       setError(null);
 
       const qs = categoryId ? `?categoryId=${categoryId}` : '';
-      const res = await fetch(`${API_BASE}/api/v1/items${qs}`, {
+      const res = await fetch(`${API_BASE_URL}/api/v1/items${qs}`, {
         method: 'GET',
         credentials: 'include',
         cache: 'no-store',
@@ -43,7 +45,7 @@ export function useItems(categoryId: number | null) {
   }, [categoryId, fetchItems]);
 
   const deleteItem = useCallback(async (id: number) => {
-    const res = await fetch(`${API_BASE}/api/v1/items/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/v1/items/${id}`, {
       method: 'DELETE',
       credentials: 'include',
     });

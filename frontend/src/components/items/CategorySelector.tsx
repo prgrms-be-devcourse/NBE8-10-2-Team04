@@ -1,4 +1,7 @@
-// components/items/CategorySelector.tsx
+/**
+ * 카테고리 선택 셀렉트 박스 컴포넌트
+ */
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Category = {

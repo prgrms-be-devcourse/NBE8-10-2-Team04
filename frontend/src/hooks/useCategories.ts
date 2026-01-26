@@ -1,4 +1,6 @@
-// hooks/useCategories.ts
+/**
+ * 카테고리 목록을 조회하는 커스텀 훅
+ */
 import { useState, useEffect } from 'react';
 
 const API_BASE = 'http://localhost:8080';
@@ -14,6 +16,8 @@ type RsData<T> = {
   data: T;
 };
 
+const API_BASE_URL = 'http://localhost:8080';
+
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +29,7 @@ export function useCategories() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${API_BASE}/api/v1/categories`, {
+        const res = await fetch(`${API_BASE_URL}/api/v1/categories`, {
           method: 'GET',
           credentials: 'include',
           cache: 'no-store',
