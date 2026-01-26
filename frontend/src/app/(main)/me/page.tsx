@@ -1,15 +1,25 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Mail, Save, Trash2, Lock, CheckCircle2, X } from 'lucide-react';
+import { User, Mail, Save, Trash2, Lock, CheckCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { PageHeader } from '@/components/common/PageHeader';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { validateEmail, validatePasswordForUpdate } from '@/lib/validation';
-
 
 type RsData<T> = {
   resultCode: string;
@@ -44,14 +54,14 @@ export default function MePage() {
         setIsLoading(true);
         setError(null);
 
-        const res = await fetch("/api/v1/user/me", {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
+        const res = await fetch('/api/v1/user/me', {
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
         });
 
         if (res.status === 401) {
-          router.replace("/login");
+          router.replace('/login');
           return;
         }
 
@@ -68,17 +78,17 @@ export default function MePage() {
           setEmail(userData.email);
         }
       } catch (err: any) {
-        let errorMsg = "사용자 정보를 불러오지 못했습니다.";
-        
+        let errorMsg = '사용자 정보를 불러오지 못했습니다.';
+
         // 네트워크 에러 처리
-        if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
-          errorMsg = "서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.";
+        if (err?.message?.includes('Failed to fetch') || err?.name === 'TypeError') {
+          errorMsg = '서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.';
         } else if (err?.message) {
           errorMsg = err.message;
         }
-        
+
         setError(errorMsg);
-        console.error("사용자 정보 조회 오류:", err);
+        console.error('사용자 정보 조회 오류:', err);
       } finally {
         setIsLoading(false);
       }
@@ -91,10 +101,10 @@ export default function MePage() {
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const emailValidation = validateEmail(email);
     if (!emailValidation.isValid) {
-      setError(emailValidation.error ?? "이메일을 확인해주세요.");
+      setError(emailValidation.error ?? '이메일을 확인해주세요.');
       return;
     }
 
@@ -102,12 +112,12 @@ export default function MePage() {
     const isChangingPassword = newPassword.length > 0;
     if (isChangingPassword) {
       if (!currentPassword) {
-        setError("비밀번호를 변경하려면 현재 비밀번호를 입력해주세요.");
+        setError('비밀번호를 변경하려면 현재 비밀번호를 입력해주세요.');
         return;
       }
       const pwValidation = validatePasswordForUpdate(newPassword);
       if (!pwValidation.isValid) {
-        setError(pwValidation.error ?? "새 비밀번호를 확인해주세요.");
+        setError(pwValidation.error ?? '새 비밀번호를 확인해주세요.');
         return;
       }
     }
@@ -119,15 +129,15 @@ export default function MePage() {
       // 1. 이메일 수정 (변경된 경우만)
       const emailChanged = user && email.trim() !== user.email;
       if (emailChanged) {
-        const emailRes = await fetch("/api/v1/user/me", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+        const emailRes = await fetch('/api/v1/user/me', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ email: email.trim() }),
         });
 
         if (emailRes.status === 401) {
-          router.replace("/login");
+          router.replace('/login');
           return;
         }
 
@@ -139,15 +149,15 @@ export default function MePage() {
 
       // 2. 비밀번호 변경 (입력된 경우만)
       if (isChangingPassword) {
-        const passwordRes = await fetch("/api/v1/user/me/password", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
+        const passwordRes = await fetch('/api/v1/user/me/password', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ currentPassword, newPassword }),
         });
 
         if (passwordRes.status === 401) {
-          router.replace("/login");
+          router.replace('/login');
           return;
         }
 
@@ -161,7 +171,7 @@ export default function MePage() {
       const updatedItems: { email?: boolean; password?: boolean } = {};
       if (emailChanged) updatedItems.email = true;
       if (isChangingPassword) updatedItems.password = true;
-      
+
       setSuccessMessage(updatedItems);
 
       // 4초 후 성공 메시지 자동 제거
@@ -170,10 +180,10 @@ export default function MePage() {
       }, 4000);
 
       // 사용자 정보 다시 조회
-      const userRes = await fetch("/api/v1/user/me", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
+      const userRes = await fetch('/api/v1/user/me', {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
       });
 
       if (userRes.ok) {
@@ -187,14 +197,16 @@ export default function MePage() {
       }
 
       setIsEditing(false);
-      setCurrentPassword("");
-      setNewPassword("");
+      setCurrentPassword('');
+      setNewPassword('');
       setError(null);
-      
+
       // 성공 메시지는 위에서 이미 설정됨
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "정보 수정에 실패했습니다.";
-      setError(message.includes("Failed to fetch") ? "서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인해주세요." : message);
+      const message = err instanceof Error ? err.message : '정보 수정에 실패했습니다.';
+      setError(
+        message.includes('Failed to fetch') ? '서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인해주세요.' : message,
+      );
     } finally {
       setIsSaving(false);
     }
@@ -202,7 +214,7 @@ export default function MePage() {
 
   // 회원 탈퇴
   const handleDelete = async () => {
-    if (!confirm("정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+    if (!confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
       return;
     }
 
@@ -210,13 +222,13 @@ export default function MePage() {
       setIsDeleting(true);
       setError(null);
 
-      const res = await fetch("/api/v1/user/me", {
-        method: "DELETE",
-        credentials: "include",
+      const res = await fetch('/api/v1/user/me', {
+        method: 'DELETE',
+        credentials: 'include',
       });
 
       if (res.status === 401) {
-        router.replace("/login");
+        router.replace('/login');
         return;
       }
 
@@ -226,13 +238,13 @@ export default function MePage() {
       }
 
       const body = (await res.json()) as RsData<any>;
-      alert(body.msg || "회원탈퇴가 완료되었습니다.");
-      
+      alert(body.msg || '회원탈퇴가 완료되었습니다.');
+
       // 탈퇴 후 로그인 페이지로 이동
-      router.replace("/login");
+      router.replace('/login');
     } catch (err: any) {
-      setError(err?.message ?? "회원탈퇴에 실패했습니다.");
-      alert(err?.message ?? "회원탈퇴에 실패했습니다.");
+      setError(err?.message ?? '회원탈퇴에 실패했습니다.');
+      alert(err?.message ?? '회원탈퇴에 실패했습니다.');
     } finally {
       setIsDeleting(false);
     }
@@ -243,8 +255,8 @@ export default function MePage() {
     if (user) {
       setEmail(user.email);
     }
-    setCurrentPassword("");
-    setNewPassword("");
+    setCurrentPassword('');
+    setNewPassword('');
   };
 
   if (isLoading) {
@@ -258,20 +270,7 @@ export default function MePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-1">
-        <div className="bg-black/90 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <Button
-              onClick={() => router.back()}
-              variant="outline"
-              className="bg-blue-600 hover:bg-blue-700 text-white border-blue-400"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              돌아가기
-            </Button>
-          </div>
-        </div>
-      </div>
+      <PageHeader variant="blue" />
 
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -282,11 +281,7 @@ export default function MePage() {
           <p className="text-gray-400">당신의 정보를 관리하세요</p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200">{error}</div>}
 
         {successMessage && (
           <div className="mb-4 p-4 bg-green-900/50 border-2 border-green-500 rounded-lg text-green-200 animate-in slide-in-from-top-2 duration-300">
@@ -329,13 +324,15 @@ export default function MePage() {
             </div>
             <CardTitle className="text-white text-center">내 정보</CardTitle>
             <CardDescription className="text-gray-400 text-center">
-              {isEditing ? "정보를 수정하세요" : "정보를 조회하고 수정할 수 있습니다"}
+              {isEditing ? '정보를 수정하세요' : '정보를 조회하고 수정할 수 있습니다'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="loginId" className="text-white">아이디</Label>
+                <Label htmlFor="loginId" className="text-white">
+                  아이디
+                </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -350,7 +347,9 @@ export default function MePage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">이메일</Label>
+                <Label htmlFor="email" className="text-white">
+                  이메일
+                </Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
@@ -391,7 +390,9 @@ export default function MePage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="text-white">새 비밀번호</Label>
+                    <Label htmlFor="newPassword" className="text-white">
+                      새 비밀번호
+                    </Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
@@ -418,7 +419,7 @@ export default function MePage() {
                       className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-2 border-green-400 disabled:opacity-50"
                     >
                       <Save className="h-4 w-4 mr-2" />
-                      {isSaving ? "저장 중..." : "저장"}
+                      {isSaving ? '저장 중...' : '저장'}
                     </Button>
                     <Button
                       type="button"
@@ -455,7 +456,7 @@ export default function MePage() {
                     className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 border-2 border-red-400 disabled:opacity-50"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    {isDeleting ? "탈퇴 중..." : "회원 탈퇴"}
+                    {isDeleting ? '탈퇴 중...' : '회원 탈퇴'}
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent className="bg-black border-2 border-red-400">
@@ -466,13 +467,15 @@ export default function MePage() {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-gray-700 hover:bg-gray-600 text-white border-gray-500">취소</AlertDialogCancel>
+                    <AlertDialogCancel className="bg-gray-700 hover:bg-gray-600 text-white border-gray-500">
+                      취소
+                    </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDelete}
                       disabled={isDeleting}
                       className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white disabled:opacity-50"
                     >
-                      {isDeleting ? "탈퇴 중..." : "탈퇴하기"}
+                      {isDeleting ? '탈퇴 중...' : '탈퇴하기'}
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

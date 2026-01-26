@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ItemCard } from '@/components/items/ItemCard';
 import { CategorySelector } from '@/components/items/CategorySelector';
 import { DeleteItemDialog } from '@/components/items/DeleteItemDialog';
+import { PageHeader } from '@/components/common/PageHeader'; // 추가
 import { useCategories } from '@/hooks/useCategories';
 import { useItems } from '@/hooks/useItems';
 
@@ -56,6 +57,9 @@ export default function ItemsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0b0f1a] via-[#0a1020] to-[#070b14] text-white">
+      {/* Header - 리팩토링된 컴포넌트 사용 */}
+      <PageHeader variant="red" />
+
       <div className="mx-auto max-w-6xl px-6 py-10">
         {/* 제목 */}
         <header className="text-center">

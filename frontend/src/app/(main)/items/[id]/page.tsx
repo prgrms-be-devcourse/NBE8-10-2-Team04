@@ -1,15 +1,10 @@
 'use client';
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowLeft,
-  Activity,
-  Tag,
-  Package,
-  Calendar,
-  History,
-} from "lucide-react";
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { PageHeader } from '@/components/common/PageHeader';
+
+import { Activity, Tag, Package, Calendar, History } from 'lucide-react';
 
 type ItemHistory = {
   id: number;
@@ -30,17 +25,17 @@ type ItemDetail = {
 
 // Mock Data
 const mockItemHistories: ItemHistory[] = [
-  { id: 1, startDate: "2026-01-01" },
-  { id: 2, startDate: "2025-11-30" },
+  { id: 1, startDate: '2026-01-01' },
+  { id: 2, startDate: '2025-11-30' },
 ];
 
 const mockItem: ItemDetail = {
   id: 1,
-  name: "칫솔",
-  categoryName: "식품",
-  cycleDays: "4m",
-  startDate: "2025-12-30",
-  nextReplacementDate: "2026-04-20",
+  name: '칫솔',
+  categoryName: '식품',
+  cycleDays: '4m',
+  startDate: '2025-12-30',
+  nextReplacementDate: '2026-04-20',
   dDay: 17,
   isActive: true,
   imgUrl: null,
@@ -58,7 +53,7 @@ export default function ItemPage() {
 
   // cycleDays 변환
   const formatCycle = (cycle: string | null) => {
-    if (!cycle) return "-";
+    if (!cycle) return '-';
 
     const unit = cycle.slice(-1).toLowerCase(); // 마지막 글자 (m, y, d)
     const value = cycle.slice(0, -1); // 숫자 부분
@@ -105,7 +100,7 @@ export default function ItemPage() {
 
       return {
         ...history,
-        displayUsageDays: usageDays
+        displayUsageDays: usageDays,
       };
     });
   }, [itemHistories]);
@@ -114,8 +109,8 @@ export default function ItemPage() {
     const fetchItem = async () => {
       try {
         const response = await fetch(`http://localhost:8080/api/v1/items/${id}`, {
-          method: "GET",
-          credentials: "include",
+          method: 'GET',
+          credentials: 'include',
         });
         if (response.ok) {
           const msg = await response.json();
@@ -127,13 +122,13 @@ export default function ItemPage() {
       } finally {
         setIsItemLoading(false);
       }
-    }
+    };
 
     const fetchItemHistories = async () => {
       try {
         const response = await fetch(`http://localhost:8080/api/v1/items/${id}/histories`, {
-          method: "GET",
-          credentials: "include",
+          method: 'GET',
+          credentials: 'include',
         });
         if (response.ok) {
           const msg = await response.json();
@@ -144,30 +139,28 @@ export default function ItemPage() {
       } finally {
         setIsItemHistoryLoading(false);
       }
-    }
+    };
 
     fetchItem();
     fetchItemHistories();
   }, [idStr]);
 
-  if (isItemLoading) return <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">로딩 중...</div>;
-  if (!item) return <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">아이템을 찾을 수 없습니다</div>;
+  if (isItemLoading)
+    return <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">로딩 중...</div>;
+  if (!item)
+    return (
+      <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">
+        아이템을 찾을 수 없습니다
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-[#020617] font-sans pb-20">
       {/* Top Gradient Bar */}
       <div className="h-1.5 w-full bg-gradient-to-r from-[#7000FF] via-[#FF00C7] to-[#7000FF]"></div>
 
-      {/* Back Button Container */}
-      <div className="max-w-[1200px] mx-auto px-6 py-6">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 bg-[#A855F7] hover:bg-[#9333EA] text-white px-4 py-2 rounded-lg text-sm transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          돌아가기
-        </button>
-      </div>
+      {/* Header - 보라색 */}
+      <PageHeader variant="purple" />
 
       {/* Main Titles */}
       <div className="text-center mb-10">
@@ -180,7 +173,6 @@ export default function ItemPage() {
       {/* Detail Card */}
       <div className="max-w-[800px] mx-auto px-4">
         <div className="relative bg-[#0B0E14] border-2 border-[#A855F7]/50 rounded-[2rem] p-8 md:p-12 shadow-2xl">
-
           {/* Avatar & Name */}
           <div className="flex flex-col items-center mb-12">
             <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center mb-4 shadow-lg shadow-blue-600/20">
@@ -203,8 +195,9 @@ export default function ItemPage() {
             </div>
             <div className="flex gap-3">
               <button
-                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${item.isActive ? 'bg-[#22C55E] text-white' : 'bg-[#1E293B] text-gray-500'
-                  }`}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                  item.isActive ? 'bg-[#22C55E] text-white' : 'bg-[#1E293B] text-gray-500'
+                }`}
               >
                 {item.isActive ? '활성' : '비활성'}
               </button>
@@ -220,7 +213,7 @@ export default function ItemPage() {
                 <span className="font-semibold">카테고리</span>
               </div>
               <div className="bg-[#1E293B] inline-block px-3 py-1 rounded-md text-sm text-gray-300">
-                {item.categoryName || "-"}
+                {item.categoryName || '-'}
               </div>
             </div>
 
@@ -239,7 +232,7 @@ export default function ItemPage() {
                 <Calendar className="h-5 w-5" />
                 <span className="font-semibold">시작일</span>
               </div>
-              <div className="text-white text-sm">{item.startDate || "-"}</div>
+              <div className="text-white text-sm">{item.startDate || '-'}</div>
             </div>
 
             {/* Next Replacement */}
@@ -249,11 +242,9 @@ export default function ItemPage() {
                 <span className="font-semibold">다음 교체일</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-white text-sm">{item.nextReplacementDate || "-"}</span>
+                <span className="text-white text-sm">{item.nextReplacementDate || '-'}</span>
                 {item.dDay !== undefined && (
-                  <div className="bg-[#22C55E] px-3 py-1 rounded-md text-xs font-bold text-white">
-                    D-{item.dDay}
-                  </div>
+                  <div className="bg-[#22C55E] px-3 py-1 rounded-md text-xs font-bold text-white">D-{item.dDay}</div>
                 )}
               </div>
             </div>
@@ -277,12 +268,8 @@ export default function ItemPage() {
               {calculatedHistories.length > 0 ? (
                 calculatedHistories.map((history) => (
                   <div key={history.id} className="bg-[#0B0E14] border border-white/5 rounded-xl p-5">
-                    <div className="text-white text-xl font-bold mb-2 tracking-tight">
-                      {history.startDate}
-                    </div>
-                    <div className="text-gray-500 text-base">
-                      실제 사용일: {history.displayUsageDays}일
-                    </div>
+                    <div className="text-white text-xl font-bold mb-2 tracking-tight">{history.startDate}</div>
+                    <div className="text-gray-500 text-base">실제 사용일: {history.displayUsageDays}일</div>
                   </div>
                 ))
               ) : (
@@ -300,7 +287,6 @@ export default function ItemPage() {
               삭제
             </button>
           </div>
-
         </div>
       </div>
     </div>
