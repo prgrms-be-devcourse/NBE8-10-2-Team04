@@ -159,7 +159,7 @@ export default function ItemPage() {
       {/* Top Gradient Bar */}
       <div className="h-1.5 w-full bg-gradient-to-r from-[#7000FF] via-[#FF00C7] to-[#7000FF]"></div>
 
-      {/* Header - 보라색 */}
+      {/* Header */}
       <PageHeader variant="purple" />
 
       {/* Main Titles */}
