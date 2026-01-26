@@ -21,10 +21,11 @@ type Category = {
 
 interface ItemModifyFormProps {
   itemId: number;
-  onClose?: () => void; // 모달 닫기 함수
+  onClose: () => void; // 모달 닫기 함수
+  onUpdate: () => void; // 업데이트 시 실행할 함수
 }
 
-export default function ItemModifyForm({ itemId, onClose }: ItemModifyFormProps) {
+export default function ItemModifyForm({ itemId, onClose, onUpdate }: ItemModifyFormProps) {
   const [item, setItem] = useState<ItemDetail | null>(null);
   const [isItemLoading, setIsItemLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -86,7 +87,7 @@ export default function ItemModifyForm({ itemId, onClose }: ItemModifyFormProps)
     fetchItem();
   }, [itemId]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // 에러 초기화
     setNameError("");
     setCycleError("");
@@ -106,15 +107,28 @@ export default function ItemModifyForm({ itemId, onClose }: ItemModifyFormProps)
 
     if (!isValid) return;
 
-    const updatedItem = {
-      name,
-      categoryId: Number(categoryId),
-      imgUrl,
-      cycleDays: `${cycleValue}${cycleUnit}`,
-      isActive: item?.isActive
-    };
-    console.log("저장 데이터:", updatedItem);
     // 수정 요청
+    try {
+      const response = await fetch(`http://localhost:8080/api/v1/items/${itemId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name,
+          categoryId: Number(categoryId),
+          imgUrl,
+          cycleDays: `${cycleValue}${cycleUnit}`,
+          isActive: item?.isActive
+        })
+      });
+      if (response.ok) {
+        alert('수정이 완료되었습니다.');
+        onUpdate(); // 데이터 갱신 요청
+        onClose(); // 모달 닫기 요청
+      }
+    } catch (error) {
+      console.error('아이템 수정 오류 발생:', error);
+    }
   };
 
   if (isItemLoading)
@@ -139,7 +153,7 @@ export default function ItemModifyForm({ itemId, onClose }: ItemModifyFormProps)
         {/* 헤더 */}
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">아이템 수정</h2>
-          <button onClick={onClose} className="text-white hover:opacity-70">
+          <button onClick={onClose} className="text-white hover:opacity-70 cursor-pointer">
             <X size={24} />
           </button>
         </div>
@@ -241,7 +255,7 @@ export default function ItemModifyForm({ itemId, onClose }: ItemModifyFormProps)
         {/* 저장 버튼 */}
         <button
           onClick={handleSave}
-          className="mt-8 w-full rounded-lg bg-[#b45309] py-3 text-lg font-bold text-white transition-colors hover:bg-[#92400e]"
+          className="mt-8 w-full rounded-lg bg-[#b45309] py-3 text-lg font-bold text-white transition-colors hover:bg-[#92400e] cursor-pointer"
         >
           저장
         </button>
