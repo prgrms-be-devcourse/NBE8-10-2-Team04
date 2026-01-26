@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -59,8 +58,6 @@ public class ApiV1UserControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("201-1"))
                 .andExpect(jsonPath("$.msg").exists())
                 .andExpect(jsonPath("$.data").exists());
-
-        User user = userService.findByLoginId("usernew").orElseThrow();
 
         resultActions
                 .andExpect(jsonPath("$.data.loginId").value("usernew"));
@@ -130,6 +127,8 @@ public class ApiV1UserControllerTest {
                 .getCookie("accessToken");
 
         // 3. [로그아웃] 쿠키를 가지고 요청
+        assert accessTokenCookie != null;
+
         ResultActions logoutResult = mvc
                 .perform(
                         post("/api/v1/user/logout")
@@ -176,6 +175,8 @@ public class ApiV1UserControllerTest {
                 .getCookie("accessToken");
 
         // 3. [요청] 내 정보 조회 (쿠키에 있는 토큰 사용)
+        assert accessTokenCookie != null;
+
         ResultActions resultActions = mvc
                 .perform(
                         get("/api/v1/user/me")
@@ -223,6 +224,8 @@ public class ApiV1UserControllerTest {
                 .getCookie("accessToken");
 
         // 3. [요청] 이메일 수정 (PATCH /api/v1/user/me)
+        assert accessTokenCookie != null;
+
         ResultActions resultActions = mvc
                 .perform(
                         patch("/api/v1/user/me")
@@ -281,6 +284,8 @@ public class ApiV1UserControllerTest {
                 .getCookie("accessToken");
 
         // 3. [요청] 비밀번호 변경 (PATCH /api/v1/user/me/password)
+        assert accessTokenCookie != null;
+
         ResultActions resultActions = mvc
                 .perform(
                         patch("/api/v1/user/me/password")

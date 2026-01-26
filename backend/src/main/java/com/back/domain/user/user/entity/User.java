@@ -42,11 +42,6 @@ public class User {
         this.apiKey = apiKey;
     }
 
-    public void modifyMember(String email, String password) {
-        this.email = email;
-        this.password = password;
-    }
-
     public void modifyUser(String email, String password) {
         this.email = email;
         this.password = password;

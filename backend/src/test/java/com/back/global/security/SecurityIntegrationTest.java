@@ -37,9 +37,6 @@ class SecurityIntegrationTest {
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private UserRepository userRepository;
-
     @Value("${custom.jwt.secretKey}")
     private String jwtSecret;
 

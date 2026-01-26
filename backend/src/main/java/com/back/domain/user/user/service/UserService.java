@@ -62,10 +62,6 @@ public class UserService {
         return authTokenService.genAccessToken(user);
     }
 
-    public Map<String, Object> payload(String accessToken) {
-        return authTokenService.payload(accessToken);
-    }
-
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
