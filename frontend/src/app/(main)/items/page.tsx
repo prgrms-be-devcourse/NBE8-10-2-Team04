@@ -22,27 +22,29 @@ type Category = {
   name: string;
 };
 
+const API_BASE = "http://localhost:8080";
+
 export default function Page() {
-  // ✅ 카테고리
+  // 카테고리
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
-  // ✅ 아이템
+  // 아이템
   const [items, setItems] = useState<ItemSummary[]>([]);
 
-  // ✅ 로딩/에러
+  // 로딩/에러
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [loadingItems, setLoadingItems] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // ✅ 카테고리 불러오기
+  // 카테고리 불러오기
   useEffect(() => {
     const run = async () => {
       try {
         setLoadingCategories(true);
         setErrorMsg(null);
 
-        const res = await fetch("/api/v1/categories", {
+        const res = await fetch(`${API_BASE}/api/v1/categories`, {
           method: "GET",
           credentials: "include",
           cache: "no-store",
@@ -62,10 +64,10 @@ export default function Page() {
     run();
   }, []);
 
-  // ✅ 아이템 불러오기(categoryId 따라 분기)
+  // 아이템 불러오기(categoryId 따라 분기)
   const fetchItems = async (categoryId: number | null) => {
     const qs = categoryId ? `?categoryId=${categoryId}` : "";
-    const res = await fetch(`/api/v1/items${qs}`, {
+    const res = await fetch(`${API_BASE}/api/v1/items${qs}`, {
       method: "GET",
       credentials: "include",
       cache: "no-store",
@@ -77,7 +79,7 @@ export default function Page() {
     return body.data ?? [];
   };
 
-  // ✅ category 변경될 때마다 items 재조회
+  // category 변경될 때마다 items 재조회
   useEffect(() => {
     const run = async () => {
       try {
@@ -108,13 +110,13 @@ export default function Page() {
     // TODO : 삭제
   };
 
-  // ✅ 수정 (일단 알림)
+  // 수정 (일단 알림)
   const handleEdit = (id: number) => {
     alert(`수정 클릭: ${id}`);
     // TODO: 수정 모달
   };
 
-  // ✅ isActive 토글은 지금 백에 API가 없으니 UI만 반영(원하면 버튼 숨겨도 됨)
+  // isActive 토글은 지금 백에 API가 없으니 UI만 반영(원하면 버튼 숨겨도 됨)
   const handleToggleActive = (id: number, next: boolean) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, isActive: next } : i)));
   };
@@ -132,7 +134,7 @@ export default function Page() {
           <p className="mt-2 text-sm text-white/60">레인저 장비를 관리하세요</p>
         </div>
 
-        {/* ✅ 카테고리 필터 */}
+        {/* 카테고리 필터 */}
         <div className="mt-8 flex justify-start">
           <div className="w-52">
             <Select
