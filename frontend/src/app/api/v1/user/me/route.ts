@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { applyCookiesToResponse } from "@/lib/cookie-utils";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -48,8 +49,8 @@ export async function GET() {
   }
 }
 
-// PUT /api/v1/user/modify - 사용자 정보 수정
-export async function PUT(request: NextRequest) {
+// PATCH /api/v1/user/me - 프로필(이메일) 수정
+export async function PATCH(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const accessToken = cookieStore.get("accessToken")?.value;
@@ -57,8 +58,8 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
-    const res = await fetch(`${BASE_URL}/api/v1/user/modify`, {
-      method: "PUT",
+    const res = await fetch(`${BASE_URL}/api/v1/user/me`, {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Cookie: [
@@ -73,32 +74,31 @@ export async function PUT(request: NextRequest) {
     });
 
     const data = await res.json();
-
-    // 백엔드에서 쿠키를 설정한 경우, 프론트엔드 쿠키에도 반영
     const setCookieHeader = res.headers.get("set-cookie");
-    if (setCookieHeader) {
-      const response = NextResponse.json(data, { status: res.status });
-      // 쿠키 파싱 및 설정
-      setCookieHeader.split(",").forEach((cookie) => {
-        const [nameValue] = cookie.split(";");
-        const [name, value] = nameValue.split("=");
-        if (name && value) {
-          response.cookies.set(name.trim(), value.trim(), {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-          });
-        }
-      });
+    const response = NextResponse.json(data, { status: res.status });
+
+    // 401 에러 시 쿠키 삭제 후 재인증 유도
+    if (res.status === 401) {
+      response.cookies.delete("accessToken");
+      response.cookies.delete("apiKey");
       return response;
     }
 
-    if (!res.ok) {
-      return NextResponse.json(data, { status: res.status });
+    // 백엔드에서 쿠키를 설정한 경우, 프론트엔드 쿠키에도 반영
+    if (setCookieHeader) {
+      applyCookiesToResponse(response, setCookieHeader);
+    } else if (res.ok && res.status === 200) {
+      // 성공했는데 토큰 갱신이 없는 경우 경고 (개발 환경에서만)
+      if (process.env.NODE_ENV === "development") {
+        console.warn("백엔드에서 새 토큰을 설정하지 않았습니다. 이메일 변경 시 토큰 갱신이 필요할 수 있습니다.");
+      }
     }
 
-    return NextResponse.json(data, { status: 200 });
+    if (!res.ok) {
+      return response;
+    }
+
+    return response;
   } catch (error: any) {
     return NextResponse.json(
       {
