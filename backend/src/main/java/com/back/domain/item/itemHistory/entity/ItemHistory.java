@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "item_histories") // 테이블명
@@ -31,5 +32,11 @@ public class ItemHistory {
 
     public void end(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public Long getUsedDays() {
+        if (endDate == null || startDate == null) return null;
+        long days = ChronoUnit.DAYS.between(startDate, endDate);
+        return Math.max(days, 0);
     }
 }

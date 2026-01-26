@@ -11,17 +11,10 @@ public record ItemHistoryResponse(
         Long usedDays
 ) {
     public static ItemHistoryResponse from(ItemHistory history) {
-        Long usedDays = null;
-        if (history.getEndDate() != null) {
-            usedDays = Math.max(
-                    0,
-                    ChronoUnit.DAYS.between(history.getStartDate(), history.getEndDate())
-            );
-        }
         return new ItemHistoryResponse(
                 history.getId(),
                 history.getStartDate(),
-                usedDays
+                history.getUsedDays()
         );
     }
 }
