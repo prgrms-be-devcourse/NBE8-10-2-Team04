@@ -21,9 +21,15 @@ public class ItemHistory {
     private Item item;
 
     private LocalDate startDate;
+    private LocalDate endDate;
 
     public ItemHistory(Item item) {
         this.item = item;
         this.startDate = item.getStartDate();
+        this.endDate = null;
+    }
+
+    public void end(LocalDate endDate) {
+        this.endDate = endDate;
     }
 }
