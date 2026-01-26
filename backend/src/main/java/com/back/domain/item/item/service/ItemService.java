@@ -143,6 +143,10 @@ public class ItemService {
         // 아이템 생성자가 아니면 예외 처리(인가)
         item.validateOwner(userId);
 
+        // 기존 진행중인 이력 endDate 넣기
+        LocalDate today = LocalDate.now();
+        itemHistoryService.endHistory(itemId, today);
+
         // 아이템 정보 교체
         modifyDate(item);
 

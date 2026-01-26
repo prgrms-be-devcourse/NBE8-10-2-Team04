@@ -2,6 +2,7 @@ package com.back.global.initData;
 
 import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.service.CategoryService;
+import com.back.domain.item.item.dto.ItemCreateRequest;
 import com.back.domain.item.item.service.ItemService;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
@@ -76,50 +77,38 @@ public class BaseInitData {
         Category car = categoryService.findByName("자동차").orElseThrow();
 
 
-        itemService.create(
-                user1.getId(),
-                bathroom,
+        itemService.createItem(user1.getId(), new ItemCreateRequest(
+                bathroom.getId(),
                 "칫솔",
                 "https://example.com/toothbrush.png",
                 LocalDate.of(2026, 1, 1),
-                "3m",
-                LocalDate.of(2026, 4, 1),
-                true
-        );
+                "3m"
+        ));
 
-        itemService.create(
-                user1.getId(),
-                kitchen,
+        itemService.createItem(user1.getId(), new ItemCreateRequest(
+                kitchen.getId(),
                 "수세미",
                 "https://example.com/sponge.png",
                 LocalDate.of(2026, 1, 5),
-                "21d",
-                LocalDate.of(2026, 1, 26),
-                true
-        );
+                "21d"
+        ));
 
-        itemService.create(
-                user2.getId(),
-                car,
+        itemService.createItem(user2.getId(), new ItemCreateRequest(
+                car.getId(),
                 "엔진오일",
                 "https://example.com/engineoil.png",
                 LocalDate.of(2025, 12, 1),
-                "6m",
-                LocalDate.of(2026, 5, 30),
-                true
-        );
+                "6m"
+        ));
 
         // 테스트용: 교체일이 오늘인 아이템 추가
-        itemService.create(
-                user1.getId(),
-                bathroom,
+        itemService.createItem(user1.getId(), new ItemCreateRequest(
+                bathroom.getId(),
                 "테스트용 칫솔 (D-Day 0)",
                 "https://example.com/test-toothbrush.png",
-                LocalDate.now().minusMonths(3),  // 3개월 전에 시작
-                "3m",
-                LocalDate.now(),  // 오늘이 교체일
-                true
-        );
+                LocalDate.now().minusMonths(3),
+                "3m"
+        ));
     }
 
     @Transactional
