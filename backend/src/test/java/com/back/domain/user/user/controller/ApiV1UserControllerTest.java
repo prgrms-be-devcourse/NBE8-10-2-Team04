@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -196,10 +196,9 @@ public class ApiV1UserControllerTest {
     }
 
     @Test
-    @DisplayName("회원정보 수정")
+    @DisplayName("이메일 수정")
     void t4() throws Exception {
-        // 1. [준비] BaseInitData의 user1 사용 (없으면 생성)
-        // 회원을 가져오는 것만으로는 토큰이 없으므로, 로그인을 해야 함
+        // 1. [준비] 회원 생성
         User user = userService.findByLoginId("user1")
                 .orElseGet(() -> userService.join("user1", "1234", "user1@test.com"));
         String originalEmail = user.getEmail();
@@ -218,23 +217,21 @@ public class ApiV1UserControllerTest {
                                         """.stripIndent())
                 );
 
-        // 로그인 응답의 쿠키에서 accessToken 추출
         jakarta.servlet.http.Cookie accessTokenCookie = loginResult
                 .andReturn()
                 .getResponse()
                 .getCookie("accessToken");
 
-        // 3. [요청] 회원정보 수정 (쿠키에 있는 토큰 사용)
+        // 3. [요청] 이메일 수정 (PATCH /api/v1/user/me)
         ResultActions resultActions = mvc
                 .perform(
-                        put("/api/v1/user/modify")
+                        patch("/api/v1/user/me")
                                 .with(csrf())
                                 .cookie(accessTokenCookie)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("""
                                         {
-                                            "email": "updated@test.com",
-                                            "password": "newpassword123"
+                                            "email": "updated@test.com"
                                         }
                                         """.stripIndent())
                 )
@@ -243,7 +240,7 @@ public class ApiV1UserControllerTest {
         // 4. [검증] 응답 검증
         resultActions
                 .andExpect(handler().handlerType(ApiV1UserController.class))
-                .andExpect(handler().methodName("updateUser"))
+                .andExpect(handler().methodName("updateProfile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("200-2"))
                 .andExpect(jsonPath("$.msg").value("회원정보가 수정되었습니다."))
@@ -255,6 +252,72 @@ public class ApiV1UserControllerTest {
         User afterUser = userService.findByLoginId("user1").orElseThrow();
         assertNotEquals(originalEmail, afterUser.getEmail(), "이메일이 수정되어야 합니다");
         assertEquals("updated@test.com", afterUser.getEmail(), "이메일이 올바르게 수정되어야 합니다");
+    }
+
+    @Test
+    @DisplayName("비밀번호 변경")
+    void t5() throws Exception {
+        // 1. [준비] 회원 생성
+        User user = userService.findByLoginId("user2")
+                .orElseGet(() -> userService.join("user2", "1234", "user2@test.com"));
+
+        // 2. [준비] 로그인 API 호출하여 쿠키에 accessToken 획득
+        ResultActions loginResult = mvc
+                .perform(
+                        post("/api/v1/user/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "loginId": "user2",
+                                            "password": "1234"
+                                        }
+                                        """.stripIndent())
+                );
+
+        jakarta.servlet.http.Cookie accessTokenCookie = loginResult
+                .andReturn()
+                .getResponse()
+                .getCookie("accessToken");
+
+        // 3. [요청] 비밀번호 변경 (PATCH /api/v1/user/me/password)
+        ResultActions resultActions = mvc
+                .perform(
+                        patch("/api/v1/user/me/password")
+                                .with(csrf())
+                                .cookie(accessTokenCookie)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "currentPassword": "1234",
+                                            "newPassword": "newpassword123"
+                                        }
+                                        """.stripIndent())
+                )
+                .andDo(print());
+
+        // 4. [검증] 응답 검증
+        resultActions
+                .andExpect(handler().handlerType(ApiV1UserController.class))
+                .andExpect(handler().methodName("changePassword"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-2"))
+                .andExpect(jsonPath("$.msg").value("비밀번호가 변경되었습니다."));
+
+        // 5. [검증] 새 비밀번호로 로그인 가능한지 확인
+        mvc.perform(
+                        post("/api/v1/user/login")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("""
+                                        {
+                                            "loginId": "user2",
+                                            "password": "newpassword123"
+                                        }
+                                        """.stripIndent())
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"));
     }
 
 }
