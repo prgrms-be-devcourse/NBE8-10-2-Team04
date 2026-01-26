@@ -61,6 +61,7 @@ public class ItemControllerTest {
                 .andExpect(jsonPath("$.msg").value("아이템 단건 조회 성공"))
                 .andExpect(jsonPath("$.data.id").value(item.getId()))
                 .andExpect(jsonPath("$.data.userId").value(user.getId()))
+                .andExpect(jsonPath("$.data.categoryId").value(item.getCategory().getId()))
                 .andExpect(jsonPath("$.data.categoryName").value(item.getCategory().getName()))
                 .andExpect(jsonPath("$.data.dDay").value(ChronoUnit.DAYS.between(LocalDate.now(),
                         item.getNextReplacementDate())));
