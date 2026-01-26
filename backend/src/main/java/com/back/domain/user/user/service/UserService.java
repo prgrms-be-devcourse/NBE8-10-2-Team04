@@ -69,18 +69,42 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    /**
+     * 프로필(이메일) 수정
+     * PATCH /api/v1/user/me
+     */
     @Transactional
-    public User updateUser(
-            long id,
-            @NotBlank @Size(min = 2, max = 30) String email,
-            @NotBlank @Size(min = 2, max = 20) String password)
-    {
+    public User updateProfile(long id, @NotBlank @Size(min = 2, max = 30) String email) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
 
-        String encodedPassword = passwordEncoder.encode(password);
-        user.modifyUser(email, encodedPassword);
+        user.modifyUser(email, user.getPassword());
+        return user;
+    }
 
+    /**
+     * 비밀번호 변경
+     * PATCH /api/v1/user/me/password
+     * 현재 비밀번호 검증 후 새 비밀번호로 변경
+     */
+    @Transactional
+    public User changePassword(
+            long id,
+            @NotBlank @Size(min = 2, max = 30) String currentPassword,
+            @NotBlank @Size(min = 2, max = 20) String newPassword) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new ServiceException("403-1", "현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new ServiceException("400-1", "새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+        }
+        
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.modifyUser(user.getEmail(), encodedPassword);
         return user;
     }
 }
