@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, User, Mail, Save, Trash2, Lock } from 'lucide-react';
+import { ArrowLeft, User, Mail, Save, Trash2, Lock, CheckCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { validateUpdateForm } from '@/lib/validation';
+import { validateEmail, validatePasswordForUpdate } from '@/lib/validation';
 
 
 type RsData<T> = {
@@ -35,6 +35,7 @@ export default function MePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<{ email?: boolean; password?: boolean } | null>(null);
 
   // 사용자 정보 조회
   useEffect(() => {
@@ -86,99 +87,89 @@ export default function MePage() {
     fetchUser();
   }, [router]);
 
-  // 사용자 정보 수정
+  // 정보 수정 (이메일 + 비밀번호) - 각각 별도 API 호출
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
-    // 현재 비밀번호 확인
-    if (!currentPassword) {
-      setError("현재 비밀번호를 입력해주세요.");
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error ?? "이메일을 확인해주세요.");
       return;
     }
 
-    // 새 비밀번호 입력 확인
-    if (!newPassword) {
-      setError("새 비밀번호를 입력해주세요.");
-      return;
-    }
-
-    // 새 비밀번호 유효성 검사
-    const passwordValidation = validateUpdateForm(email, newPassword);
-    if (!passwordValidation.isValid) {
-      setError(passwordValidation.error || "입력 정보를 확인해주세요.");
-      return;
+    // 비밀번호를 변경하려는 경우 검증
+    const isChangingPassword = newPassword.length > 0;
+    if (isChangingPassword) {
+      if (!currentPassword) {
+        setError("비밀번호를 변경하려면 현재 비밀번호를 입력해주세요.");
+        return;
+      }
+      const pwValidation = validatePasswordForUpdate(newPassword);
+      if (!pwValidation.isValid) {
+        setError(pwValidation.error ?? "새 비밀번호를 확인해주세요.");
+        return;
+      }
     }
 
     try {
       setIsSaving(true);
       setError(null);
 
-      const res = await fetch("/api/v1/user/me", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          email: email.trim(),
-          password: newPassword, // 백엔드는 password만 받으므로 새 비밀번호를 password로 전송
-        }),
-      });
+      // 1. 이메일 수정 (변경된 경우만)
+      const emailChanged = user && email.trim() !== user.email;
+      if (emailChanged) {
+        const emailRes = await fetch("/api/v1/user/me", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email: email.trim() }),
+        });
 
-      if (res.status === 401) {
-        router.replace("/login");
-        return;
-      }
-
-      if (!res.ok) {
-        let errorMessage = `HTTP ${res.status}`;
-        try {
-          const errorData = await res.json() as RsData<any>;
-          // 백엔드에서 반환하는 에러 메시지 처리
-          if (errorData.msg) {
-            // 백엔드 validation 에러 형식: "field-code-message" 또는 여러 줄
-            // 예: "email-Email-올바른 이메일 형식이 아닙니다\npassword-NotBlank-비밀번호는 필수입니다"
-            const messages = errorData.msg.split('\n');
-            if (messages.length > 0) {
-              // 마지막 부분만 추출 (더 읽기 쉬운 메시지)
-              const lastMessage = messages[messages.length - 1];
-              const parts = lastMessage.split('-');
-              if (parts.length >= 3) {
-                // 필드명과 메시지 추출
-                const fieldName = parts[0];
-                const message = parts.slice(2).join('-');
-                
-                // 필드명을 한글로 변환
-                const fieldMap: Record<string, string> = {
-                  'email': '이메일',
-                  'password': '비밀번호',
-                };
-                const fieldLabel = fieldMap[fieldName] || fieldName;
-                errorMessage = `${fieldLabel}: ${message}`;
-              } else {
-                errorMessage = lastMessage;
-              }
-            } else {
-              errorMessage = errorData.msg;
-            }
-          } else if (errorData.resultCode) {
-            errorMessage = "요청 처리 중 오류가 발생했습니다.";
-          }
-        } catch (parseError) {
-          // JSON 파싱 실패 시 기본 메시지 사용
-          const text = await res.text().catch(() => "");
-          if (text) {
-            errorMessage = text;
-          }
+        if (emailRes.status === 401) {
+          router.replace("/login");
+          return;
         }
-        throw new Error(errorMessage);
+
+        if (!emailRes.ok) {
+          const errorData = (await emailRes.json()) as RsData<unknown>;
+          throw new Error((errorData as { msg?: string }).msg ?? `이메일 수정 실패: HTTP ${emailRes.status}`);
+        }
       }
 
-      const body = (await res.json()) as RsData<any>;
+      // 2. 비밀번호 변경 (입력된 경우만)
+      if (isChangingPassword) {
+        const passwordRes = await fetch("/api/v1/user/me/password", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ currentPassword, newPassword }),
+        });
+
+        if (passwordRes.status === 401) {
+          router.replace("/login");
+          return;
+        }
+
+        if (!passwordRes.ok) {
+          const errorData = (await passwordRes.json()) as RsData<unknown>;
+          throw new Error((errorData as { msg?: string }).msg ?? `비밀번호 변경 실패: HTTP ${passwordRes.status}`);
+        }
+      }
+
+      // 3. 성공 메시지 설정
+      const updatedItems: { email?: boolean; password?: boolean } = {};
+      if (emailChanged) updatedItems.email = true;
+      if (isChangingPassword) updatedItems.password = true;
       
-      alert(body.msg || "회원정보가 수정되었습니다.");
-      
-      // 수정 후 다시 사용자 정보 조회
+      setSuccessMessage(updatedItems);
+
+      // 4초 후 성공 메시지 자동 제거
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 4000);
+
+      // 사용자 정보 다시 조회
       const userRes = await fetch("/api/v1/user/me", {
         method: "GET",
         credentials: "include",
@@ -196,21 +187,14 @@ export default function MePage() {
       }
 
       setIsEditing(false);
-      setCurrentPassword('');
-      setNewPassword('');
+      setCurrentPassword("");
+      setNewPassword("");
       setError(null);
-    } catch (err: any) {
-      let errorMsg = "회원정보 수정에 실패했습니다.";
       
-      // 네트워크 에러 처리
-      if (err?.message?.includes("Failed to fetch") || err?.name === "TypeError") {
-        errorMsg = "서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해주세요.";
-      } else if (err?.message) {
-        errorMsg = err.message;
-      }
-      
-      setError(errorMsg);
-      console.error("회원정보 수정 오류:", err);
+      // 성공 메시지는 위에서 이미 설정됨
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "정보 수정에 실패했습니다.";
+      setError(message.includes("Failed to fetch") ? "서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인해주세요." : message);
     } finally {
       setIsSaving(false);
     }
@@ -257,11 +241,10 @@ export default function MePage() {
   const handleCancel = () => {
     setIsEditing(false);
     if (user) {
-      setLoginId(user.loginId);
       setEmail(user.email);
     }
-    setCurrentPassword('');
-    setNewPassword('');
+    setCurrentPassword("");
+    setNewPassword("");
   };
 
   if (isLoading) {
@@ -305,6 +288,40 @@ export default function MePage() {
           </div>
         )}
 
+        {successMessage && (
+          <div className="mb-4 p-4 bg-green-900/50 border-2 border-green-500 rounded-lg text-green-200 animate-in slide-in-from-top-2 duration-300">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start gap-3 flex-1">
+                <CheckCircle2 className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="font-semibold mb-2">정보가 성공적으로 수정되었습니다!</div>
+                  <div className="space-y-1.5 text-sm">
+                    {successMessage.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-green-300" />
+                        <span>이메일이 수정되었습니다.</span>
+                      </div>
+                    )}
+                    {successMessage.password && (
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-4 w-4 text-green-300" />
+                        <span>비밀번호가 변경되었습니다.</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setSuccessMessage(null)}
+                className="ml-4 text-green-300 hover:text-green-100 transition-colors flex-shrink-0"
+                aria-label="닫기"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         <Card className="bg-black/80 backdrop-blur-sm border-4 border-blue-400 shadow-2xl">
           <CardHeader>
             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center mx-auto mb-4 border-4 border-white/30 shadow-lg">
@@ -312,11 +329,11 @@ export default function MePage() {
             </div>
             <CardTitle className="text-white text-center">내 정보</CardTitle>
             <CardDescription className="text-gray-400 text-center">
-              {isEditing ? '정보를 수정하세요' : '정보를 조회하고 수정할 수 있습니다'}
+              {isEditing ? "정보를 수정하세요" : "정보를 조회하고 수정할 수 있습니다"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleUpdate} className="space-y-6">
+            <div className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="loginId" className="text-white">아이디</Label>
                 <div className="relative">
@@ -340,7 +357,10 @@ export default function MePage() {
                     id="email"
                     type="email"
                     value={email}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      setEmail(e.target.value);
+                      setError(null);
+                    }}
                     disabled={!isEditing}
                     className="pl-10 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500 disabled:opacity-60"
                     required
@@ -349,9 +369,11 @@ export default function MePage() {
               </div>
 
               {isEditing && (
-                <>
+                <form onSubmit={handleUpdate} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="currentPassword" className="text-white">현재 비밀번호</Label>
+                    <Label htmlFor="currentPassword" className="text-white">
+                      현재 비밀번호 <span className="text-xs text-gray-500">(비밀번호 변경 시에만 필요)</span>
+                    </Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
@@ -360,11 +382,10 @@ export default function MePage() {
                         value={currentPassword}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           setCurrentPassword(e.target.value);
-                          setError(null); // 입력 시 에러 메시지 초기화
+                          setError(null);
                         }}
                         className="pl-10 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                        placeholder="현재 비밀번호를 입력하세요"
-                        required
+                        placeholder="비밀번호 변경 시에만 입력하세요"
                       />
                     </div>
                   </div>
@@ -379,31 +400,18 @@ export default function MePage() {
                         value={newPassword}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           setNewPassword(e.target.value);
-                          setError(null); // 입력 시 에러 메시지 초기화
+                          setError(null);
                         }}
                         className="pl-10 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
-                        placeholder="새 비밀번호를 입력하세요 (2-20자)"
-                        required
+                        placeholder="비밀번호 변경 시에만 입력하세요 (2-20자)"
                         minLength={2}
                         maxLength={20}
                       />
                     </div>
-                    <p className="text-xs text-gray-500">비밀번호는 2자 이상 20자 이하여야 합니다.</p>
+                    <p className="text-xs text-gray-500">비밀번호를 변경하지 않으려면 비워두세요.</p>
                   </div>
-                </>
-              )}
 
-              <div className="flex gap-4">
-                {!isEditing ? (
-                  <Button
-                    type="button"
-                    onClick={() => setIsEditing(true)}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-2 border-blue-400"
-                  >
-                    정보 수정
-                  </Button>
-                ) : (
-                  <>
+                  <div className="flex gap-4">
                     <Button
                       type="submit"
                       disabled={isSaving}
@@ -421,10 +429,22 @@ export default function MePage() {
                     >
                       취소
                     </Button>
-                  </>
-                )}
-              </div>
-            </form>
+                  </div>
+                </form>
+              )}
+
+              {!isEditing && (
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-2 border-blue-400"
+                  >
+                    정보 수정
+                  </Button>
+                </div>
+              )}
+            </div>
 
             <div className="mt-8 pt-8 border-t border-gray-700">
               <AlertDialog>

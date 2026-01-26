@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
@@ -26,11 +27,7 @@ function parseJwt(token: string): JwtPayload | null {
 }
 
 
-export default async function MainLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function MainLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("accessToken")?.value;
 
@@ -53,12 +50,12 @@ export default async function MainLayout({
       <div className="bg-gradient-to-r from-red-500 via-blue-500 to-yellow-400 p-[2px]">
         <header className="bg-[#0a0d14]">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-3">
-            <div>
-              <div className="text-sm font-semibold tracking-[0.2em] text-white">
+            <Link href="/" className="cursor-pointer select-none">
+              <div className="text-xl font-extrabold tracking-[0.25em] text-white">
                 POWER RANGERS
               </div>
               <div className="text-[10px] text-white/60">관리 시스템</div>
-            </div>
+            </Link>
 
             <div className="flex items-center gap-3 text-xs text-white/70">
               <span className="hidden sm:inline">
