@@ -1,7 +1,6 @@
 package com.back.global.security;
 
 import com.back.domain.user.user.entity.User;
-import com.back.domain.user.user.repository.UserRepository;
 import com.back.domain.user.user.service.UserService;
 import com.back.standard.util.Ut;
 import io.jsonwebtoken.Claims;
