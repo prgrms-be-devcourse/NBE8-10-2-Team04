@@ -6,12 +6,12 @@ import { CategorySelector } from '@/components/items/CategorySelector';
 import { DeleteItemDialog } from '@/components/items/DeleteItemDialog';
 import { useCategories } from '@/hooks/useCategories';
 import { useItems } from '@/hooks/useItems';
-import ItemModifyForm from '@/components/ItemModifyModal';
+import ItemModifyModal from '@/components/ItemModifyModal';
 
 export default function ItemsPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null); // 수정하고자 하는 itemId
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -54,7 +54,7 @@ export default function ItemsPage() {
     // 수정하고자 하는 itemId를 상태에 저장
     setSelectedItemId(id);
     // 모달 열기
-    setIsModalOpen(true);
+    setIsModifyModalOpen(true);
   };
 
   const isLoading = loadingCategories || loadingItems;
@@ -104,11 +104,11 @@ export default function ItemsPage() {
       <DeleteItemDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen} onConfirm={confirmDelete} />
 
       {/* 수정 모달 */}
-      {(selectedItemId !== null && isModalOpen) && (
-        <ItemModifyForm
+      {(selectedItemId !== null && isModifyModalOpen) && (
+        <ItemModifyModal
           itemId={selectedItemId}
           onClose={() => {
-            setIsModalOpen(false);
+            setIsModifyModalOpen(false);
             setSelectedItemId(null);
           }}
           onUpdate={() => refetch()} // 수정 후 최신 데이터를 다시 불러옴

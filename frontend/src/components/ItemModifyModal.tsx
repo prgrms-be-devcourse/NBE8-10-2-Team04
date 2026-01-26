@@ -25,7 +25,7 @@ interface ItemModifyFormProps {
   onUpdate: () => void; // 업데이트 시 실행할 함수
 }
 
-export default function ItemModifyForm({ itemId, onClose, onUpdate }: ItemModifyFormProps) {
+export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModifyFormProps) {
   const [item, setItem] = useState<ItemDetail | null>(null);
   const [isItemLoading, setIsItemLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -95,7 +95,7 @@ export default function ItemModifyForm({ itemId, onClose, onUpdate }: ItemModify
 
     // 이름 검증
     if (!name || name.trim() === '') {
-      setNameError('상품 이름을 입력해주세요.');
+      setNameError('아이템 이름을 입력해주세요.');
       isValid = false;
     }
 
