@@ -7,11 +7,13 @@ import { DeleteItemDialog } from '@/components/items/DeleteItemDialog';
 import { useCategories } from '@/hooks/useCategories';
 import { useItems } from '@/hooks/useItems';
 import ItemModifyModal from '@/components/ItemModifyModal';
+import ItemCreateModal from '@/components/ItemCreateModal';
 
 export default function ItemsPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null); // 수정하고자 하는 itemId
   const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -69,14 +71,21 @@ export default function ItemsPage() {
           <p className="mt-2 text-sm text-white/60">레인저 장비를 관리하세요</p>
         </header>
 
-        {/* 카테고리 필터 */}
-        <div className="mt-8 flex justify-start">
+        {/* 카테고리 필터 및 아이템 등록 버튼 */}
+        <div className="mt-8 flex items-center justify-between">
           <CategorySelector
             categories={categories}
             selectedId={selectedCategoryId}
             onSelect={setSelectedCategoryId}
             disabled={loadingCategories}
           />
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center justify-center gap-2 rounded-md bg-[#00a34e] px-5 h-9 text-white transition-colors hover:bg-[#008a42] border-[2.5px] border-[#12d36c] cursor-pointer"
+          >
+            <span className="text-xl font-medium leading-none mb-0.5">+</span> 아이템 등록
+          </button>
         </div>
 
         {/* 로딩/에러 상태 */}
@@ -112,6 +121,14 @@ export default function ItemsPage() {
             setSelectedItemId(null);
           }}
           onUpdate={() => refetch()} // 수정 후 최신 데이터를 다시 불러옴
+        />
+      )}
+
+      {/* 등록 모달 */}
+      {isCreateModalOpen && (
+        <ItemCreateModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreate={() => refetch()} // 등록 후 최신 데이터를 다시 불러옴
         />
       )}
     </div>
