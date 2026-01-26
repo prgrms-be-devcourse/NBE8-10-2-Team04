@@ -28,24 +28,6 @@ type ItemDetail = {
   imgUrl: string | null;
 };
 
-// Mock Data
-const mockItemHistories: ItemHistory[] = [
-  { id: 1, startDate: "2026-01-01" },
-  { id: 2, startDate: "2025-11-30" },
-];
-
-const mockItem: ItemDetail = {
-  id: 1,
-  name: "칫솔",
-  categoryName: "식품",
-  cycleDays: "4m",
-  startDate: "2025-12-30",
-  nextReplacementDate: "2026-04-20",
-  dDay: 17,
-  isActive: true,
-  imgUrl: null,
-};
-
 export default function ItemPage() {
   const router = useRouter();
   const { id: idStr } = useParams<{ id: string }>();
@@ -120,7 +102,6 @@ export default function ItemPage() {
         if (response.ok) {
           const msg = await response.json();
           setItem(msg.data);
-          setItemHistories(mockItemHistories);
         }
       } catch (error) {
         console.error('Error fetching item:', error);
