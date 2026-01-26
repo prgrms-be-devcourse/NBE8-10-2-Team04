@@ -23,6 +23,9 @@ public class User {
     @Column(unique = true)
     private String apiKey;
 
+    @Column(nullable = false)
+    private Long tokenVersion = 0L;
+
     public User(long id, String loginId) {
         this.id = id;
         this.loginId = loginId;
@@ -47,5 +50,9 @@ public class User {
     public void modifyUser(String email, String password) {
         this.email = email;
         this.password = password;
+    }
+
+    public void increaseTokenVersion() {
+        this.tokenVersion++;
     }
 }

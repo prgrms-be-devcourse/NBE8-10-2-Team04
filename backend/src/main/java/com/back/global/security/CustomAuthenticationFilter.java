@@ -109,6 +109,7 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 // 5) 토큰에서 회원 ID 추출
                 Long id = claims.get("id", Long.class);
                 String loginId = claims.get("loginId", String.class);
+                Long tokenVersion = claims.get("tokenVersion", Long.class);
 
                 // 클레임 유효성 검사
                 if (id == null || loginId == null) {
@@ -118,6 +119,11 @@ public class CustomAuthenticationFilter extends OncePerRequestFilter {
                 // DB에서 실제 회원 조회
                 user = userRepository.findById(id)
                         .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 회원입니다."));
+
+                // tokenVersion 검증 - DB의 버전과 토큰의 버전이 다르면 토큰 무효화
+                if (tokenVersion == null || !tokenVersion.equals(user.getTokenVersion())) {
+                    throw new ServiceException("401-4", "토큰이 만료되었습니다. 다시 로그인해주세요.");
+                }
 
                 isAccessTokenValid = true;
             }
