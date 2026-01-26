@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MissionBadgeIcon, MissionIcon, type MissionKey } from "@/components/icons/MissionIcons";
+import { Box, User, Clock, Layers } from "lucide-react";
+
+type MissionKey = "items" | "me" | "history" | "categories";
 
 type MissionCard = {
   key: MissionKey;
@@ -72,6 +74,29 @@ const COLOR = {
   },
 } as const;
 
+function MissionIcon({
+  kind,
+  className,
+}: {
+  kind: MissionKey;
+  className?: string;
+}) {
+  const cn = `h-6 w-6 ${className ?? ""}`;
+
+  if (kind === "items") return <Box className={cn} />;
+  if (kind === "me") return <User className={cn} />;
+  if (kind === "history") return <Clock className={cn} />;
+  return <Layers className={cn} />;
+}
+
+function MissionBadgeIcon() {
+  return (
+    <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-700 shadow-[0_0_0_2px_rgba(16,185,129,0.25),0_0_8px_rgba(16,185,129,0.18)]">
+      <span className="absolute inset-0 rounded-full bg-gradient-to-b from-white/15 to-transparent" />
+      <Box className="relative h-6 w-6 text-emerald-100" />
+    </span>
+  );
+}
 
 export default function Page() {
   const router = useRouter();
