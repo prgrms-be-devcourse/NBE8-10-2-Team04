@@ -166,4 +166,61 @@ class EmailServiceTest {
         verify(javaMailSender, times(3)).createMimeMessage();
         verify(javaMailSender, times(3)).send(any(MimeMessage.class));
     }
+
+    @Test
+    @DisplayName("한 명의 수신자에게 여러 아이템에 대한 이메일 발송 테스트")
+    void sendDDayNotification_SingleRecipientMultipleItems() {
+        Item item1 = new Item(
+                testUser,
+                testCategory,
+                "칫솔",
+                "/images/toothbrush.png",
+                LocalDate.of(2024, 1, 1),
+                "90일",
+                LocalDate.of(2024, 4, 1),
+                true
+        );
+
+        Item item2 = new Item(
+                testUser,
+                testCategory,
+                "수세미",
+                "/images/sponge.png",
+                LocalDate.of(2024, 2, 1),
+                "30일",
+                LocalDate.of(2024, 3, 1),
+                true
+        );
+
+        Item item3 = new Item(
+                testUser,
+                testCategory,
+                "샤워타올",
+                "/images/towel.png",
+                LocalDate.of(2024, 3, 1),
+                "180일",
+                LocalDate.of(2024, 9, 1),
+                true
+        );
+
+        // 교체 알림이 필요한 아이템 리스트
+        Item[] items = {item1, item2, item3};
+
+        // 메일 생성 및 전송 정상 설정
+        MimeMessage mimeMessage = new MimeMessage((Session) null);
+        given(javaMailSender.createMimeMessage()).willReturn(mimeMessage);
+        doNothing().when(javaMailSender).send(any(MimeMessage.class));
+
+        // 동일한 수신자에게 여러 아이템에 대한 메일 발송
+        for (Item item : items) {
+            String result = emailService.sendDDayNotification(recipientEmail, item);
+
+            // 각 메일 발송마다 동일한 수신자 이메일이 반환되는지 검증
+            assertThat(result).isEqualTo(recipientEmail);
+        }
+
+        // 아이템 개수만큼 메일 생성/전송이 호출되었는지 검증
+        verify(javaMailSender, times(3)).createMimeMessage();
+        verify(javaMailSender, times(3)).send(any(MimeMessage.class));
+    }
 }
