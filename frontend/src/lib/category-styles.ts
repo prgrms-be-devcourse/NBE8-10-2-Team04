@@ -28,7 +28,7 @@ export const categoryStyles: Record<string, CategoryStyle> = {
   },
   자동차: {
     icon: Car,
-    color: '#d267e0', // Slate
+    color: '#d267e0', // purple
   },
   전자기기: {
     icon: Smartphone,

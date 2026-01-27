@@ -5,8 +5,6 @@ import { Grid, Package} from 'lucide-react';
 import {
   getCategoryStyle,
   getIconBgClass,
-  getBgColorClass,
-  getTextColorClass,
 } from "@/lib/category-styles";
 
 
