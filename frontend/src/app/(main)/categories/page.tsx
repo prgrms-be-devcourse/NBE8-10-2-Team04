@@ -98,7 +98,7 @@ export default function CategoriesPage() {
 
         {!loading && !errorMsg && (
           <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories.map((category) => {
                 const { icon: Icon } = getCategoryStyle(category.name);
 
@@ -142,7 +142,7 @@ export default function CategoriesPage() {
                 <CardTitle className="text-white text-center">전체 통계</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
                   {categories.map((category) => (
                     <div key={category.id} className="text-center p-4 bg-gray-900/50 rounded-lg border border-gray-700">
                       <p className="text-gray-400 text-sm mb-1">{category.name}</p>
