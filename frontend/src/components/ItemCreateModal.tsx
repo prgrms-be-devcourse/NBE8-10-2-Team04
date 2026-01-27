@@ -1,39 +1,38 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react"; // X 아이콘을 위해 lucide-react 사용 (없을 경우 일반 텍스트 'X'로 대체 가능)
-
-type ItemDetail = {
-  id: number;
-  name: string;
-  categoryId: number;
-  categoryName: string | null;
-  cycleDays: string | null;
-  startDate: string | null;
-  nextReplacementDate: string | null;
-  dDay: number;
-  isActive: boolean;
-  imgUrl: string | null;
-};
+import { X } from "lucide-react";
 
 type Category = {
   id: number;
   name: string;
 }
 
-interface ItemModifyFormProps {
-  itemId: number;
+interface ItemCreateFormProps {
   onClose: () => void; // 모달 닫기 함수
-  onUpdate: () => void; // 업데이트 시 실행할 함수
+  onCreate: () => void; // 생성 완료 시 실행할 함수
 }
 
-export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModifyFormProps) {
-  const [item, setItem] = useState<ItemDetail | null>(null);
-  const [isItemLoading, setIsItemLoading] = useState(true);
+export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormProps) {
+  // 서울 기준 오늘 날짜를 구하는 함수
+  const getSeoulToday = () => {
+    const now = new Date();
+    // Intl API를 사용해 Asia/Seoul 시간대의 날짜만 추출
+    // 'en-CA' 로케일은 YYYY-MM-DD 형식을 반환함
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(now);
+  };
+
+  // 카테고리 상태 관리
   const [categories, setCategories] = useState<Category[]>([]);
 
   // 폼 상태 관리
   const [name, setName] = useState("");
   const [categoryId, setCategoryId] = useState<number | string>("");
   const [imgUrl, setImgUrl] = useState("")
+  const [startDate, setStartDate] = useState(getSeoulToday());
   const [cycleValue, setCycleValue] = useState("");
   const [cycleUnit, setCycleUnit] = useState("m"); // 기본값 'm' (월)
 
@@ -41,51 +40,27 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
   const [nameError, setNameError] = useState("");
   const [cycleError, setCycleError] = useState("");
 
-
-  // cycleDays 파싱 함수 ('3d' -> {value: '3', unit: 'd'})
-  const parseCycleDays = (cycle: string | null) => {
-    if (!cycle) return { value: "", unit: "m" };
-    const value = cycle.replace(/[^0-9]/g, "");
-    const unit = cycle.replace(/[0-9]/g, "");
-    return { value, unit: unit || "m" };
-  };
-
-  // 아이템 정보 불러오기
-  const fetchItem = async () => {
+  // 카테고리 목록 불러오기
+  const fetchCategories = async () => {
     try {
-      // 카테고리 목록과 아이템 상세 정보를 동시에 요청
-      const [categoryResponse, itemResponse] = await Promise.all([
-        fetch(`http://localhost:8080/api/v1/categories`, { credentials: "include" }),
-        fetch(`http://localhost:8080/api/v1/items/${itemId}`, { credentials: "include" })
-      ]);
+      const categoryResponse = await fetch(`http://localhost:8080/api/v1/categories`,
+        { credentials: "include" })
+        ;
 
-      if (categoryResponse.ok && itemResponse.ok) {
+      if (categoryResponse.ok) {
         const categoryData = await categoryResponse.json();
-        const itemData = await itemResponse.json();
 
         // 카테고리 설정
         setCategories(categoryData.data);
-
-        // 아이템 설정
-        const item: ItemDetail = itemData.data;
-        setItem(item);
-        setName(item.name);
-        setCategoryId(item.categoryId || 1);
-        setImgUrl(item.imgUrl || "");
-        const { value, unit } = parseCycleDays(item.cycleDays);
-        setCycleValue(value);
-        setCycleUnit(unit);
       }
     } catch (error) {
-      console.error("Error fetching item:", error);
-    } finally {
-      setIsItemLoading(false);
+      console.error("Error fetching categories:", error);
     }
   };
 
   useEffect(() => {
-    fetchItem();
-  }, [itemId]);
+    fetchCategories();
+  }, []);
 
   const handleSave = async () => {
     // 에러 초기화
@@ -107,52 +82,38 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
 
     if (!isValid) return;
 
-    // 수정 요청
+    // 등록 요청
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/items/${itemId}`, {
-        method: "PUT",
+      const response = await fetch('http://localhost:8080/api/v1/items', {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
           name,
           categoryId: Number(categoryId),
           imgUrl,
+          startDate,
           cycleDays: `${cycleValue}${cycleUnit}`,
-          isActive: item?.isActive
         })
       });
       if (response.ok) {
-        alert('수정이 완료되었습니다.');
-        onUpdate(); // 데이터 갱신 요청
+        alert('등록이 완료되었습니다.');
+        onCreate(); // 데이터 갱신 요청
         onClose(); // 모달 닫기 요청
       }
     } catch (error) {
-      console.error('아이템 수정 오류 발생:', error);
+      console.error('아이템 등록 오류 발생:', error);
     }
   };
-
-  if (isItemLoading)
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="text-white">로딩 중...</div>
-      </div>
-    );
-
-  if (!item)
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="text-white">아이템을 찾을 수 없습니다</div>
-      </div>
-    );
 
   return (
     // 모달 배경 overlay
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
       {/* 모달 컨테이너 */}
-      <div className="relative w-full max-w-md rounded-2xl border-2 border-orange-500 bg-[#0a0a0a] p-6 shadow-2xl">
+      <div className="relative w-full max-w-md rounded-2xl border-2 border-green-500 bg-[#0a0a0a] p-6 shadow-2xl">
         {/* 헤더 */}
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">아이템 수정</h2>
+          <h2 className="text-xl font-bold text-white">새 아이템 등록</h2>
           <button onClick={onClose} className="text-white hover:opacity-70 cursor-pointer">
             <X size={24} />
           </button>
@@ -170,7 +131,7 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
                 setName(e.target.value);
                 if (nameError) setNameError(""); // 입력 시 에러 초기화
               }}
-              className={`w-full rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${nameError ? "border-red-500" : "border-gray-800 focus:border-orange-500"
+              className={`w-full rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${nameError ? "border-red-500" : "border-gray-800 focus:border-green-500"
                 }`}
               placeholder='이름'
             />
@@ -188,7 +149,7 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full appearance-none rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white focus:border-orange-500 focus:outline-none"
+                className="w-full appearance-none rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white focus:border-green-500 focus:outline-none"
               >
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>
@@ -209,9 +170,22 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
               type="text"
               value={imgUrl}
               onChange={(e) => setImgUrl(e.target.value)}
-              className="w-full rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white focus:border-orange-500 focus:outline-none"
+              className="w-full rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white focus:border-green-500 focus:outline-none"
               placeholder="https://example.com/img.jpg"
             />
+          </div>
+
+          {/* 시작일 */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-white">시작일</label>
+            <div className="relative">
+              <input
+                type="date" // 달력 기능 내장, yyyy-mm-dd으로 자동 반환
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white focus:border-green-500 focus:outline-none scheme-dark"
+              />
+            </div>
           </div>
 
           {/* 교체 주기 */}
@@ -226,14 +200,14 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
                   setCycleValue(e.target.value);
                   if (cycleError) setCycleError(""); // 입력 시 에러 초기화
                 }}
-                className={`flex-1 rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${cycleError ? "border-red-500" : "border-gray-800 focus:border-orange-500"}`}
+                className={`flex-1 rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${cycleError ? "border-red-500" : "border-gray-800 focus:border-green-500"}`}
                 placeholder="1"
               />
               <div className="relative flex-1">
                 <select
                   value={cycleUnit}
                   onChange={(e) => setCycleUnit(e.target.value)}
-                  className="w-full appearance-none rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white focus:border-orange-500 focus:outline-none"
+                  className="w-full appearance-none rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white focus:border-green-500 focus:outline-none"
                 >
                   <option value="d">일</option>
                   <option value="m">개월</option>
@@ -252,12 +226,12 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
           </div>
         </div>
 
-        {/* 저장 버튼 */}
+        {/* 등록 버튼 */}
         <button
           onClick={handleSave}
-          className="mt-8 w-full rounded-lg bg-[#b45309] py-3 text-lg font-bold text-white transition-colors hover:bg-[#92400e] cursor-pointer"
+          className="mt-8 w-full rounded-lg bg-[#00A63E] py-3 text-lg font-bold text-white transition-colors hover:bg-[#008236] cursor-pointer"
         >
-          저장
+          등록
         </button>
       </div>
     </div>
