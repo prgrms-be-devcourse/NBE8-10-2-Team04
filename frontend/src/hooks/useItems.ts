@@ -57,8 +57,23 @@ export function useItems(categoryId: number | null) {
     return false;
   }, []);
 
-  const toggleItemActive = useCallback((id: number, isActive: boolean) => {
-    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, isActive } : item)));
+  const toggleItemActive = useCallback(async (id: number, isActive: boolean) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/v1/items/${id}/toggle-active`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        // 로컬 상태 업데이트
+        setItems((prev) => prev.map((item) => (item.id === id ? { ...item, isActive } : item)));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Toggle active failed:', error);
+      return false;
+    }
   }, []);
 
   const refetch = useCallback(() => {

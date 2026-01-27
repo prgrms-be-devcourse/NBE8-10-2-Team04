@@ -187,7 +187,7 @@ export default function ItemPage() {
             </div>
             <h2 className="text-2xl font-bold text-white tracking-tight">{item.name}</h2>
           </div>
-          Status Section
+          {/* Status Section */}
           <div className="bg-[#0F172A]/50 border border-white/5 rounded-2xl p-6 mb-4">
             <div className="flex items-center gap-2 text-[#22C55E] mb-4">
               <Activity className="h-5 w-5" />

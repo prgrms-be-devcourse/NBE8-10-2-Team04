@@ -186,4 +186,17 @@ public class ItemService {
 
         return item;
     }
+
+    @Transactional
+    public Item toggleActive(Long userId, Long itemId) {
+        Item item = findItemOrThrow(itemId);
+
+        // 아이템 생성자가 아니면 예외 처리(인가)
+        item.validateOwner(userId);
+
+        // 활성화 상태 토글
+        item.toggleActive();
+
+        return item;
+    }
 }
