@@ -19,11 +19,12 @@ public class AuthTokenService {
         long id = user.getId();
         String loginId = user.getLoginId();
         String email = user.getEmail();
+        Long tokenVersion = user.getTokenVersion();
 
         return Ut.jwt.toString(
                 jwtSecretKey,
                 accessTokenExpirationSeconds,
-                Map.of("id", id, "loginId", loginId, "email", email)
+                Map.of("id", id, "loginId", loginId, "email", email, "tokenVersion", tokenVersion)
         );
     }
 
@@ -35,8 +36,9 @@ public class AuthTokenService {
         long id = ((Number) parsedPayload.get("id")).longValue();
         String loginId = (String) parsedPayload.get("loginId");
         String email = (String) parsedPayload.get("email");
+        long tokenVersion = ((Number) parsedPayload.get("tokenVersion")).longValue();
 
-        return Map.of("id", id, "loginId", loginId, "email", email);
+        return Map.of("id", id, "loginId", loginId, "email", email, "tokenVersion", tokenVersion);
 
     }
 }
