@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { FolderOpenDotIcon, X } from "lucide-react";
 
 type Category = {
   id: number;
@@ -30,7 +30,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
 
   // 폼 상태 관리
   const [name, setName] = useState("");
-  const [categoryId, setCategoryId] = useState<number | string>("");
+  const [categoryId, setCategoryId] = useState<number | null>(null);
   const [imgUrl, setImgUrl] = useState("")
   const [startDate, setStartDate] = useState(getSeoulToday());
   const [cycleValue, setCycleValue] = useState("");
@@ -38,6 +38,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
 
   // input값 에러 여부 관리
   const [nameError, setNameError] = useState("");
+  const [categoryError, setCategoryError] = useState("");
   const [cycleError, setCycleError] = useState("");
 
   // 카테고리 목록 불러오기
@@ -65,6 +66,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
   const handleSave = async () => {
     // 에러 초기화
     setNameError("");
+    setCategoryError("");
     setCycleError("");
     let isValid = true;
 
@@ -78,6 +80,12 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
     if (!cycleValue || Number(cycleValue) < 1) {
       setCycleError('주기는 숫자 1 이상이어야 합니다.');
       isValid = false;
+    }
+
+    // 카테고리 검증
+    if(!categoryId) {
+      setCategoryError('카테고리를 선택해주세요.');
+      isValid = false
     }
 
     if (!isValid) return;
@@ -147,20 +155,34 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
             <label className="mb-1.5 block text-sm font-medium text-white">카테고리</label>
             <div className="relative">
               <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="w-full appearance-none rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white focus:border-green-500 focus:outline-none"
+                value={categoryId ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setCategoryId(v === "" ? null : Number(v));
+                  if (categoryError) setCategoryError("");
+                }}
+                className={`w-full appearance-none rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${
+                  categoryError ? "border-red-500" : "border-gray-800 focus:border-green-500"
+                }`}
               >
+                <option value="">카테고리를 선택해주세요</option>
+
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>
                     {category.name}
                   </option>
                 ))}
               </select>
+
               <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
                 ▼
               </div>
             </div>
+            {categoryError && (
+              <p className="mt-1.5 flex items-center gap-1 text-xs text-red-500">
+                <span className="text-yellow-400">⚠️</span> {categoryError}
+              </p>
+            )}
           </div>
 
           {/* 이미지 URL */}
