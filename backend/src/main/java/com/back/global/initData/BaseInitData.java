@@ -1,6 +1,7 @@
 package com.back.global.initData;
 
 import com.back.domain.category.category.entity.Category;
+import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.category.category.service.CategoryService;
 import com.back.domain.item.item.dto.ItemCreateRequest;
 import com.back.domain.item.item.service.ItemService;
@@ -24,7 +25,7 @@ public class BaseInitData {
     @Lazy
     private BaseInitData self;
 
-    private final CategoryService categoryService;
+    private final CategoryRepository categoryRepository;
     private final ItemService itemService;
     private final UserService userService;
 
@@ -41,16 +42,15 @@ public class BaseInitData {
     @Transactional
     public void createDefaultCategory() {
         // 이미 카테고리가 있으면 스킵 (원하면 조건 변경 가능)
-        if (categoryService.count() > 0) return;
+        if (categoryRepository.count() > 0) return;
 
-        categoryService.create("집/생활");
-        categoryService.create("욕실");
-        categoryService.create("주방");
-        categoryService.create("뷰티");
-        categoryService.create("반려동물");
-        categoryService.create("자동차");
-        categoryService.create("전자기기");
-        categoryService.create("업무");
+        categoryRepository.save(new Category("집/생활"));
+        categoryRepository.save(new Category("욕실"));
+        categoryRepository.save(new Category("주방"));
+        categoryRepository.save(new Category("뷰티"));
+        categoryRepository.save(new Category("자동차"));
+        categoryRepository.save(new Category("전자기기"));
+        categoryRepository.save(new Category("업무"));
     }
 
     @Transactional
@@ -72,9 +72,9 @@ public class BaseInitData {
         User user1 = userService.findByLoginId("user1").orElseThrow();
         User user2 = userService.findByLoginId("user2").orElseThrow();
 
-        Category bathroom = categoryService.findByName("욕실").orElseThrow();
-        Category kitchen = categoryService.findByName("주방").orElseThrow();
-        Category car = categoryService.findByName("자동차").orElseThrow();
+        Category bathroom = categoryRepository.findByName("욕실").orElseThrow();
+        Category kitchen = categoryRepository.findByName("주방").orElseThrow();
+        Category car = categoryRepository.findByName("자동차").orElseThrow();
 
 
         itemService.createItem(user1.getId(), new ItemCreateRequest(
