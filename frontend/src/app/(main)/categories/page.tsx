@@ -1,19 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import {
-  Grid,
-  Package,
-  Home,
-  Bath,
-  Utensils,
-  Sparkles,
-  PawPrint,
-  Car,
-  Laptop,
-  Briefcase,
-} from 'lucide-react';
+import { Grid, Package} from 'lucide-react';
 import {
   getCategoryStyle,
   getIconBgClass,
@@ -40,33 +28,8 @@ type CategoryApi = {
 type CategoryUI = {
   id: string;
   name: string;
-  description: string;
   count: number;
 };
-
-function getIndexById(id: number | string, length: number) {
-  const n = Number(id);
-  if (Number.isNaN(n)) return 0;
-  return (n - 1) % length;
-}
-
-const COLOR_PALETTE = [
-  'from-red-600 to-red-700', // 0 → 빨강
-  'from-yellow-500 to-yellow-600', // 1 → 노랑
-  'from-green-600 to-green-700', // 2 → 초록
-  'from-blue-600 to-blue-700', // 3 → 파랑
-  'from-pink-600 to-pink-700', // 4 → 분홍
-] as const;
-
-function getCategoryColor(id: number | string) {
-  return COLOR_PALETTE[getIndexById(id, COLOR_PALETTE.length)];
-}
-
-const ICONS = [Home, Bath, Utensils, Sparkles, PawPrint, Car, Laptop, Briefcase] as const;
-
-function getCategoryIcon(id: number | string) {
-  return ICONS[getIndexById(id, ICONS.length)];
-}
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<CategoryUI[]>([]);
@@ -89,7 +52,6 @@ export default function CategoriesPage() {
         const ui: CategoryUI[] = (body.data ?? []).map((c) => ({
           id: String(c.id),
           name: c.name,
-          description: '카테고리 설명',
           count: 0,
         }));
 
@@ -140,8 +102,7 @@ export default function CategoriesPage() {
                 const { icon: Icon } = getCategoryStyle(category.name);
 
                 const iconBg = getIconBgClass(category.name);   // 아이콘 배경 (진한색)
-                const cardBg = getBgColorClass(category.name);  // 카드/배지 배경 (연한색)
-                const textColor = getTextColorClass(category.name); // 포인트 텍스트 색
+                
                 return (
                   <Card
                     key={category.id}
@@ -155,7 +116,6 @@ export default function CategoriesPage() {
                       </div>
 
                       <CardTitle className="text-white text-center text-2xl">{category.name}</CardTitle>
-                      <CardDescription className="text-gray-400 text-center">{category.description}</CardDescription>
                     </CardHeader>
 
                     <CardContent>
