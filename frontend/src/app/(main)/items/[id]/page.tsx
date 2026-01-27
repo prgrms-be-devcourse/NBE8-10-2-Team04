@@ -146,8 +146,7 @@ export default function ItemPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] font-sans pb-20">
-      {/* Top Gradient Bar */}
-      <div className="h-1.5 w-full bg-gradient-to-r from-[#7000FF] via-[#FF00C7] to-[#7000FF]"></div>
+
 
       {/* Header */}
       <PageHeader variant="purple" />
