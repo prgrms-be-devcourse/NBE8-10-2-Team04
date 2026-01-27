@@ -47,28 +47,28 @@ const COLOR = {
   red: {
     ring: "ring-red-500",
     glow: "shadow-[0_0_0_1px_rgba(239,68,68,0.3),0_0_18px_rgba(239,68,68,0.25)]",
-    btn: "bg-red-500 hover:bg-red-500",
+    btn: "bg-red-500 hover:bg-red-400 hover:scale-105 active:scale-95",
     icon: "text-red-50",
     iconBg: "bg-red-500",
   },
   blue: {
     ring: "ring-blue-500",
     glow: "shadow-[0_0_0_1px_rgba(59,130,246,0.3),0_0_18px_rgba(59,130,246,0.25)]",
-    btn: "bg-blue-500 hover:bg-blue-500",
+    btn: "bg-blue-500 hover:bg-blue-400 hover:scale-105 active:scale-95",
     icon: "text-blue-50",
     iconBg: "bg-blue-500",
   },
   yellow: {
     ring: "ring-yellow-500",
     glow: "shadow-[0_0_0_1px_rgba(234,179,8,0.3),0_0_18px_rgba(234,179,8,0.25)]",
-    btn: "bg-yellow-500 hover:bg-yellow-500",
+    btn: "bg-yellow-500 hover:bg-yellow-400 hover:scale-105 active:scale-95",
     icon: "text-yellow-50",
     iconBg: "bg-yellow-500",
   },
   pink: {
     ring: "ring-pink-500",
     glow: "shadow-[0_0_0_1px_rgba(236,72,153,0.3),0_0_18px_rgba(236,72,153,0.25)]",
-    btn: "bg-pink-500 hover:bg-pink-500",
+    btn: "bg-pink-500 hover:bg-pink-400 hover:scale-105 active:scale-95",
     icon: "text-pink-50",
     iconBg: "bg-pink-500",
   },
@@ -170,7 +170,17 @@ export default function Page() {
 
       <main className="mx-auto w-full max-w-6xl px-6 pb-14 pt-8">
         <div className="mb-8 text-center">
-          <div className="text-3xl font-extrabold tracking-tight text-red-300">레인저 미션 센터</div>
+          <div className="text-3xl font-extrabold tracking-tight">
+            <span className="text-red-400">레</span>
+            <span className="text-pink-400">인</span>
+            <span className="text-yellow-400">저</span>
+            <span className="text-white"> </span>
+            <span className="text-green-400">미</span>
+            <span className="text-blue-400">션</span>
+            <span className="text-white"> </span>
+            <span className="text-red-400">센</span>
+            <span className="text-pink-400">터</span>
+          </div>
           <div className="mt-1 text-xs text-white/70">원하는 미션을 선택하세요</div>
         </div>
 

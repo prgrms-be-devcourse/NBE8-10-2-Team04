@@ -416,7 +416,7 @@ export default function MePage() {
                     <Button
                       type="submit"
                       disabled={isSaving}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white border-2 border-green-400 disabled:opacity-50"
+                      className="flex-1 bg-green-500 hover:bg-green-400 hover:scale-105 active:scale-95 transition text-white border-2 border-green-400 disabled:opacity-50"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       {isSaving ? '저장 중...' : '저장'}
@@ -426,7 +426,7 @@ export default function MePage() {
                       onClick={handleCancel}
                       disabled={isSaving}
                       variant="outline"
-                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white border-gray-500 disabled:opacity-50"
+                      className="flex-1 bg-gray-600 hover:bg-gray-500 hover:scale-105 active:scale-95 transition text-white border-gray-500 disabled:opacity-50"
                     >
                       취소
                     </Button>
@@ -439,7 +439,7 @@ export default function MePage() {
                   <Button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-2 border-blue-400"
+                    className="flex-1 bg-blue-500 hover:bg-blue-400 hover:scale-105 active:scale-95 transition text-white border-2 border-blue-400"
                   >
                     정보 수정
                   </Button>
@@ -453,7 +453,7 @@ export default function MePage() {
                   <Button
                     variant="destructive"
                     disabled={isDeleting}
-                    className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 border-2 border-red-400 disabled:opacity-50"
+                    className="w-full bg-red-500 hover:bg-red-400 hover:scale-105 active:scale-95 transition border-2 border-red-400 disabled:opacity-50"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     {isDeleting ? '탈퇴 중...' : '회원 탈퇴'}
@@ -467,13 +467,13 @@ export default function MePage() {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel className="bg-gray-700 hover:bg-gray-600 text-white border-gray-500">
+                    <AlertDialogCancel className="bg-gray-600 hover:bg-gray-500 hover:scale-105 active:scale-95 transition text-white border-gray-500">
                       취소
                     </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDelete}
                       disabled={isDeleting}
-                      className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white disabled:opacity-50"
+                      className="bg-red-500 hover:bg-red-400 hover:scale-105 active:scale-95 transition text-white disabled:opacity-50"
                     >
                       {isDeleting ? '탈퇴 중...' : '탈퇴하기'}
                     </AlertDialogAction>
