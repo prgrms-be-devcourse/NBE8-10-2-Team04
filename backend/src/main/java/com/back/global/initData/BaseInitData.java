@@ -48,6 +48,7 @@ public class BaseInitData {
         categoryRepository.save(new Category("욕실"));
         categoryRepository.save(new Category("주방"));
         categoryRepository.save(new Category("뷰티"));
+        categoryRepository.save(new Category("반려동물"));
         categoryRepository.save(new Category("자동차"));
         categoryRepository.save(new Category("전자기기"));
         categoryRepository.save(new Category("업무"));
