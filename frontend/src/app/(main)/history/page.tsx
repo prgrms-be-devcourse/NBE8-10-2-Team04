@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { History as HistoryIcon, Calendar, Package } from 'lucide-react';
+import { History as HistoryIcon, Calendar, Package, Clock } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,13 +16,15 @@ type RsData<T> = {
 
 type HistoryItem = {
   id: number | string;
+  itemId: number | string;
   itemName: string;
-  timestamp: string;
+  startDate: string;
+  usedDays: number | null;
 };
 
 //실제값 사용하려면 주석 변경하면됨
 //const API_BASE = "";
-const API_BASE = "http://localhost:8080";
+const API_BASE = 'http://localhost:8080';
 
 export default function Page() {
   const router = useRouter();
@@ -38,13 +40,13 @@ export default function Page() {
         setErrorMsg(null);
 
         const res = await fetch(`${API_BASE}/api/v1/items/histories`, {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
+          method: 'GET',
+          credentials: 'include',
+          cache: 'no-store',
         });
 
         if (res.status === 401) {
-          router.replace("/login");
+          router.replace('/login');
           return;
         }
 
@@ -53,7 +55,7 @@ export default function Page() {
         const body = (await res.json()) as RsData<HistoryItem[]>;
         setItems(body.data ?? []);
       } catch {
-        setErrorMsg("이력 목록을 불러오지 못했습니다.");
+        setErrorMsg('이력 목록을 불러오지 못했습니다.');
       } finally {
         setLoading(false);
       }
@@ -64,8 +66,8 @@ export default function Page() {
 
   const historyItems = useMemo(() => {
     return [...items].sort((a, b) => {
-      const ta = new Date(a.startDate.replace(" ", "T")).getTime();
-      const tb = new Date(b.startDate.replace(" ", "T")).getTime();
+      const ta = new Date(a.startDate.replace(' ', 'T')).getTime();
+      const tb = new Date(b.startDate.replace(' ', 'T')).getTime();
       return tb - ta;
     });
   }, [items]);
@@ -73,15 +75,7 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       {/* Header */}
-      <div className="mx-auto max-w-7xl px-4 py-4">
-        <Button
-          onClick={() => router.back()}
-          variant="outline"
-          className="border-yellow-400 bg-yellow-600 text-white hover:bg-yellow-700">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          돌아가기
-        </Button>
-      </div>
+      <PageHeader variant="yellow" />
 
       {/* Main */}
       <div className="mx-auto max-w-5xl px-4 py-8">
@@ -131,34 +125,32 @@ export default function Page() {
                     className="rounded-lg border border-gray-700 bg-gray-900/50 p-4 transition-colors hover:border-yellow-500/50"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center 
-                     rounded-full bg-green-600 ">
+                      <div
+                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center 
+                     rounded-full bg-green-600 "
+                      >
                         <Package className="h-6 w-6 text-white" />
                       </div>
 
                       {/* 텍스트 영역 */}
                       <div className="flex-1">
                         {/* 아이템명 */}
-                        <div className="text-sm font-semibold text-white">
-                          {item.itemName}
-                        </div>
+                        <div className="text-sm font-semibold text-white">{item.itemName}</div>
 
                         {/* 교체일 */}
                         <div className="mt-1 flex items-center gap-1 text-xs text-white/60">
                           <Calendar className="h-3.5 w-3.5" />
-                          교체일: <span className="text-yellow-400">{item.timestamp.split(' ')[0]}</span>
+                          교체일: <span className="text-yellow-400">{item.startDate.split(' ')[0]}</span>
                         </div>
 
                         {/* 사용기간 */}
                         <div className="mt-1 flex items-center gap-1 text-xs text-white/60">
                           <Clock className="h-3.5 w-3.5" />
-                          사용기간:{" "}
+                          사용기간:{' '}
                           {item.usedDays === null ? (
                             <span className="text-green-400">사용 중</span>
                           ) : (
-                            <span className="text-gray-400">
-                              {item.usedDays}일
-                            </span>
+                            <span className="text-gray-400">{item.usedDays}일</span>
                           )}
                         </div>
                       </div>
