@@ -1,17 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, History as HistoryIcon, Calendar, Package, Clock } from "lucide-react";
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { History as HistoryIcon, Calendar, Package } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { PageHeader } from '@/components/common/PageHeader';
 
 type RsData<T> = {
   resultCode: string;
@@ -21,10 +16,8 @@ type RsData<T> = {
 
 type HistoryItem = {
   id: number | string;
-  itemId: number | string;
   itemName: string;
-  startDate: string;
-  usedDays: number | null;
+  timestamp: string;
 };
 
 //실제값 사용하려면 주석 변경하면됨
@@ -153,10 +146,7 @@ export default function Page() {
                         {/* 교체일 */}
                         <div className="mt-1 flex items-center gap-1 text-xs text-white/60">
                           <Calendar className="h-3.5 w-3.5" />
-                          교체일:{" "}
-                          <span className="text-yellow-400">
-                            {item.startDate.split(" ")[0]}
-                          </span>
+                          교체일: <span className="text-yellow-400">{item.timestamp.split(' ')[0]}</span>
                         </div>
 
                         {/* 사용기간 */}

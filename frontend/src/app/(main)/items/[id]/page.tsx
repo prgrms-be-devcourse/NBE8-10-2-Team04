@@ -1,16 +1,12 @@
 'use client';
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowLeft,
-  Activity,
-  Tag,
-  Package,
-  Calendar,
-  History,
-} from "lucide-react";
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
+import { PageHeader } from '@/components/common/PageHeader';
+
+import { Activity, Tag, Package, Calendar, History } from 'lucide-react';
 import ItemModifyForm from "@/components/ItemModifyModal";
+
 
 type ItemHistory = {
   id: number;
@@ -139,24 +135,22 @@ export default function ItemPage() {
     fetchItemHistories();
   }, [idStr]);
 
-  if (isItemLoading) return <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">로딩 중...</div>;
-  if (!item) return <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">아이템을 찾을 수 없습니다</div>;
+  if (isItemLoading)
+    return <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">로딩 중...</div>;
+  if (!item)
+    return (
+      <div className="min-h-screen bg-[#020617] text-white flex items-center justify-center">
+        아이템을 찾을 수 없습니다
+      </div>
+    );
 
   return (
     <div className="min-h-screen bg-[#020617] font-sans pb-20">
       {/* Top Gradient Bar */}
       <div className="h-1.5 w-full bg-gradient-to-r from-[#7000FF] via-[#FF00C7] to-[#7000FF]"></div>
 
-      {/* Back Button Container */}
-      <div className="max-w-[1200px] mx-auto px-6 py-6">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 bg-[#A855F7] hover:bg-[#9333EA] text-white px-4 py-2 rounded-lg text-sm transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          돌아가기
-        </button>
-      </div>
+      {/* Header */}
+      <PageHeader variant="purple" />
 
       {/* Main Titles */}
       <div className="text-center mb-10">
@@ -192,8 +186,9 @@ export default function ItemPage() {
             </div>
             <div className="flex gap-3">
               <button
-                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${item.isActive ? 'bg-[#22C55E] text-white' : 'bg-[#1E293B] text-gray-500'
-                  }`}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                  item.isActive ? 'bg-[#22C55E] text-white' : 'bg-[#1E293B] text-gray-500'
+                }`}
               >
                 {item.isActive ? '활성' : '비활성'}
               </button>
@@ -209,7 +204,7 @@ export default function ItemPage() {
                 <span className="font-semibold">카테고리</span>
               </div>
               <div className="bg-[#1E293B] inline-block px-3 py-1 rounded-md text-sm text-gray-300">
-                {item.categoryName || "-"}
+                {item.categoryName || '-'}
               </div>
             </div>
 
@@ -228,7 +223,7 @@ export default function ItemPage() {
                 <Calendar className="h-5 w-5" />
                 <span className="font-semibold">시작일</span>
               </div>
-              <div className="text-white text-sm">{item.startDate || "-"}</div>
+              <div className="text-white text-sm">{item.startDate || '-'}</div>
             </div>
 
             {/* Next Replacement */}
@@ -238,7 +233,7 @@ export default function ItemPage() {
                 <span className="font-semibold">다음 교체일</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-white text-sm">{item.nextReplacementDate || "-"}</span>
+                <span className="text-white text-sm">{item.nextReplacementDate || '-'}</span>
                 {item.dDay !== undefined && (
                   <div className={`${item.dDay > 0 ? "bg-[#22C55E]" : "bg-[#DC2626]"} px-3 py-1 rounded-md text-xs font-bold text-white`}>
                     {item.dDay === 0
@@ -268,12 +263,8 @@ export default function ItemPage() {
               {calculatedHistories.length > 0 ? (
                 calculatedHistories.map((history) => (
                   <div key={history.id} className="bg-[#0B0E14] border border-white/5 rounded-xl p-5">
-                    <div className="text-white text-xl font-bold mb-2 tracking-tight">
-                      {history.startDate}
-                    </div>
-                    <div className="text-gray-500 text-base">
-                      실제 사용일: {history.displayUsageDays}일
-                    </div>
+                    <div className="text-white text-xl font-bold mb-2 tracking-tight">{history.startDate}</div>
+                    <div className="text-gray-500 text-base">실제 사용일: {history.displayUsageDays}일</div>
                   </div>
                 ))
               ) : (
