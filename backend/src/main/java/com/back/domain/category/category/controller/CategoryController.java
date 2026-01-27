@@ -1,7 +1,6 @@
 package com.back.domain.category.category.controller;
 
 import com.back.domain.category.category.dto.CategoryResponse;
-import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.service.CategoryService;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,16 +22,10 @@ public class CategoryController {
     @GetMapping
     @Operation(summary = "카테고리 조회")
     public RsData<List<CategoryResponse>> getCategories() {
-        List<Category> categories = categoryService.findAll();
-
-        List<CategoryResponse> data = categories.stream()
-                .map(CategoryResponse::new)
-                .toList();
-
         return new RsData<>(
                 "200-1",
                 "카테고리 조회 성공",
-                data
+                categoryService.findAllWithItemCount()
         );
     }
 }

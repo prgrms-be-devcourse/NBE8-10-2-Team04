@@ -5,10 +5,12 @@ import com.back.domain.item.itemHistory.dto.ItemAllHistoryResponse;
 import com.back.domain.item.itemHistory.dto.ItemHistoryResponse;
 import com.back.domain.item.itemHistory.entity.ItemHistory;
 import com.back.domain.item.itemHistory.repository.ItemHistoryRepository;
+import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -35,5 +37,13 @@ public class ItemHistoryService {
                 .stream()
                 .map(ItemAllHistoryResponse::from)
                 .toList();
+    }
+
+    @Transactional
+    public void endHistory(Long itemId, LocalDate endDate) {
+        ItemHistory ongoing = itemHistoryRepository.findTopByItemIdAndEndDateIsNullOrderByStartDateDesc(itemId)
+                .orElseThrow(() -> new ServiceException("404-1", "진행중인 이력이 없습니다."));
+
+        ongoing.end(endDate);
     }
 }

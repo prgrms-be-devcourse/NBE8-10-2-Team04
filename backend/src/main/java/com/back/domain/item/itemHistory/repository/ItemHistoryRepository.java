@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ItemHistoryRepository extends JpaRepository<ItemHistory, Long> {
@@ -19,4 +20,6 @@ public interface ItemHistoryRepository extends JpaRepository<ItemHistory, Long> 
             ORDER BY ih.startDate DESC
             """)
     List<ItemHistory> findByUserIdOrderByStartDateDesc(Long userId);
+
+    Optional<ItemHistory> findTopByItemIdAndEndDateIsNullOrderByStartDateDesc(Long itemId);
 }

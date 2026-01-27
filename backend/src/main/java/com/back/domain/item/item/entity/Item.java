@@ -84,4 +84,20 @@ public class Item {
         this.nextReplacementDate = nextReplacementDate;
         this.isActive = isActive;
     }
+
+    public LocalDate getLastReplacementDate() {
+        if (itemHistories == null || itemHistories.isEmpty()) {
+            return null;
+        }
+
+        // 가장 최근 교체일 찾기
+        LocalDate latestDate = null;
+        for (ItemHistory history : itemHistories) {
+            LocalDate historyDate = history.getStartDate();
+            if (latestDate == null || historyDate.isAfter(latestDate)) {
+                latestDate = historyDate;
+            }
+        }
+        return latestDate;
+    }
 }
