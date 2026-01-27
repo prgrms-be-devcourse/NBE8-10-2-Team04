@@ -1,5 +1,6 @@
 package com.back.domain.category.category.service;
 
+import com.back.domain.category.category.dto.CategoryResponse;
 import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,4 +36,10 @@ public class CategoryService {
     public List<Category> findAll() {
         return categoryRepository.findAll();
     }
+
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> findAllWithItemCount() {
+        return categoryRepository.findAllWithItemCount();
+    }
+
 }
