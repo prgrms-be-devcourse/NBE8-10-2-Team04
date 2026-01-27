@@ -18,15 +18,21 @@ export type ItemSummary = {
 };
 
 function dDayLabel(dDay: number) {
-  if (dDay === 0) return 'D-0';
+  if (dDay === 0) return "D-Day";
   if (dDay > 0) return `D-${dDay}`;
   return `D+${Math.abs(dDay)}`;
 }
 
-function dDayBadgeClass(isActive: boolean) {
-  // 활성은 초록, 비활성은 흐린 회색
-  if (!isActive) return 'bg-white/15 text-white/70';
-  return 'bg-green-500/90 text-white';
+function dDayBadgeClass(isActive: boolean, isDDayOver: boolean) {
+  // 1. 비활성은 흐린 회색
+  if (!isActive) {
+    return "bg-white/15 text-white/70";
+  }
+  // 2. 활성
+  // 2-1. d-day에 도래하지 않으면 초록색
+  if (!isDDayOver) return "bg-green-500/90 text-white";
+  // 2-2. d-day에 도래했거나 지났으면 빨간색
+  return "bg-red-500/90 text-white";
 }
 
 export function ItemCard({
@@ -60,17 +66,15 @@ export function ItemCard({
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') goDetail();
       }}
-      className={`cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${
-        disabled ? 'opacity-70' : ''
-      }`}
+      className={`cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${disabled ? "opacity-70" : ""
+        }`}
     >
       {/* 상단 */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div
-            className={`flex h-9 w-9 items-center justify-center rounded-full ${
-              item.isActive ? 'bg-red-600' : 'bg-white/20'
-            }`}
+            className={`flex h-9 w-9 items-center justify-center rounded-full ${item.isActive ? "bg-red-600" : "bg-white/20"
+              }`}
           >
             <Box className="h-5 w-5 text-white" />
           </div>
@@ -78,7 +82,11 @@ export function ItemCard({
           <div className="text-base font-semibold">{item.name}</div>
         </div>
 
-        <span className={`rounded-md px-2 py-1 text-xs font-semibold ${dDayBadgeClass(item.isActive)}`}>
+        <span
+          className={`rounded-md px-2 py-1 text-xs font-semibold ${dDayBadgeClass(
+            item.isActive, item.dDay < 0
+          )}`}
+        >
           {dDayLabel(item.dDay)}
         </span>
       </div>
@@ -130,7 +138,7 @@ export function ItemCard({
         >
           <button
             onClick={() => onEdit(item.id)}
-            className="inline-flex items-center gap-1 hover:text-white"
+            className="inline-flex items-center gap-1 hover:text-white cursor-pointer"
             type="button"
           >
             <Pencil className="h-4 w-4" />
@@ -139,7 +147,7 @@ export function ItemCard({
 
           <button
             onClick={() => onDelete(item.id)}
-            className="inline-flex items-center gap-1 hover:text-white"
+            className="inline-flex items-center gap-1 hover:text-white cursor-pointer"
             type="button"
           >
             <Trash2 className="h-4 w-4" />
@@ -151,9 +159,10 @@ export function ItemCard({
       {/* 교체 버튼 */}
       <div className="mt-4" onClick={(e) => e.stopPropagation()}>
         <Button
-          className={`h-9 w-full rounded-md font-semibold ${
-            disabled ? 'bg-white/15 text-white/70 hover:bg-white/15' : 'bg-purple-600 hover:bg-purple-700'
-          }`}
+          className={`h-9 w-full rounded-md font-semibold cursor-pointer ${disabled
+            ? "bg-white/15 text-white/70 hover:bg-white/15"
+            : "bg-purple-600 hover:bg-purple-700"
+            }`}
           onClick={() => onReplace(item.id)}
           disabled={disabled}
         >
