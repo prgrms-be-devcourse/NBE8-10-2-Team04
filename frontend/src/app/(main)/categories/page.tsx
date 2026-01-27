@@ -23,6 +23,7 @@ type RsData<T> = {
 type CategoryApi = {
   id: number | string;
   name: string;
+  itemCount : number;
 };
 
 type CategoryUI = {
@@ -52,7 +53,7 @@ export default function CategoriesPage() {
         const ui: CategoryUI[] = (body.data ?? []).map((c) => ({
           id: String(c.id),
           name: c.name,
-          count: 0,
+          count: c.itemCount ?? 0,
         }));
 
         setCategories(ui);
