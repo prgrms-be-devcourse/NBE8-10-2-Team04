@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ItemCard } from '@/components/items/ItemCard';
 import { CategorySelector } from '@/components/items/CategorySelector';
 import { DeleteItemDialog } from '@/components/items/DeleteItemDialog';
+import { ReplaceItemDialog } from '@/components/items/ReplaceItemDialog';
 import { useCategories } from '@/hooks/useCategories';
 import { useItems } from '@/hooks/useItems';
 import ItemModifyModal from '@/components/ItemModifyModal';
@@ -17,6 +18,12 @@ export default function ItemsPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  // 교체 대기 중인 아이템 ID
+  const [replaceId, setReplaceId] = useState<number | null>(null);
+
+  // 교체 확인 다이얼로그 표시 여부
+  const [isReplaceDialogOpen, setIsReplaceDialogOpen] = useState(false);
+
   const { categories, loading: loadingCategories, error: categoriesError } = useCategories();
   const {
     items,
@@ -25,6 +32,7 @@ export default function ItemsPage() {
     deleteItem,
     toggleItemActive,
     refetch
+    replaceItem,
   } = useItems(selectedCategoryId);
 
   const handleDeleteClick = (id: number) => {
@@ -48,8 +56,36 @@ export default function ItemsPage() {
     }
   };
 
-  const handleReplace = async (id: number) => {
-    // TODO: 교체 로직
+  /**
+   * 교체 버튼 클릭 핸들러
+   * - 바로 교체하지 않고 확인 다이얼로그를 표시
+   */
+  const handleReplaceClick = (id: number) => {
+    setReplaceId(id);
+    setIsReplaceDialogOpen(true);
+  };
+
+  /**
+   * 교체 확인 핸들러
+   * - 다이얼로그에서 '교체' 버튼을 눌렀을 때 실행
+   */
+  const confirmReplace = async () => {
+    if (replaceId === null) return;
+
+    try {
+      const success = await replaceItem(replaceId);
+
+      if (!success) {
+        alert('교체 실패');
+      } else {
+        alert('교체되었습니다');
+      }
+    } catch (err) {
+      alert('교체 실패');
+    } finally {
+      setIsReplaceDialogOpen(false);
+      setReplaceId(null);
+    }
   };
 
   const handleEdit = (id: number) => {
@@ -100,7 +136,7 @@ export default function ItemsPage() {
                 key={item.id}
                 item={item}
                 onToggleActive={toggleItemActive}
-                onReplace={handleReplace}
+                onReplace={handleReplaceClick}
                 onDelete={handleDeleteClick}
                 onEdit={handleEdit}
               />
@@ -131,6 +167,8 @@ export default function ItemsPage() {
           onCreate={() => refetch()} // 등록 후 최신 데이터를 다시 불러옴
         />
       )}
+      {/* 교체 확인 다이얼로그 */}
+      <ReplaceItemDialog open={isReplaceDialogOpen} onOpenChange={setIsReplaceDialogOpen} onConfirm={confirmReplace} />
     </div>
   );
 }

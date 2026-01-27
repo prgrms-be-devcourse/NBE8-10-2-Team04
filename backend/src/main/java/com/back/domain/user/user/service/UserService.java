@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -61,10 +61,6 @@ public class UserService {
         return authTokenService.genAccessToken(user);
     }
 
-    public Map<String, Object> payload(String accessToken) {
-        return authTokenService.payload(accessToken);
-    }
-
     public Optional<User> findById(Long id) {
         return userRepository.findById(id);
     }
@@ -72,6 +68,7 @@ public class UserService {
     /**
      * 프로필(이메일) 수정
      * PATCH /api/v1/user/me
+     * 이메일 변경 시 기존 토큰 무효화 (tokenVersion 증가 + apiKey 재생성)
      */
     @Transactional
     public User updateProfile(long id, @NotBlank @Size(min = 2, max = 30) String email) {
@@ -79,6 +76,11 @@ public class UserService {
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
 
         user.modifyUser(email, user.getPassword());
+
+        // 기존 토큰 무효화: tokenVersion 증가 + apiKey 재생성
+        user.increaseTokenVersion();
+        user.modifyApiKey(UUID.randomUUID().toString());
+
         return user;
     }
 
@@ -86,6 +88,7 @@ public class UserService {
      * 비밀번호 변경
      * PATCH /api/v1/user/me/password
      * 현재 비밀번호 검증 후 새 비밀번호로 변경
+     * 비밀번호 변경 시 기존 모든 토큰 무효화 (tokenVersion 증가 + apiKey 재생성)
      */
     @Transactional
     public User changePassword(
@@ -102,9 +105,14 @@ public class UserService {
         if (passwordEncoder.matches(newPassword, user.getPassword())) {
             throw new ServiceException("400-1", "새 비밀번호는 현재 비밀번호와 달라야 합니다.");
         }
-        
+
         String encodedPassword = passwordEncoder.encode(newPassword);
         user.modifyUser(user.getEmail(), encodedPassword);
+
+        // 기존 모든 토큰 무효화: tokenVersion 증가 + apiKey 재생성
+        user.increaseTokenVersion();
+        user.modifyApiKey(UUID.randomUUID().toString());
+
         return user;
     }
 }

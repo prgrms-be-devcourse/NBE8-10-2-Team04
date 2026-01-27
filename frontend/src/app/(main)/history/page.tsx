@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, History as HistoryIcon, Calendar, Package } from "lucide-react";
+import { ArrowLeft, History as HistoryIcon, Calendar, Package, Clock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,13 +21,15 @@ type RsData<T> = {
 
 type HistoryItem = {
   id: number | string;
+  itemId: number | string;
   itemName: string;
-  timestamp: string;
+  startDate: string;
+  usedDays: number | null;
 };
 
 //실제값 사용하려면 주석 변경하면됨
-const API_BASE = "";
-// const API_BASE = "http://localhost:8080";
+//const API_BASE = "";
+const API_BASE = "http://localhost:8080";
 
 export default function Page() {
   const router = useRouter();
@@ -69,8 +71,8 @@ export default function Page() {
 
   const historyItems = useMemo(() => {
     return [...items].sort((a, b) => {
-      const ta = new Date(a.timestamp.replace(" ", "T")).getTime();
-      const tb = new Date(b.timestamp.replace(" ", "T")).getTime();
+      const ta = new Date(a.startDate.replace(" ", "T")).getTime();
+      const tb = new Date(b.startDate.replace(" ", "T")).getTime();
       return tb - ta;
     });
   }, [items]);
@@ -153,8 +155,21 @@ export default function Page() {
                           <Calendar className="h-3.5 w-3.5" />
                           교체일:{" "}
                           <span className="text-yellow-400">
-                            {item.timestamp.split(" ")[0]}
+                            {item.startDate.split(" ")[0]}
                           </span>
+                        </div>
+
+                        {/* 사용기간 */}
+                        <div className="mt-1 flex items-center gap-1 text-xs text-white/60">
+                          <Clock className="h-3.5 w-3.5" />
+                          사용기간:{" "}
+                          {item.usedDays === null ? (
+                            <span className="text-green-400">사용 중</span>
+                          ) : (
+                            <span className="text-gray-400">
+                              {item.usedDays}일
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
