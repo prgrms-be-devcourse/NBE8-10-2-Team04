@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 
 import { Activity, Tag, Package, Calendar, History } from 'lucide-react';
 import ItemModifyForm from "@/components/ItemModifyModal";
+import { DeleteItemDialog } from '@/components/items/DeleteItemDialog';
 
 
 type ItemHistory = {
@@ -38,13 +39,29 @@ export default function ItemPage() {
   // 수정 모달
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // 삭제 다이얼로그
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  // 아이템 삭제
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/api/v1/items/${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        router.push('/items');
+      } else {
+        console.error('삭제 실패');
+      }
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
+
   // 아이템 상세 정보 불러오기
   const fetchItem = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/items/${id}`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const response = await fetch(`/api/v1/items/${id}`);
       if (response.ok) {
         const msg = await response.json();
         setItem(msg.data);
@@ -59,10 +76,7 @@ export default function ItemPage() {
   // 아이템 이력 불러오기
   const fetchItemHistories = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/items/${id}/histories`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const response = await fetch(`/api/v1/items/${id}/histories`);
       if (response.ok) {
         const msg = await response.json();
         setItemHistories(msg);
@@ -279,7 +293,10 @@ export default function ItemPage() {
               className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-bold transition-colors cursor-pointer">
               수정
             </button>
-            <button className="flex-1 bg-[#DC2626] hover:bg-[#B91C1C] text-white py-3 rounded-xl font-bold transition-colors cursor-pointer">
+            <button
+              onClick={() => setIsDeleteDialogOpen(true)}
+              className="flex-1 bg-[#DC2626] hover:bg-[#B91C1C] text-white py-3 rounded-xl font-bold transition-colors cursor-pointer"
+            >
               삭제
             </button>
           </div>
@@ -292,6 +309,13 @@ export default function ItemPage() {
               onUpdate={() => fetchItem()} // 수정 후 최신 데이터를 다시 불러옴
             />
           )}
+
+          {/* 삭제 다이얼로그 */}
+          <DeleteItemDialog
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
+            onConfirm={handleDelete}
+          />
         </div>
       </div>
     </div>
