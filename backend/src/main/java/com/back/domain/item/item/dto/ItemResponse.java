@@ -8,6 +8,7 @@ import java.time.temporal.ChronoUnit;
 public record ItemResponse(
         Long id,
         Long userId,
+        Long categoryId,
         String categoryName,
         String name,
         String imgUrl,
@@ -21,6 +22,7 @@ public record ItemResponse(
         this(
                 item.getId(),
                 item.getUser().getId(),
+                item.getCategory() == null ? null : item.getCategory().getId(),
                 item.getCategory() == null ? null : item.getCategory().getName(),
                 item.getName(),
                 item.getImgUrl(),

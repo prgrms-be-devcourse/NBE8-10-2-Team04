@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
 
 import { Activity, Tag, Package, Calendar, History } from 'lucide-react';
+import ItemModifyForm from "@/components/ItemModifyModal";
+
 
 type ItemHistory = {
   id: number;
@@ -23,24 +25,6 @@ type ItemDetail = {
   imgUrl: string | null;
 };
 
-// Mock Data
-const mockItemHistories: ItemHistory[] = [
-  { id: 1, startDate: '2026-01-01' },
-  { id: 2, startDate: '2025-11-30' },
-];
-
-const mockItem: ItemDetail = {
-  id: 1,
-  name: '칫솔',
-  categoryName: '식품',
-  cycleDays: '4m',
-  startDate: '2025-12-30',
-  nextReplacementDate: '2026-04-20',
-  dDay: 17,
-  isActive: true,
-  imgUrl: null,
-};
-
 export default function ItemPage() {
   const router = useRouter();
   const { id: idStr } = useParams<{ id: string }>();
@@ -51,9 +35,48 @@ export default function ItemPage() {
   const [isItemLoading, setIsItemLoading] = useState(true);
   const [isItemHistoryLoading, setIsItemHistoryLoading] = useState(true);
 
+  // 수정 모달
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 아이템 상세 정보 불러오기
+  const fetchItem = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/v1/items/${id}`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (response.ok) {
+        const msg = await response.json();
+        setItem(msg.data);
+      }
+    } catch (error) {
+      console.error('Error fetching item:', error);
+    } finally {
+      setIsItemLoading(false);
+    }
+  }
+
+  // 아이템 이력 불러오기
+  const fetchItemHistories = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/v1/items/${id}/histories`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (response.ok) {
+        const msg = await response.json();
+        setItemHistories(msg);
+      }
+    } catch (error) {
+      console.error('Error fetching itemHistories:', error);
+    } finally {
+      setIsItemHistoryLoading(false);
+    }
+  }
+
   // cycleDays 변환
   const formatCycle = (cycle: string | null) => {
-    if (!cycle) return '-';
+    if (!cycle) return "-";
 
     const unit = cycle.slice(-1).toLowerCase(); // 마지막 글자 (m, y, d)
     const value = cycle.slice(0, -1); // 숫자 부분
@@ -100,47 +123,14 @@ export default function ItemPage() {
 
       return {
         ...history,
-        displayUsageDays: usageDays,
+        displayUsageDays: usageDays
       };
     });
   }, [itemHistories]);
 
+
+  // 페이지 접속 시 데이터 fetch
   useEffect(() => {
-    const fetchItem = async () => {
-      try {
-        const response = await fetch(`http://localhost:8080/api/v1/items/${id}`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const msg = await response.json();
-          setItem(msg.data);
-          setItemHistories(mockItemHistories);
-        }
-      } catch (error) {
-        console.error('Error fetching item:', error);
-      } finally {
-        setIsItemLoading(false);
-      }
-    };
-
-    const fetchItemHistories = async () => {
-      try {
-        const response = await fetch(`http://localhost:8080/api/v1/items/${id}/histories`, {
-          method: 'GET',
-          credentials: 'include',
-        });
-        if (response.ok) {
-          const msg = await response.json();
-          setItemHistories(msg);
-        }
-      } catch (error) {
-        console.error('Error fetching itemHistories:', error);
-      } finally {
-        setIsItemHistoryLoading(false);
-      }
-    };
-
     fetchItem();
     fetchItemHistories();
   }, [idStr]);
@@ -173,6 +163,7 @@ export default function ItemPage() {
       {/* Detail Card */}
       <div className="max-w-[800px] mx-auto px-4">
         <div className="relative bg-[#0B0E14] border-2 border-[#A855F7]/50 rounded-[2rem] p-8 md:p-12 shadow-2xl">
+
           {/* Avatar & Name */}
           <div className="flex flex-col items-center mb-12">
             <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center mb-4 shadow-lg shadow-blue-600/20">
@@ -244,7 +235,11 @@ export default function ItemPage() {
               <div className="flex items-center justify-between">
                 <span className="text-white text-sm">{item.nextReplacementDate || '-'}</span>
                 {item.dDay !== undefined && (
-                  <div className="bg-[#22C55E] px-3 py-1 rounded-md text-xs font-bold text-white">D-{item.dDay}</div>
+                  <div className={`${item.dDay > 0 ? "bg-[#22C55E]" : "bg-[#DC2626]"} px-3 py-1 rounded-md text-xs font-bold text-white`}>
+                    {item.dDay === 0
+                      ? "D-Day"
+                      : `D${item.dDay > 0 ? '-' : '+'}${Math.abs(item.dDay)}`}
+                  </div>
                 )}
               </div>
             </div>
@@ -280,13 +275,24 @@ export default function ItemPage() {
 
           {/* Action Buttons */}
           <div className="flex gap-4">
-            <button className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-bold transition-colors">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-bold transition-colors cursor-pointer">
               수정
             </button>
-            <button className="flex-1 bg-[#DC2626] hover:bg-[#B91C1C] text-white py-3 rounded-xl font-bold transition-colors">
+            <button className="flex-1 bg-[#DC2626] hover:bg-[#B91C1C] text-white py-3 rounded-xl font-bold transition-colors cursor-pointer">
               삭제
             </button>
           </div>
+
+          {/* 수정 모달 */}
+          {isModalOpen && (
+            <ItemModifyForm
+              itemId={id}
+              onClose={() => setIsModalOpen(false)}
+              onUpdate={() => fetchItem()} // 수정 후 최신 데이터를 다시 불러옴
+            />
+          )}
         </div>
       </div>
     </div>

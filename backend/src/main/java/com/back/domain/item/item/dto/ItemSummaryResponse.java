@@ -10,6 +10,7 @@ public record ItemSummaryResponse(
         String name,
         String categoryName,
         LocalDate nextReplacementDate,
+        LocalDate lastReplacementDate,
         String imgUrl,
         long dDay,
         Boolean isActive
@@ -20,6 +21,7 @@ public record ItemSummaryResponse(
                 item.getName(),
                 item.getCategory() == null ? null : item.getCategory().getName(),
                 item.getNextReplacementDate(),
+                item.getLastReplacementDate(),
                 item.getImgUrl(),
                 item.getNextReplacementDate() == null
                         ? 0

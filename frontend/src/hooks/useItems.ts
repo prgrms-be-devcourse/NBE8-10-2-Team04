@@ -65,12 +65,31 @@ export function useItems(categoryId: number | null) {
     fetchItems(categoryId);
   }, [categoryId, fetchItems]);
 
+  // 아이템을 교체하는 함수
+  const replaceItem = useCallback(
+    async (id: number) => {
+      const res = await fetch(`${API_BASE_URL}/api/v1/items/${id}/replace`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+
+      // 교체 성공 시 목록 새로고침
+      if (res.ok) {
+        await fetchItems(categoryId);
+        return true;
+      }
+      return false;
+    },
+    [categoryId, fetchItems],
+  );
+
   return {
     items,
     loading,
     error,
     deleteItem,
     toggleItemActive,
+    replaceItem,
     refetch,
   };
 }
