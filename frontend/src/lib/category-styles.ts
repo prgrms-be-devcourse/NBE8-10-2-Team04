@@ -8,7 +8,7 @@ export type CategoryStyle = {
 export const categoryStyles: Record<string, CategoryStyle> = {
   '집/생활': {
     icon: Home,
-    color: '#818cf8', // Indigo
+    color: '#fa4c4c', // red
   },
   욕실: {
     icon: Droplets,
@@ -32,7 +32,7 @@ export const categoryStyles: Record<string, CategoryStyle> = {
   },
   전자기기: {
     icon: Smartphone,
-    color: '#c084fc', // Purple
+    color: '#60ff6d', // green
   },
   업무: {
     icon: Briefcase,
@@ -54,13 +54,13 @@ export function getCategoryStyle(categoryName: string): CategoryStyle {
 // Hex color를 Tailwind 색상 클래스로 변환하는 헬퍼 함수들
 export function getBgColorClass(categoryName: string): string {
   const colorMap: Record<string, string> = {
-    '집/생활': 'bg-indigo-500/10',
+    '집/생활': 'bg-red-500/10',
     욕실: 'bg-cyan-500/10',
     주방: 'bg-orange-500/10',
     뷰티: 'bg-pink-500/10',
     반려동물: 'bg-yellow-500/10',
     자동차: 'bg-slate-500/10',
-    전자기기: 'bg-purple-500/10',
+    전자기기: 'bg-green-500/10',
     업무: 'bg-blue-500/10',
   };
   return colorMap[categoryName] || 'bg-gray-500/10';
@@ -68,13 +68,13 @@ export function getBgColorClass(categoryName: string): string {
 
 export function getTextColorClass(categoryName: string): string {
   const colorMap: Record<string, string> = {
-    '집/생활': 'text-indigo-400',
+    '집/생활': 'text-red-400',
     욕실: 'text-cyan-400',
     주방: 'text-orange-400',
     뷰티: 'text-pink-400',
     반려동물: 'text-yellow-400',
     자동차: 'text-slate-400',
-    전자기기: 'text-purple-400',
+    전자기기: 'text-green-400',
     업무: 'text-blue-400',
   };
   return colorMap[categoryName] || 'text-gray-400';
@@ -82,13 +82,13 @@ export function getTextColorClass(categoryName: string): string {
 
 export function getIconBgClass(categoryName: string): string {
   const colorMap: Record<string, string> = {
-    '집/생활': 'bg-indigo-500',
+    '집/생활': 'bg-red-500',
     욕실: 'bg-cyan-500',
     주방: 'bg-orange-500',
     뷰티: 'bg-pink-500',
     반려동물: 'bg-yellow-500',
     자동차: 'bg-slate-500',
-    전자기기: 'bg-purple-500',
+    전자기기: 'bg-green-500',
     업무: 'bg-blue-500',
   };
   return colorMap[categoryName] || 'bg-gray-500';
