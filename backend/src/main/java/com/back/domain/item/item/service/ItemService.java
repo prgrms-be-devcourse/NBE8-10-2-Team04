@@ -143,6 +143,11 @@ public class ItemService {
         // 아이템 생성자가 아니면 예외 처리(인가)
         item.validateOwner(userId);
 
+        // 비활성 아이템은 교체 불가
+        if (!item.getIsActive()) {
+            throw new ServiceException("400-2", "비활성 상태의 아이템은 교체할 수 없습니다.");
+        }
+
         // 기존 진행중인 이력 endDate 넣기
         LocalDate today = LocalDate.now();
         itemHistoryService.endHistory(itemId, today);
