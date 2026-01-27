@@ -11,6 +11,7 @@ export type ItemSummary = {
   name: string;
   categoryName: string | null;
   nextReplacementDate: string | null; // LocalDate -> 보통 "YYYY-MM-DD"로 옴
+  lastReplacementDate: string | null;
   imgUrl: string | null;
   dDay: number;
   isActive: boolean;
@@ -104,7 +105,7 @@ export function ItemCard({
       {/* 날짜 */}
       <div className="mt-3 space-y-1 text-xs text-white/60">
         <div>
-          최근 교체일: <span className="text-white/80">-</span>
+          최근 교체일: <span className="text-white/80">{item.lastReplacementDate ?? '-'}</span>
         </div>
         <div>
           다음 교체일: <span className="text-white/80">{item.nextReplacementDate ?? '-'}</span>

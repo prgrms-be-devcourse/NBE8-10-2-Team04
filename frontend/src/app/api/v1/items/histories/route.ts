@@ -7,42 +7,56 @@ type RsData<T> = {
 };
 
 type HistoryItem = {
-  id: number;
+  id: number | string;
+  itemId: number | string;
   itemName: string;
-  timestamp: string; // "YYYY-MM-DD HH:mm"
+  startDate: string;
+  usedDays: number | null;
 };
 
-// ✅ mock 이력 데이터 (행위 표현 제거)
+// mock 이력 데이터 (행위 표현 제거)
 const mockHistories: HistoryItem[] = [
   {
     id: 1,
+    itemId: 101,
     itemName: "파워 소드",
-    timestamp: "2026-01-16 14:30",
+    startDate: "2026-01-16",
+    usedDays: null, // 사용 중
   },
   {
     id: 2,
+    itemId: 102,
     itemName: "파워 블래스터",
-    timestamp: "2026-01-16 13:15",
+    startDate: "2026-01-16",
+    usedDays: 3,
   },
   {
     id: 3,
+    itemId: 103,
     itemName: "메가조드",
-    timestamp: "2026-01-16 12:00",
+    startDate: "2026-01-16",
+    usedDays: 7,
   },
   {
     id: 4,
+    itemId: 104,
     itemName: "구형 통신기",
-    timestamp: "2026-01-16 11:45",
+    startDate: "2026-01-15",
+    usedDays: 1,
   },
   {
     id: 5,
+    itemId: 105,
     itemName: "파워 코인",
-    timestamp: "2026-01-16 10:30",
+    startDate: "2026-01-15",
+    usedDays: 10,
   },
   {
     id: 6,
+    itemId: 101,
     itemName: "파워 소드",
-    timestamp: "2026-01-15 16:20",
+    startDate: "2026-01-14",
+    usedDays: 2,
   },
 ];
 

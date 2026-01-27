@@ -1,7 +1,6 @@
 package com.back.global.security;
 
 import com.back.domain.user.user.entity.User;
-import com.back.domain.user.user.repository.UserRepository;
 import com.back.domain.user.user.service.UserService;
 import com.back.standard.util.Ut;
 import io.jsonwebtoken.Claims;
@@ -36,9 +35,6 @@ class SecurityIntegrationTest {
 
     @Autowired
     private UserService userService;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @Value("${custom.jwt.secretKey}")
     private String jwtSecret;
@@ -145,7 +141,7 @@ class SecurityIntegrationTest {
     @Test
     @DisplayName("테스트 5: 유효하지 않은 JWT 토큰으로 요청 시 401")
     void t5_invalidJwtTokenReturns401() throws Exception {
-        // Given
+        // Given - 유효하지 않은 토큰 + apiKey도 없음
         String invalidToken = "Bearer invalid.jwt.token";
 
         // When
@@ -157,11 +153,11 @@ class SecurityIntegrationTest {
                 )
                 .andDo(print());
 
-        // Then
+        // Then - 토큰이 유효하지 않고 apiKey도 없으면 401-3
         resultActions
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.resultCode").value("401-1"))
-                .andExpect(jsonPath("$.msg").value("유효하지 않은 토큰입니다."));
+                .andExpect(jsonPath("$.resultCode").value("401-3"))
+                .andExpect(jsonPath("$.msg").value("API 키가 유효하지 않습니다."));
     }
 
     // ============================================
@@ -176,7 +172,8 @@ class SecurityIntegrationTest {
         Map<String, Object> claims = Map.of(
                 "id", user.getId(),
                 "loginId", user.getLoginId(),
-                "email", user.getEmail() != null ? user.getEmail() : ""
+                "email", user.getEmail() != null ? user.getEmail() : "",
+                "tokenVersion", user.getTokenVersion()
         );
 
         String accessToken = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims);
@@ -212,15 +209,16 @@ class SecurityIntegrationTest {
         Map<String, Object> claims = Map.of(
                 "id", 99999L,
                 "loginId", "nonexistent",
-                "email", "nonexistent@test.com"
+                "email", "nonexistent@test.com",
+                "tokenVersion", 0L
         );
 
         String accessToken = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims);
 
-        // When
+        // When - 쿠키 방식으로 토큰 전달 (Authorization 헤더는 Bearer {apiKey} {accessToken} 형식이라서)
         ResultActions resultActions = mvc.perform(
                         post("/api/v1/items")
-                                .header("Authorization", "Bearer " + accessToken)
+                                .cookie(new Cookie("accessToken", accessToken))
                                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                                 .content("{}")
                 )
@@ -241,22 +239,23 @@ class SecurityIntegrationTest {
     void t8_invalidTokenClaimsReturns401() throws Exception {
         // Given - 필수 클레임(id, loginId)이 없는 토큰
         Map<String, Object> invalidClaims = Map.of(
-                "email", "test@test.com"
+                "email", "test@test.com",
+                "tokenVersion", 0L
                 // id, loginId 누락
         );
 
         String token = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, invalidClaims);
 
-        // When
+        // When - 쿠키 방식으로 토큰 전달
         ResultActions resultActions = mvc.perform(
                         post("/api/v1/items")
-                                .header("Authorization", "Bearer " + token)
+                                .cookie(new Cookie("accessToken", token))
                                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                                 .content("{}")
                 )
                 .andDo(print());
 
-        // Then
+        // Then - id, loginId가 없으면 401-1 (토큰 클레임이 올바르지 않습니다)
         resultActions
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.resultCode").value("401-1"))
@@ -275,7 +274,8 @@ class SecurityIntegrationTest {
         Map<String, Object> claims = Map.of(
                 "id", user.getId(),
                 "loginId", user.getLoginId(),
-                "email", user.getEmail() != null ? user.getEmail() : ""
+                "email", user.getEmail() != null ? user.getEmail() : "",
+                "tokenVersion", user.getTokenVersion()
         );
 
         String accessToken = Ut.jwt.toString(jwtSecret, accessTokenExpirationSeconds, claims);
@@ -320,7 +320,7 @@ class SecurityIntegrationTest {
     // ============================================
 
     /*
-     * TODO: 테스트 11 - Refresh Token 재발급 테스트
+     * TODO: 테스트 11 - Refresh Token 재발급 테스트 -> API로 대체함
      * - refreshToken으로 새로운 accessToken 발급
      * - refreshToken이 유효하지 않을 때 401
      * - refreshToken이 만료되었을 때 401

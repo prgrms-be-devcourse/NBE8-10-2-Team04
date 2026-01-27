@@ -172,8 +172,11 @@ public class ApiV1UserController {
         }
 
         User updatedUser = userService.updateProfile(actor.id(), request.email());
+
+        // 새 토큰 발급 및 쿠키 갱신 (기존 토큰은 무효화됨)
         String newAccessToken = userService.genAccessToken(updatedUser);
         rq.setCookie("accessToken", newAccessToken);
+        rq.setCookie("apiKey", updatedUser.getApiKey());
 
         return new RsData<>(
                 "200-2",
@@ -197,8 +200,11 @@ public class ApiV1UserController {
                 request.currentPassword(),
                 request.newPassword()
         );
+
+        // 새 토큰 발급 및 쿠키 갱신 (기존 모든 토큰은 무효화됨)
         String newAccessToken = userService.genAccessToken(updatedUser);
         rq.setCookie("accessToken", newAccessToken);
+        rq.setCookie("apiKey", updatedUser.getApiKey());
 
         return new RsData<>(
                 "200-2",
