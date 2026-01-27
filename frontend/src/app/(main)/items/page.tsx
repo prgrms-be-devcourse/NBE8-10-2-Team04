@@ -29,7 +29,7 @@ export default function ItemsPage() {
     error: itemsError,
     deleteItem,
     toggleItemActive,
-    refetch
+    refetch,
     replaceItem,
   } = useItems(selectedCategoryId);
 

@@ -258,19 +258,15 @@ export default function MePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-1">
-        <div className="bg-black/90 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <Button
-              onClick={() => router.back()}
-              variant="outline"
-              className="bg-blue-600 hover:bg-blue-700 text-white border-blue-400"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              돌아가기
-            </Button>
-          </div>
-        </div>
+      <div className="mx-auto max-w-7xl px-4 py-4">
+        <Button
+          onClick={() => router.back()}
+          variant="outline"
+          className="bg-blue-600 hover:bg-blue-700 text-white border-blue-400"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          돌아가기
+        </Button>
       </div>
 
       {/* Main Content */}
