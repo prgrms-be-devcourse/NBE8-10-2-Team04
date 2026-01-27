@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Box, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { getCategoryStyle } from '@/lib/category-styles';
 
 export type ItemSummary = {
   id: number;
@@ -46,6 +47,11 @@ export function ItemCard({
 
   const goDetail = () => router.push(`/items/${item.id}`);
 
+  // 카테고리 스타일 가져오기
+  const categoryStyle = item.categoryName ? getCategoryStyle(item.categoryName) : null;
+  const CategoryIcon = categoryStyle?.icon;
+  const categoryColor = categoryStyle?.color;
+
   return (
     <div
       role="button"
@@ -77,11 +83,23 @@ export function ItemCard({
         </span>
       </div>
 
-      {/* 카테고리 */}
+      {/* 카테고리 - 색상과 아이콘 적용 */}
       <div className="mt-4">
-        <span className="inline-flex rounded-md bg-white/10 px-2 py-1 text-xs text-white/80">
-          {item.categoryName ?? '미분류'}
-        </span>
+        {item.categoryName ? (
+          <span
+            className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium"
+            style={{
+              backgroundColor: `${categoryColor}20`, // 20% opacity
+              color: categoryColor,
+              border: `1px solid ${categoryColor}40`,
+            }}
+          >
+            {CategoryIcon && <CategoryIcon size={14} />}
+            {item.categoryName}
+          </span>
+        ) : (
+          <span className="inline-flex rounded-md bg-white/10 px-2 py-1 text-xs text-white/80">미분류</span>
+        )}
       </div>
 
       {/* 날짜 */}
