@@ -52,6 +52,7 @@ public class BaseInitData {
         categoryRepository.save(new Category("자동차"));
         categoryRepository.save(new Category("전자기기"));
         categoryRepository.save(new Category("업무"));
+        categoryRepository.save(new Category("기타"));
     }
 
     @Transactional
