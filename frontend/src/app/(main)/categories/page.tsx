@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
-  ArrowLeft,
   Grid,
   Package,
   Home,
@@ -15,6 +14,13 @@ import {
   Laptop,
   Briefcase,
 } from 'lucide-react';
+import {
+  getCategoryStyle,
+  getIconBgClass,
+  getBgColorClass,
+  getTextColorClass,
+} from "@/lib/category-styles";
+
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,8 +42,6 @@ type CategoryUI = {
   name: string;
   description: string;
   count: number;
-  color: string;
-  icon: LucideIcon;
 };
 
 function getIndexById(id: number | string, length: number) {
@@ -87,8 +91,6 @@ export default function CategoriesPage() {
           name: c.name,
           description: '카테고리 설명',
           count: 0,
-          icon: getCategoryIcon(c.id),
-          color: getCategoryColor(c.id),
         }));
 
         setCategories(ui);
@@ -135,7 +137,11 @@ export default function CategoriesPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories.map((category) => {
-                const Icon = category.icon;
+                const { icon: Icon } = getCategoryStyle(category.name);
+
+                const iconBg = getIconBgClass(category.name);   // 아이콘 배경 (진한색)
+                const cardBg = getBgColorClass(category.name);  // 카드/배지 배경 (연한색)
+                const textColor = getTextColorClass(category.name); // 포인트 텍스트 색
                 return (
                   <Card
                     key={category.id}
@@ -143,17 +149,19 @@ export default function CategoriesPage() {
                   >
                     <CardHeader>
                       <div
-                        className={`w-20 h-20 rounded-full bg-gradient-to-br ${category.color} flex items-center justify-center mx-auto mb-4 border-4 border-white/30 shadow-lg`}
+                        className={`w-20 h-20 rounded-full ${iconBg} flex items-center justify-center mx-auto mb-4 border-4 border-white/30 shadow-lg`}
                       >
                         <Icon className="h-10 w-10 text-white" />
                       </div>
+
                       <CardTitle className="text-white text-center text-2xl">{category.name}</CardTitle>
                       <CardDescription className="text-gray-400 text-center">{category.description}</CardDescription>
                     </CardHeader>
+
                     <CardContent>
                       <div className="text-center">
                         <div
-                          className={`inline-flex items-center justify-center w-full py-3 rounded-lg bg-gradient-to-r ${category.color} border-2 border-white/30`}
+                          className={`inline-flex items-center justify-center w-full py-3 rounded-lg ${iconBg} border-2 border-white/20`}
                         >
                           <Package className="h-5 w-5 text-white mr-2" />
                           <span className="text-white text-xl">{category.count}개 아이템</span>
