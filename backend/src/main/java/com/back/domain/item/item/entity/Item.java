@@ -100,4 +100,8 @@ public class Item {
         }
         return latestDate;
     }
+
+    public void toggleActive() {
+        this.isActive = !this.isActive;
+    }
 }
