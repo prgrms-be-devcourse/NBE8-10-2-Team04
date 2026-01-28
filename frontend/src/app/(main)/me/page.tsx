@@ -223,10 +223,6 @@ export default function MePage() {
 
   // 회원 탈퇴
   const handleDelete = async () => {
-    if (!confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      return;
-    }
-
     try {
       setIsDeleting(true);
       setError(null);
@@ -506,7 +502,7 @@ export default function MePage() {
 
               {/* 비밀번호 확인 다이얼로그 */}
               <AlertDialog open={isPasswordDialogOpen} onOpenChange={(open) => !open && handlePasswordDialogClose()}>
-                <AlertDialogContent className="bg-black border-2 border-blue-400">
+                <AlertDialogContent className="bg-gray-950 text-white border-2 border-blue-400 shadow-2xl">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-white">비밀번호 확인</AlertDialogTitle>
                     <AlertDialogDescription className="text-gray-400">
@@ -570,10 +566,10 @@ export default function MePage() {
                     {isDeleting ? '탈퇴 중...' : '회원 탈퇴'}
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent className="bg-black border-2 border-red-400">
+                <AlertDialogContent className="bg-gray-950 text-white border-2 border-red-400 shadow-2xl">
                   <AlertDialogHeader>
                     <AlertDialogTitle className="text-white">정말 탈퇴하시겠습니까?</AlertDialogTitle>
-                    <AlertDialogDescription className="text-gray-400">
+                    <AlertDialogDescription className="text-gray-200">
                       이 작업은 되돌릴 수 없습니다. 모든 데이터가 영구적으로 삭제됩니다.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
