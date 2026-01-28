@@ -11,8 +11,10 @@ import { useItems } from '@/hooks/useItems';
 import ItemModifyModal from '@/components/ItemModifyModal';
 import ItemCreateModal from '@/components/ItemCreateModal';
 import { useToast } from '@/contexts/ToastContext';
+import { useRouter } from 'next/navigation';
 
 export default function ItemsPage() {
+  const router = useRouter();
   const { showToast } = useToast();
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null); // 수정하고자 하는 itemId
@@ -106,7 +108,7 @@ export default function ItemsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0b0f1a] via-[#0a1020] to-[#070b14] text-white">
       {/* Header */}
-      <PageHeader variant="red" />
+      <PageHeader variant="red" onBack={() => router.push('/')} />
 
       <div className="mx-auto max-w-6xl px-6 py-10">
         {/* 제목 */}

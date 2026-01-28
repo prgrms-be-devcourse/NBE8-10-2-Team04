@@ -128,7 +128,7 @@ export default function ItemPage() {
   return (
     <div className="min-h-screen bg-[#020617] font-sans pb-20">
       {/* Header */}
-      <PageHeader variant="purple" />
+      <PageHeader variant="purple" onBack={() => router.push('/items')} />
 
       {/* Main Titles */}
       <div className="text-center mb-10">
@@ -162,9 +162,8 @@ export default function ItemPage() {
             </div>
             <div className="flex gap-3">
               <button
-                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
-                  item.isActive ? 'bg-[#22C55E] text-white' : 'bg-[#1E293B] text-gray-500'
-                }`}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${item.isActive ? 'bg-[#22C55E] text-white' : 'bg-[#1E293B] text-gray-500'
+                  }`}
               >
                 {item.isActive ? '활성' : '비활성'}
               </button>
