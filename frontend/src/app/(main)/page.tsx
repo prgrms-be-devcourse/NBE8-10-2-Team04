@@ -170,17 +170,10 @@ export default function Page() {
 
       <main className="mx-auto w-full max-w-6xl px-6 pb-14 pt-8">
         <div className="mb-8 text-center">
-          <div className="text-3xl font-extrabold tracking-tight">
-            <span className="text-red-400">레</span>
-            <span className="text-pink-400">인</span>
-            <span className="text-yellow-400">저</span>
-            <span className="text-white"> </span>
-            <span className="text-green-400">미</span>
-            <span className="text-blue-400">션</span>
-            <span className="text-white"> </span>
-            <span className="text-red-400">센</span>
-            <span className="text-pink-400">터</span>
-          </div>
+            <h2
+              className="inline-block text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-green-500 to-blue-500 mb-2">
+              레인저 미션 센터
+            </h2>
           <div className="mt-1 text-xs text-white/70">원하는 미션을 선택하세요</div>
         </div>
 
