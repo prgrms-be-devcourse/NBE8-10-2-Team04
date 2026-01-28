@@ -14,8 +14,8 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Transactional(readOnly = true)
-    public List<CategoryResponse> findAllWithItemCount() {
-        return categoryRepository.findAllWithItemCount();
+    public List<CategoryResponse> findAllWithItemCount(Long userId) {
+        return categoryRepository.findAllWithItemCount(userId);
     }
 
 }
