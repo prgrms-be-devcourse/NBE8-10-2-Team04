@@ -13,7 +13,6 @@ public record UserJoinRequest(
         @NotBlank
         @Size(min = 2, max = 30)
         String password,
-        @Email(message = "이메일 형식이 올바르지 않습니다.")
         @Pattern(
                 //정규식으로 . 뒤에 2글자 이상의 도메인이 오도록 규칙설정
                 regexp = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
