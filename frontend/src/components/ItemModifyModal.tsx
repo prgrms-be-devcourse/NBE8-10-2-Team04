@@ -50,7 +50,7 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // cycleDays 파싱 함수
+  // cycleDays 파싱 함수 ('3d' -> {value: '3', unit: 'd'})
   const parseCycleDays = (cycle: string | null) => {
     if (!cycle) return { value: '', unit: 'm' };
     const value = cycle.replace(/[^0-9]/g, '');
@@ -348,7 +348,7 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
           onClick={handleSave}
           className="mt-8 w-full rounded-lg bg-[#b45309] py-3 text-lg font-bold text-white transition-colors hover:bg-[#92400e] cursor-pointer"
         >
-          수정 완료
+          저장
         </button>
       </div>
     </div>
