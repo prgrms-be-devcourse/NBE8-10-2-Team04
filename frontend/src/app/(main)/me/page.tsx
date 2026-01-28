@@ -223,10 +223,6 @@ export default function MePage() {
 
   // 회원 탈퇴
   const handleDelete = async () => {
-    if (!confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      return;
-    }
-
     try {
       setIsDeleting(true);
       setError(null);
