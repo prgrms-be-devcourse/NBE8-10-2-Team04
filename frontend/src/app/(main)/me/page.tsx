@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Mail, Save, Trash2, Lock, CheckCircle2, X } from 'lucide-react';
+import { User, Mail, Save, Trash2, Lock, CheckCircle2, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { validateEmail, validatePasswordForUpdate } from '@/lib/validation';
 
 type RsData<T> = {
@@ -46,6 +47,12 @@ export default function MePage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<{ email?: boolean; password?: boolean } | null>(null);
+
+  // 비밀번호 확인 다이얼로그 상태
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [verifyPassword, setVerifyPassword] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
 
   // 사용자 정보 조회
   useEffect(() => {
@@ -259,6 +266,49 @@ export default function MePage() {
     setNewPassword('');
   };
 
+  // 비밀번호 확인 후 수정 모드 진입
+  const handleVerifyPassword = async () => {
+    if (!verifyPassword.trim()) {
+      setVerifyError('비밀번호를 입력해주세요.');
+      return;
+    }
+
+    try {
+      setIsVerifying(true);
+      setVerifyError(null);
+
+      const res = await fetch('/api/v1/user/me/verify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ password: verifyPassword }),
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.msg || '비밀번호가 일치하지 않습니다.');
+      }
+
+      // 비밀번호 확인 성공 - 수정 모드로 전환
+      setIsPasswordDialogOpen(false);
+      setVerifyPassword('');
+      setVerifyError(null);
+      setIsEditing(true);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : '비밀번호 확인에 실패했습니다.';
+      setVerifyError(message);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // 다이얼로그 닫기
+  const handlePasswordDialogClose = () => {
+    setIsPasswordDialogOpen(false);
+    setVerifyPassword('');
+    setVerifyError(null);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
@@ -281,7 +331,13 @@ export default function MePage() {
           <p className="text-gray-400">당신의 정보를 관리하세요</p>
         </div>
 
-        {error && <div className="mb-4 p-4 bg-red-900/50 border border-red-500 rounded-lg text-red-200">{error}</div>}
+        {error && (
+          <Alert variant="destructive" className="mb-4 bg-red-900/50 border-red-500">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>오류</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {successMessage && (
           <div className="mb-4 p-4 bg-green-900/50 border-2 border-green-500 rounded-lg text-green-200 animate-in slide-in-from-top-2 duration-300">
@@ -438,13 +494,66 @@ export default function MePage() {
                 <div className="flex gap-4">
                   <Button
                     type="button"
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => setIsPasswordDialogOpen(true)}
                     className="flex-1 bg-blue-500 hover:bg-blue-400 hover:scale-105 active:scale-95 transition text-white border-2 border-blue-400"
                   >
                     정보 수정
                   </Button>
                 </div>
               )}
+
+              {/* 비밀번호 확인 다이얼로그 */}
+              <AlertDialog open={isPasswordDialogOpen} onOpenChange={(open) => !open && handlePasswordDialogClose()}>
+                <AlertDialogContent className="bg-black border-2 border-blue-400">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle className="text-white">비밀번호 확인</AlertDialogTitle>
+                    <AlertDialogDescription className="text-gray-400">
+                      정보 수정을 위해 현재 비밀번호를 입력해주세요.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="py-4">
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        type="password"
+                        value={verifyPassword}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          setVerifyPassword(e.target.value);
+                          setVerifyError(null);
+                        }}
+                        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleVerifyPassword();
+                          }
+                        }}
+                        placeholder="비밀번호를 입력하세요"
+                        className="pl-10 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
+                        disabled={isVerifying}
+                      />
+                    </div>
+                    {verifyError && (
+                      <p className="mt-2 text-sm text-red-400">{verifyError}</p>
+                    )}
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel
+                      onClick={handlePasswordDialogClose}
+                      className="bg-gray-600 hover:bg-gray-500 hover:scale-105 active:scale-95 transition text-white border-gray-500"
+                      disabled={isVerifying}
+                    >
+                      취소
+                    </AlertDialogCancel>
+                    <Button
+                      onClick={handleVerifyPassword}
+                      disabled={isVerifying}
+                      className="bg-blue-500 hover:bg-blue-400 hover:scale-105 active:scale-95 transition text-white disabled:opacity-50"
+                    >
+                      {isVerifying ? '확인 중...' : '확인'}
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
 
             <div className="mt-8 pt-8 border-t border-gray-700">
