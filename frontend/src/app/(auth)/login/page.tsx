@@ -23,13 +23,14 @@ export default function AuthPage() {
         body: JSON.stringify({ loginId, password: loginPassword }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log("로그인 성공:", data);
-        alert("레인저 인증 완료! 시스템에 접속합니다.");
+      const rsData = await response.json();
+
+      if (rsData.resultCode && rsData.resultCode.startsWith("2")) {
+        console.log("로그인 성공:", rsData.msg);
+        alert(rsData.msg);
         router.push("/");
       } else {
-        alert("인증 실패: 아이디나 비밀번호를 확인하세요.");
+        alert(rsData.msg);
       }
     } catch (error) {
       console.error("에러:", error);
@@ -107,8 +108,10 @@ export default function AuthPage() {
         }),
       });
 
-      if (response.ok) {
-        alert("회원가입이 완료되었습니다. 로그인해주세요.");
+      const rsData = await response.json();
+
+      if (rsData.resultCode && rsData.resultCode.startsWith("2")) {
+        alert(rsData.msg);
         setActiveTab("login");
         setSignupLoginId("");
         setSignupPassword("");
@@ -116,8 +119,7 @@ export default function AuthPage() {
         
         setSignupErrors({ loginId: "", password: "", email: "" });
       } else {
-        console.error("회원가입 실패");
-        alert("회원가입에 실패했습니다.");
+        alert(rsData.msg);
       }
     } catch (error) {
       console.error("에러 발생:", error);
@@ -246,7 +248,7 @@ export default function AuthPage() {
                   </div>
                   {signupErrors.loginId && (
                     <p className="text-red-400 text-xs mt-1 font-medium pl-1">
-                      ⚠️ {signupErrors.loginId}
+                      {signupErrors.loginId}
                     </p>
                   )}
                 </div>
@@ -277,7 +279,7 @@ export default function AuthPage() {
                   </div>
                   {signupErrors.password && (
                     <p className="text-red-400 text-xs mt-1 font-medium pl-1">
-                      ⚠️ {signupErrors.password}
+                      {signupErrors.password}
                     </p>
                   )}
                 </div>
@@ -307,7 +309,7 @@ export default function AuthPage() {
                   </div>
                   {signupErrors.email && (
                     <p className="text-red-400 text-xs mt-1 font-medium pl-1">
-                      ⚠️ {signupErrors.email}
+                      {signupErrors.email}
                     </p>
                   )}
                 </div>
