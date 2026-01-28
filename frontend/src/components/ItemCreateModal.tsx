@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
 import { useToast } from '@/contexts/ToastContext';
+import { FolderOpenDotIcon, X, Upload, Image as ImageIcon } from "lucide-react";
 
 type Category = {
   id: number;
@@ -32,7 +32,9 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
   // 폼 상태 관리
   const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [imgUrl, setImgUrl] = useState('');
+  const [imgUrl, setImgUrl] = useState('')
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [startDate, setStartDate] = useState(getSeoulToday());
   const [cycleValue, setCycleValue] = useState('');
   const [cycleUnit, setCycleUnit] = useState('m'); // 기본값 'm' (월)
@@ -42,6 +44,8 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
   const [categoryError, setCategoryError] = useState('');
   const [cycleError, setCycleError] = useState('');
   const { showToast } = useToast();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 카테고리 목록 불러오기
   const fetchCategories = async () => {
@@ -61,6 +65,27 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
   useEffect(() => {
     fetchCategories();
   }, []);
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      // 미리보기 URL 생성
+      const objectUrl = URL.createObjectURL(file);
+      setPreview(objectUrl);
+      // 파일 올리면 URL 입력칸은 비워주는 UX (선택사항)
+      setImgUrl("");
+    }
+  };
+
+  // [추가] 파일 선택 취소
+  const clearFile = () => {
+    setImageFile(null);
+    setPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSave = async () => {
     // 에러 초기화
@@ -89,19 +114,28 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
 
     if (!isValid) return;
 
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("categoryId", String(categoryId));
+    formData.append("startDate", startDate);
+    formData.append("cycleDays", `${cycleValue}${cycleUnit}`);
+    
+    // 파일이 있으면 파일 추가
+    if (imageFile) {
+      formData.append("image", imageFile); 
+    }
+    
+    // URL이 있으면 URL 추가 (백엔드 로직에 따라 파일이 우선순위)
+    if (imgUrl) {
+      formData.append("imgUrl", imgUrl);
+    }
+
     // 등록 요청
     try {
       const response = await fetch('http://localhost:8080/api/v1/items', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          name,
-          categoryId: Number(categoryId),
-          imgUrl,
-          startDate,
-          cycleDays: `${cycleValue}${cycleUnit}`,
-        }),
+        body: formData,
       });
       if (response.ok) {
         showToast('success', '등록이 완료되었습니다.');
@@ -185,14 +219,67 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
           </div>
 
           {/* 이미지 URL */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-white">이미지 URL (선택)</label>
+          <div className="space-y-3">
+            <label className="block text-sm font-medium text-white">이미지 (선택)</label>
+            
+            {/*  파일 업로드  */}
+            <div className="flex items-start gap-4">
+              {/* 미리보기 박스 */}
+              <div 
+                className={`relative flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border ${preview ? 'border-green-500' : 'border-dashed border-gray-600 bg-[#161b26]'}`}
+              >
+                {preview ? (
+                  <>
+                    <img src={preview} alt="Preview" className="h-full w-full object-cover" />
+                    <button 
+                      onClick={clearFile}
+                      className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity"
+                    >
+                      <X className="text-white" size={20} />
+                    </button>
+                  </>
+                ) : (
+                  <ImageIcon className="text-gray-500" size={24} />
+                )}
+              </div>
+
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label 
+                  htmlFor="image-upload"
+                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                >
+                  <Upload size={16} />
+                  파일 선택
+                </label>
+                <p className="mt-1 text-xs text-gray-500">jpg, png, webp (최대 10MB)</p>
+              </div>
+            </div>
+
+            <div className="relative flex items-center py-1">
+                <div className="flex-grow border-t border-gray-800"></div>
+                <span className="flex-shrink-0 mx-2 text-xs text-gray-500">OR</span>
+                <div className="flex-grow border-t border-gray-800"></div>
+            </div>
+
+            {/* URL 입력 영역 */}
             <input
               type="text"
               value={imgUrl}
-              onChange={(e) => setImgUrl(e.target.value)}
-              className="w-full rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white focus:border-green-500 focus:outline-none"
-              placeholder="https://example.com/img.jpg"
+              onChange={(e) => {
+                setImgUrl(e.target.value);
+                // URL 입력 시 파일 선택 해제 (UX 선택사항)
+                if (e.target.value && imageFile) clearFile(); 
+              }}
+              className="w-full rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white placeholder-gray-600 focus:border-green-500 focus:outline-none text-sm"
+              placeholder="이미지 주소를 직접 입력하세요 (https://...)"
             />
           </div>
 
