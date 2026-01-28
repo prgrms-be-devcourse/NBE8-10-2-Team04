@@ -189,4 +189,25 @@ public class ApiV1UserController {
                 new UserUpdateResponse(updatedUser)
         );
     }
+
+    @PostMapping("/me/verify-password")
+    @Operation(summary = "비밀번호 확인")
+    public RsData<Void> verifyPassword(
+            @Valid @RequestBody PasswordVerifyRequest request
+    ) {
+        UserDto actor = rq.getActor();
+        if (actor == null) {
+            throw new ServiceException("401-1", "로그인이 필요합니다.");
+        }
+
+        User user = userService.findById(actor.id())
+                .orElseThrow(() -> new ServiceException("404-1", "사용자를 찾을 수 없습니다."));
+
+        userService.checkPassword(user, request.password());
+
+        return new RsData<>(
+                "200-1",
+                "비밀번호가 확인되었습니다."
+        );
+    }
 }
