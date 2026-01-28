@@ -100,7 +100,7 @@ function MissionBadgeIcon() {
 }
 
 function getMissionCategoryStyle(categoryName: string) {
-  const name = (categoryName).trim();
+  const name = (categoryName);
   const style = getCategoryStyle(name);
   return { Icon: style.icon, color: style.color };
 }
