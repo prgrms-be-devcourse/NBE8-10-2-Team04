@@ -23,10 +23,23 @@ public record ItemSummaryResponse(
                 item.getNextReplacementDate(),
                 item.getLastReplacementDate(),
                 item.getImgUrl(),
-                item.getNextReplacementDate() == null
-                        ? 0
-                        : ChronoUnit.DAYS.between(LocalDate.now(), item.getNextReplacementDate()),
+                calculateDDay(item),
                 item.getIsActive()
         );
+    }
+
+    /**
+     * D-day 계산 로직
+     * - 비활성 상태: 0 반환 (프론트에서 "비활성" 표시)
+     * - 활성 상태: 실제 D-day 계산
+     */
+    private static long calculateDDay(Item item) {
+        // 다음 교체일이 없으면 -1 반환
+        if (item.getNextReplacementDate() == null) {
+            return -1;
+        }
+
+        // 항상 실제 D-day 계산
+        return ChronoUnit.DAYS.between(LocalDate.now(), item.getNextReplacementDate());
     }
 }

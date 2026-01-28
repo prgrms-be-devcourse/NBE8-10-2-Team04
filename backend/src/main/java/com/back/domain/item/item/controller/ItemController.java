@@ -125,4 +125,18 @@ public class ItemController {
                 Map.of("item", new ItemReplaceResponse(item))
         );
     }
+
+    @PutMapping("/{id}/toggle-active")
+    @Operation(summary = "아이템 활성화/비활성화 토글")
+    public RsData<ItemUpdateResponse> toggleItemActive(@PathVariable Long id) {
+        Long userId = rq.getMemberId();
+
+        Item item = itemService.toggleActive(userId, id);
+
+        return new RsData<>(
+                "200",
+                "아이템 활성화 상태 변경 성공",
+                new ItemUpdateResponse(item)
+        );
+    }
 }

@@ -17,8 +17,14 @@ export type ItemSummary = {
   isActive: boolean;
 };
 
-function dDayLabel(dDay: number) {
-  if (dDay === 0) return "D-Day";
+// D-day 라벨 생성 함수
+function dDayLabel(dDay: number, isActive: boolean) {
+  // 비활성 상태면 D-day 표시 안 함
+  if (!isActive) {
+    return '비활성';
+  }
+
+  if (dDay === 0) return 'D-Day';
   if (dDay > 0) return `D-${dDay}`;
   return `D+${Math.abs(dDay)}`;
 }
@@ -26,13 +32,13 @@ function dDayLabel(dDay: number) {
 function dDayBadgeClass(isActive: boolean, isDDayOver: boolean) {
   // 1. 비활성은 흐린 회색
   if (!isActive) {
-    return "bg-white/15 text-white/70";
+    return 'bg-white/15 text-white/70';
   }
   // 2. 활성
   // 2-1. d-day에 도래하지 않으면 초록색
-  if (!isDDayOver) return "bg-green-500/90 text-white";
+  if (!isDDayOver) return 'bg-green-500/90 text-white';
   // 2-2. d-day에 도래했거나 지났으면 빨간색
-  return "bg-red-500/90 text-white";
+  return 'bg-red-500/90 text-white';
 }
 
 export function ItemCard({
@@ -66,15 +72,17 @@ export function ItemCard({
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') goDetail();
       }}
-      className={`cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${disabled ? "opacity-70" : ""
-        }`}
+      className={`cursor-pointer rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)] ${
+        disabled ? 'opacity-70' : ''
+      }`}
     >
       {/* 상단 */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div
-            className={`flex h-9 w-9 items-center justify-center rounded-full ${item.isActive ? "bg-red-600" : "bg-white/20"
-              }`}
+            className={`flex h-9 w-9 items-center justify-center rounded-full ${
+              item.isActive ? 'bg-red-600' : 'bg-white/20'
+            }`}
           >
             <Box className="h-5 w-5 text-white" />
           </div>
@@ -82,12 +90,9 @@ export function ItemCard({
           <div className="text-base font-semibold">{item.name}</div>
         </div>
 
-        <span
-          className={`rounded-md px-2 py-1 text-xs font-semibold ${dDayBadgeClass(
-            item.isActive, item.dDay < 0
-          )}`}
-        >
-          {dDayLabel(item.dDay)}
+        {/* 상단 D-day 뱃지 */}
+        <span className={`rounded-md px-2 py-1 text-xs font-semibold ${dDayBadgeClass(item.isActive, item.dDay < 0)}`}>
+          {dDayLabel(item.dDay, item.isActive)}
         </span>
       </div>
 
@@ -159,11 +164,16 @@ export function ItemCard({
       {/* 교체 버튼 */}
       <div className="mt-4" onClick={(e) => e.stopPropagation()}>
         <Button
-          className={`h-9 w-full rounded-md font-semibold cursor-pointer ${disabled
-            ? "bg-white/15 text-white/70 hover:bg-white/15"
-            : "bg-purple-600 hover:bg-purple-700"
-            }`}
-          onClick={() => onReplace(item.id)}
+          className={`h-9 w-full rounded-md font-semibold ${
+            disabled
+              ? 'bg-white/15 text-white/70 hover:bg-white/15 cursor-not-allowed'
+              : 'bg-purple-600 hover:bg-purple-700 cursor-pointer'
+          }`}
+          onClick={() => {
+            if (!disabled) {
+              onReplace(item.id);
+            }
+          }}
           disabled={disabled}
         >
           <RefreshCw className="mr-2 h-4 w-4" />

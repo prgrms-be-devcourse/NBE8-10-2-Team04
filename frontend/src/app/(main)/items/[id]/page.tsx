@@ -5,9 +5,8 @@ import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
 
 import { Activity, Tag, Package, Calendar, History } from 'lucide-react';
-import ItemModifyForm from "@/components/ItemModifyModal";
+import ItemModifyForm from '@/components/ItemModifyModal';
 import { DeleteItemDialog } from '@/components/items/DeleteItemDialog';
-
 
 type ItemHistory = {
   id: number;
@@ -43,11 +42,13 @@ export default function ItemPage() {
   // 삭제 다이얼로그
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  const disabled = !item?.isActive;
+
   // 아이템 삭제
   const handleDelete = async () => {
     try {
       const response = await fetch(`/api/v1/items/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
       if (response.ok) {
         router.push('/items');
@@ -72,7 +73,7 @@ export default function ItemPage() {
     } finally {
       setIsItemLoading(false);
     }
-  }
+  };
 
   // 아이템 이력 불러오기
   const fetchItemHistories = async () => {
@@ -87,11 +88,11 @@ export default function ItemPage() {
     } finally {
       setIsItemHistoryLoading(false);
     }
-  }
+  };
 
   // cycleDays 변환
   const formatCycle = (cycle: string | null) => {
-    if (!cycle) return "-";
+    if (!cycle) return '-';
 
     const unit = cycle.slice(-1).toLowerCase(); // 마지막 글자 (m, y, d)
     const value = cycle.slice(0, -1); // 숫자 부분
@@ -126,8 +127,6 @@ export default function ItemPage() {
 
   return (
     <div className="min-h-screen bg-[#020617] font-sans pb-20">
-
-
       {/* Header */}
       <PageHeader variant="purple" />
 
@@ -142,7 +141,6 @@ export default function ItemPage() {
       {/* Detail Card */}
       <div className="max-w-[800px] mx-auto px-4">
         <div className="relative bg-[#0B0E14] border-2 border-[#A855F7]/50 rounded-[2rem] p-8 md:p-12 shadow-2xl">
-
           {/* Avatar & Name */}
           <div className="flex flex-col items-center mb-12">
             <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center mb-4 shadow-lg shadow-blue-600/20">
@@ -156,7 +154,6 @@ export default function ItemPage() {
             </div>
             <h2 className="text-2xl font-bold text-white tracking-tight">{item.name}</h2>
           </div>
-
           {/* Status Section */}
           <div className="bg-[#0F172A]/50 border border-white/5 rounded-2xl p-6 mb-4">
             <div className="flex items-center gap-2 text-[#22C55E] mb-4">
@@ -173,7 +170,6 @@ export default function ItemPage() {
               </button>
             </div>
           </div>
-
           {/* 2-Column Grid Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {/* Category */}
@@ -214,16 +210,15 @@ export default function ItemPage() {
               <div className="flex items-center justify-between">
                 <span className="text-white text-sm">{item.nextReplacementDate || '-'}</span>
                 {item.dDay !== undefined && (
-                  <div className={`${item.dDay > 0 ? "bg-[#22C55E]" : "bg-[#DC2626]"} px-3 py-1 rounded-md text-xs font-bold text-white`}>
-                    {item.dDay === 0
-                      ? "D-Day"
-                      : `D${item.dDay > 0 ? '-' : '+'}${Math.abs(item.dDay)}`}
+                  <div
+                    className={`${item.dDay > 0 ? 'bg-[#22C55E]' : 'bg-[#DC2626]'} px-3 py-1 rounded-md text-xs font-bold text-white`}
+                  >
+                    {item.dDay === 0 ? 'D-Day' : `D${item.dDay > 0 ? '-' : '+'}${Math.abs(item.dDay)}`}
                   </div>
                 )}
               </div>
             </div>
           </div>
-
           {/* History Section */}
           <div className="bg-[#0F172A]/50 border border-white/5 rounded-2xl p-6 mb-12">
             <div className="flex items-center gap-2 text-pink-500 mb-4">
@@ -257,12 +252,12 @@ export default function ItemPage() {
               )}
             </div>
           </div>
-
           {/* Action Buttons */}
           <div className="flex gap-4">
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-bold transition-colors cursor-pointer">
+              className="flex-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-xl font-bold transition-colors cursor-pointer"
+            >
               수정
             </button>
             <button
@@ -272,7 +267,6 @@ export default function ItemPage() {
               삭제
             </button>
           </div>
-
           {/* 수정 모달 */}
           {isModalOpen && (
             <ItemModifyForm
@@ -281,13 +275,8 @@ export default function ItemPage() {
               onUpdate={() => fetchItem()} // 수정 후 최신 데이터를 다시 불러옴
             />
           )}
-
           {/* 삭제 다이얼로그 */}
-          <DeleteItemDialog
-            open={isDeleteDialogOpen}
-            onOpenChange={setIsDeleteDialogOpen}
-            onConfirm={handleDelete}
-          />
+          <DeleteItemDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen} onConfirm={handleDelete} />
         </div>
       </div>
     </div>
