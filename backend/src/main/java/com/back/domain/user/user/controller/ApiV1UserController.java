@@ -1,9 +1,6 @@
 package com.back.domain.user.user.controller;
 
-import com.back.domain.user.user.dto.PasswordChangeRequest;
-import com.back.domain.user.user.dto.UserDto;
-import com.back.domain.user.user.dto.UserProfileUpdateRequest;
-import com.back.domain.user.user.dto.UserUpdateResponse;
+import com.back.domain.user.user.dto.*;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
@@ -12,10 +9,9 @@ import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,31 +22,30 @@ public class ApiV1UserController {
     private final UserService userService;
     private final Rq rq;
 
-    //회원가입
-    record UserJoinReqBody(
-            @NotBlank
-            @Size(min = 2, max = 30)
-            String loginId,
-            @NotBlank
-            @Size(min = 2, max = 30)
-            String password,
-            @NotBlank
-            @Size(min = 2, max = 30)
-            String email
-    ) {
-    }
-
     @PostMapping("/signup")
     @Transactional
     @Operation(summary = "회원가입")
     public RsData<UserDto> join(
-            @Valid @RequestBody UserJoinReqBody reqBody
+            @Valid @RequestBody UserJoinRequest request,
+            BindingResult bindingResult // [중요] 위치는 반드시 검증 객체 바로 뒤!
     ) {
+        // 유효성 검사 실패 체크
+        if (bindingResult.hasErrors()) {
+            String errorMessage = bindingResult.getFieldError().getDefaultMessage();
 
+            // 실패 응답 리턴
+            return new RsData<>(
+                    "400",
+                    errorMessage, //
+                    null
+            );
+        }
+
+        // 성공 시 로직 실행
         User user = userService.join(
-                reqBody.loginId(),
-                reqBody.password(),
-                reqBody.email()
+                request.loginId(),
+                request.password(),
+                request.email()
         );
 
         return new RsData<>(
@@ -60,29 +55,11 @@ public class ApiV1UserController {
         );
     }
 
-    //로그인
-    record UserLoginReqBody(
-            @NotBlank
-            @Size(min = 2, max = 30)
-            String loginId,
-            @NotBlank
-            @Size(min = 2, max = 30)
-            String password
-    ) {
-    }
-
-    record UserLoginResBody(
-            UserDto userDto,
-            String apiKey,
-            String accessToken
-    ) {
-    }
-
     @PostMapping("/login")
     @Transactional(readOnly = true)
     @Operation(summary = "로그인")
-    public RsData<UserLoginResBody> login(
-            @Valid @RequestBody UserLoginReqBody reqBody
+    public RsData<UserLoginResponse> login(
+            @Valid @RequestBody UserLoginRequest reqBody
     ) {
         User user = userService.findByLoginId(reqBody.loginId())
                 .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 아이디입니다."));
@@ -100,7 +77,7 @@ public class ApiV1UserController {
         return new RsData<>(
                 "200-1",
                 "%s님 환영합니다.".formatted(user.getLoginId()),
-                new UserLoginResBody(
+                new UserLoginResponse(
                         new UserDto(user),
                         user.getApiKey(),
                         accessToken

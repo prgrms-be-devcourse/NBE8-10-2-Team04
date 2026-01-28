@@ -236,7 +236,7 @@ export default function AuthPage() {
                     />
                   </div>
                   {signupErrors.loginId && (
-                    <p className="text-red-400 text-xs mt-1 font-medium pl-1">⚠️ {signupErrors.loginId}</p>
+                    <p className="text-red-400 text-xs mt-1 font-medium pl-1">{signupErrors.loginId}</p>
                   )}
                 </div>
 
@@ -262,7 +262,7 @@ export default function AuthPage() {
                     />
                   </div>
                   {signupErrors.password && (
-                    <p className="text-red-400 text-xs mt-1 font-medium pl-1">⚠️ {signupErrors.password}</p>
+                    <p className="text-red-400 text-xs mt-1 font-medium pl-1">{signupErrors.password}</p>
                   )}
                 </div>
 
@@ -285,7 +285,7 @@ export default function AuthPage() {
                     />
                   </div>
                   {signupErrors.email && (
-                    <p className="text-red-400 text-xs mt-1 font-medium pl-1">⚠️ {signupErrors.email}</p>
+                    <p className="text-red-400 text-xs mt-1 font-medium pl-1">{signupErrors.email}</p>
                   )}
                 </div>
 
