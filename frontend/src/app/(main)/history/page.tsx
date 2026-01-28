@@ -81,7 +81,7 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       {/* Header */}
-      <PageHeader variant="yellow" onBack={() => router.push('/')} />
+      <PageHeader variant="yellow" />
 
       {/* Main */}
       <div className="mx-auto max-w-5xl px-4 py-8">

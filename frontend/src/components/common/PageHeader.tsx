@@ -26,9 +26,9 @@ export function PageHeader({ showBackButton = true, onBack, className = '', vari
 
   const handleBack = () => {
     if (onBack) {
-      onBack();
+      onBack(); // onBack props가 주어졌으면 해당 함수를 따륾
     } else {
-      router.back();
+      router.push("/"); // 기본적으로는 홈 화면으로 이동
     }
   };
 

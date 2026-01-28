@@ -322,7 +322,7 @@ export default function MePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900">
       {/* Header */}
-      <PageHeader variant="blue" onBack={() => router.push('/')} />
+      <PageHeader variant="blue" />
 
       {/* Main Content */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
