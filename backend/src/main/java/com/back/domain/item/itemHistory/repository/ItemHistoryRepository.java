@@ -16,6 +16,7 @@ public interface ItemHistoryRepository extends JpaRepository<ItemHistory, Long> 
             SELECT ih
             FROM ItemHistory ih
             JOIN FETCH ih.item i
+            JOIN FETCH i.category c
             WHERE i.user.id = :userId
             ORDER BY ih.startDate DESC
             """)
