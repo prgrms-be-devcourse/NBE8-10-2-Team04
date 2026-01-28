@@ -27,7 +27,7 @@ public class DdayEmailScheduler {
      * cron: 초 분 시 일 월 요일
      * "0 0 9 * * *" = 매일 오전 9시 정각
      */
-    @Scheduled(cron = "0 0 9 * * *")
+    @Scheduled(cron = "0 0 10 * * *")
     @Transactional // Lazy 로딩된 연관 엔티티(User) 접근을 위해 트랜잭션 유지
     public void checkAndSendDdayEmails() {
         // 오늘 날짜
