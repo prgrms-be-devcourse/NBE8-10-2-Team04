@@ -34,17 +34,12 @@ public record ItemSummaryResponse(
      * - 활성 상태: 실제 D-day 계산
      */
     private static long calculateDDay(Item item) {
-        // 비활성 상태면 0 반환
-        if (!item.getIsActive()) {
-            return 0;
-        }
-
-        // 다음 교체일이 없으면 0 반환
+        // 다음 교체일이 없으면 -1 반환
         if (item.getNextReplacementDate() == null) {
-            return 0;
+            return -1;
         }
 
-        // 활성 상태일 때만 실제 D-day 계산
+        // 항상 실제 D-day 계산
         return ChronoUnit.DAYS.between(LocalDate.now(), item.getNextReplacementDate());
     }
 }
