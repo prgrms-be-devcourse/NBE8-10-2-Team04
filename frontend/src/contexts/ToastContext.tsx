@@ -47,43 +47,55 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             {/* relative 클래스를 추가하여 내부 버튼의 기준점을 잡습니다. */}
             <Alert
               variant={toast.type === 'error' ? 'destructive' : 'default'}
-              className={`relative min-w-[320px] max-w-md shadow-lg break-keep pr-10 ${
-                // 우측 패딩(pr-10) 추가
+              // 1. w-[400px]로 고정 너비를 주어 텍스트 공간을 강제로 확보합니다.
+              className={`relative w-[400px] shadow-2xl break-keep pr-10 border-2 ${
                 toast.type === 'success'
-                  ? 'border-green-500 bg-green-500/10'
+                  ? 'border-green-500 bg-green-950/95 text-green-50'
                   : toast.type === 'info'
-                    ? 'border-blue-500 bg-blue-500/10'
-                    : ''
+                    ? 'border-blue-500 bg-blue-950/95 text-blue-50'
+                    : 'border-red-600 bg-red-950/95 text-red-50'
               }`}
             >
               <div className="flex items-start gap-3 w-full">
-                {toast.type === 'success' && <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />}
-                {toast.type === 'error' && <AlertCircle className="h-5 w-5 shrink-0" />}
-                {toast.type === 'info' && <Info className="h-5 w-5 text-blue-500 shrink-0" />}
+                {toast.type === 'success' && <CheckCircle2 className="h-5 w-5 text-green-400 shrink-0 mt-0.5" />}
+                {toast.type === 'error' && <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />}
+                {toast.type === 'info' && <Info className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />}
 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1">
                   {toast.title && (
                     <AlertTitle
-                      className={
-                        toast.type === 'success' ? 'text-green-500' : toast.type === 'info' ? 'text-blue-500' : ''
-                      }
+                      // 2. whitespace-nowrap으로 제목이 한 줄에 나오도록 고정
+                      className={`font-bold mb-1 whitespace-nowrap ${
+                        toast.type === 'success'
+                          ? 'text-green-400'
+                          : toast.type === 'info'
+                            ? 'text-blue-400'
+                            : 'text-red-400'
+                      }`}
                     >
                       {toast.title}
                     </AlertTitle>
                   )}
                   <AlertDescription
-                    className={`${toast.type === 'success' ? 'text-green-400' : toast.type === 'info' ? 'text-blue-400' : ''} whitespace-normal`}
+                    // 3. 텍스트가 잘리지 않고 옆으로 흐르도록 넉넉한 공간 보장
+                    className={`font-medium leading-normal ${
+                      toast.type === 'success'
+                        ? 'text-green-100'
+                        : toast.type === 'info'
+                          ? 'text-blue-100'
+                          : 'text-red-100'
+                    }`}
                   >
-                    {toast.message}
+                    {/* 4. 문구가 너무 길면 자연스럽게 다음 줄로 넘어가되, 공간이 있으면 한 줄로 출력 */}
+                    <span className="block min-w-[300px]">{toast.message}</span>
                   </AlertDescription>
                 </div>
               </div>
 
-              {/* X 버튼을 absolute로 설정하여 오른쪽 상단으로 강제 이동 */}
               <button
                 onClick={() => removeToast(toast.id)}
                 className={`absolute top-3 right-3 shrink-0 hover:opacity-70 transition-opacity p-1 ${
-                  toast.type === 'success' ? 'text-green-500' : toast.type === 'info' ? 'text-blue-500' : 'text-red-500'
+                  toast.type === 'success' ? 'text-green-400' : toast.type === 'info' ? 'text-blue-400' : 'text-red-400'
                 }`}
               >
                 <X className="h-4 w-4" />
