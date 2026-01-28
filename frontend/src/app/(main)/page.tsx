@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, User, Clock, Layers } from "lucide-react";
+import { getCategoryStyle } from "@/lib/category-styles";
 
 type MissionKey = "items" | "me" | "history" | "categories";
 
@@ -96,6 +97,12 @@ function MissionBadgeIcon() {
       <Box className="relative h-6 w-6 text-emerald-100" />
     </span>
   );
+}
+
+function getMissionCategoryStyle(categoryName: string) {
+  const name = (categoryName).trim();
+  const style = getCategoryStyle(name);
+  return { Icon: style.icon, color: style.color };
 }
 
 export default function Page() {
@@ -240,9 +247,22 @@ export default function Page() {
                 today.map((m) => (
                   <div key={m.id} className="flex items-center justify-between rounded-xl bg-white/5 p-4 ring-1 ring-white/15">
                     <div className="flex items-center gap-3">
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/20 ring-1 ring-emerald-400/50">
-                        <span className="h-3 w-3 rounded-full bg-emerald-200 shadow-[0_0_6px_rgba(16,185,129,0.4)]" />
-                      </span>
+                      {(() => {
+                        const { Icon, color } = getMissionCategoryStyle(m.category);
+
+                        return (
+                          <span
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full ring-1"
+                            style={{
+                              backgroundColor: color,
+                              border: `1px solid ${color}`,
+                              boxShadow: `0 0 10px ${color}55`,
+                            }}
+                          >
+                            <Icon className="h-5 w-5 text-white" />
+                          </span>
+                        );
+                      })()}
 
                       <div>
                         <div className="text-sm font-semibold">{m.title}</div>
@@ -260,9 +280,17 @@ export default function Page() {
                     </div>
 
                     {/* D-day 표시 뱃지 */}
-                    <span className="rounded-full px-3 py-1.5 text-xs font-semibold ring-1 bg-emerald-500/25 text-emerald-50 ring-emerald-500/40">
-                      {m.dDay >= 0 ? `D-${m.dDay}` : `D+${Math.abs(m.dDay)}`}
-                    </span>
+                    {m.dDay !== undefined && (
+                      <span
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold text-white ring-1 ${
+                          m.dDay >= 0
+                            ? "bg-[#22C55E] ring-[#22C55E]/40"   // 남음(초록) dDay포함
+                            : "bg-[#DC2626] ring-[#DC2626]/40"   // 지남(빨강)
+                        }`}
+                      >
+                        {m.dDay === 0 ? "D-Day" : m.dDay > 0 ? `D-${m.dDay}` : `D+${Math.abs(m.dDay)}`}
+                      </span>
+                    )}
                   </div>
                 ))
               }

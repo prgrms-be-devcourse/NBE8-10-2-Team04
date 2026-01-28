@@ -137,10 +137,7 @@ export default function Page() {
                       {/* 아이콘 */}
                       <div
                         className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full"
-                        style={{
-                          backgroundColor: color,
-                          border: `1px solid ${color}`,
-                        }}
+                        style={{backgroundColor: color, border: `1px solid ${color}`, }}
                       >
                         <Icon className="h-6 w-6 text-white" />
                       </div>
