@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { validateEmail, validatePasswordForUpdate } from '@/lib/validation';
+import { useToast } from '@/contexts/ToastContext';
 
 type RsData<T> = {
   resultCode: string;
@@ -36,6 +37,7 @@ type UserDto = {
 
 export default function MePage() {
   const router = useRouter();
+  const { showToast } = useToast();
   const [user, setUser] = useState<UserDto | null>(null);
   const [loginId, setLoginId] = useState('');
   const [email, setEmail] = useState('');
@@ -245,13 +247,13 @@ export default function MePage() {
       }
 
       const body = (await res.json()) as RsData<any>;
-      alert(body.msg || '회원탈퇴가 완료되었습니다.');
+      showToast('success', body.msg || '회원탈퇴가 완료되었습니다.');
 
-      // 탈퇴 후 로그인 페이지로 이동
       router.replace('/login');
     } catch (err: any) {
-      setError(err?.message ?? '회원탈퇴에 실패했습니다.');
-      alert(err?.message ?? '회원탈퇴에 실패했습니다.');
+      const errorMessage = err?.message ?? '회원탈퇴에 실패했습니다.';
+      setError(errorMessage);
+      showToast('error', errorMessage);
     } finally {
       setIsDeleting(false);
     }

@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
-import { FolderOpenDotIcon, X } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
 
 type Category = {
   id: number;
   name: string;
-}
+};
 
 interface ItemCreateFormProps {
   onClose: () => void; // 모달 닫기 함수
@@ -29,25 +30,23 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
   const [categories, setCategories] = useState<Category[]>([]);
 
   // 폼 상태 관리
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [categoryId, setCategoryId] = useState<number | null>(null);
-  const [imgUrl, setImgUrl] = useState("")
+  const [imgUrl, setImgUrl] = useState('');
   const [startDate, setStartDate] = useState(getSeoulToday());
-  const [cycleValue, setCycleValue] = useState("");
-  const [cycleUnit, setCycleUnit] = useState("m"); // 기본값 'm' (월)
+  const [cycleValue, setCycleValue] = useState('');
+  const [cycleUnit, setCycleUnit] = useState('m'); // 기본값 'm' (월)
 
   // input값 에러 여부 관리
-  const [nameError, setNameError] = useState("");
-  const [categoryError, setCategoryError] = useState("");
-  const [cycleError, setCycleError] = useState("");
+  const [nameError, setNameError] = useState('');
+  const [categoryError, setCategoryError] = useState('');
+  const [cycleError, setCycleError] = useState('');
+  const { showToast } = useToast();
 
   // 카테고리 목록 불러오기
   const fetchCategories = async () => {
     try {
-      const categoryResponse = await fetch(`http://localhost:8080/api/v1/categories`,
-        { credentials: "include" })
-        ;
-
+      const categoryResponse = await fetch(`http://localhost:8080/api/v1/categories`, { credentials: 'include' });
       if (categoryResponse.ok) {
         const categoryData = await categoryResponse.json();
 
@@ -55,7 +54,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
         setCategories(categoryData.data);
       }
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -65,9 +64,9 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
 
   const handleSave = async () => {
     // 에러 초기화
-    setNameError("");
-    setCategoryError("");
-    setCycleError("");
+    setNameError('');
+    setCategoryError('');
+    setCycleError('');
     let isValid = true;
 
     // 이름 검증
@@ -83,9 +82,9 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
     }
 
     // 카테고리 검증
-    if(!categoryId) {
+    if (!categoryId) {
       setCategoryError('카테고리를 선택해주세요.');
-      isValid = false
+      isValid = false;
     }
 
     if (!isValid) return;
@@ -93,24 +92,25 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
     // 등록 요청
     try {
       const response = await fetch('http://localhost:8080/api/v1/items', {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           name,
           categoryId: Number(categoryId),
           imgUrl,
           startDate,
           cycleDays: `${cycleValue}${cycleUnit}`,
-        })
+        }),
       });
       if (response.ok) {
-        alert('등록이 완료되었습니다.');
-        onCreate(); // 데이터 갱신 요청
-        onClose(); // 모달 닫기 요청
+        showToast('success', '등록이 완료되었습니다.');
+        onCreate();
+        onClose();
       }
     } catch (error) {
       console.error('아이템 등록 오류 발생:', error);
+      showToast('error', '아이템 등록에 실패했습니다.');
     }
   };
 
@@ -137,11 +137,12 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
-                if (nameError) setNameError(""); // 입력 시 에러 초기화
+                if (nameError) setNameError(''); // 입력 시 에러 초기화
               }}
-              className={`w-full rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${nameError ? "border-red-500" : "border-gray-800 focus:border-green-500"
-                }`}
-              placeholder='이름'
+              className={`w-full rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${
+                nameError ? 'border-red-500' : 'border-gray-800 focus:border-green-500'
+              }`}
+              placeholder="이름"
             />
             {nameError && (
               <p className="mt-1.5 flex items-center gap-1 text-xs text-red-500">
@@ -155,14 +156,14 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
             <label className="mb-1.5 block text-sm font-medium text-white">카테고리</label>
             <div className="relative">
               <select
-                value={categoryId ?? ""}
+                value={categoryId ?? ''}
                 onChange={(e) => {
                   const v = e.target.value;
-                  setCategoryId(v === "" ? null : Number(v));
-                  if (categoryError) setCategoryError("");
+                  setCategoryId(v === '' ? null : Number(v));
+                  if (categoryError) setCategoryError('');
                 }}
                 className={`w-full appearance-none rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${
-                  categoryError ? "border-red-500" : "border-gray-800 focus:border-green-500"
+                  categoryError ? 'border-red-500' : 'border-gray-800 focus:border-green-500'
                 }`}
               >
                 <option value="">카테고리를 선택해주세요</option>
@@ -174,9 +175,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
                 ))}
               </select>
 
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                ▼
-              </div>
+              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">▼</div>
             </div>
             {categoryError && (
               <p className="mt-1.5 flex items-center gap-1 text-xs text-red-500">
@@ -220,9 +219,9 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
                 min="1"
                 onChange={(e) => {
                   setCycleValue(e.target.value);
-                  if (cycleError) setCycleError(""); // 입력 시 에러 초기화
+                  if (cycleError) setCycleError(''); // 입력 시 에러 초기화
                 }}
-                className={`flex-1 rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${cycleError ? "border-red-500" : "border-gray-800 focus:border-green-500"}`}
+                className={`flex-1 rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${cycleError ? 'border-red-500' : 'border-gray-800 focus:border-green-500'}`}
                 placeholder="1"
               />
               <div className="relative flex-1">
@@ -235,9 +234,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
                   <option value="m">개월</option>
                   <option value="y">년</option>
                 </select>
-                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  ▼
-                </div>
+                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">▼</div>
               </div>
             </div>
             {cycleError && (

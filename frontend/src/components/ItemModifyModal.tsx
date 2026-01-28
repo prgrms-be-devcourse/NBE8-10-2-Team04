@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { X } from "lucide-react"; // X 아이콘을 위해 lucide-react 사용 (없을 경우 일반 텍스트 'X'로 대체 가능)
+import { useState, useEffect } from 'react';
+import { X } from 'lucide-react'; // X 아이콘을 위해 lucide-react 사용 (없을 경우 일반 텍스트 'X'로 대체 가능)
+import { useToast } from '@/contexts/ToastContext';
 
 type ItemDetail = {
   id: number;
@@ -17,7 +18,7 @@ type ItemDetail = {
 type Category = {
   id: number;
   name: string;
-}
+};
 
 interface ItemModifyFormProps {
   itemId: number;
@@ -26,28 +27,28 @@ interface ItemModifyFormProps {
 }
 
 export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModifyFormProps) {
+  const { showToast } = useToast();
   const [item, setItem] = useState<ItemDetail | null>(null);
   const [isItemLoading, setIsItemLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
 
   // 폼 상태 관리
-  const [name, setName] = useState("");
-  const [categoryId, setCategoryId] = useState<number | string>("");
-  const [imgUrl, setImgUrl] = useState("")
-  const [cycleValue, setCycleValue] = useState("");
-  const [cycleUnit, setCycleUnit] = useState("m"); // 기본값 'm' (월)
+  const [name, setName] = useState('');
+  const [categoryId, setCategoryId] = useState<number | string>('');
+  const [imgUrl, setImgUrl] = useState('');
+  const [cycleValue, setCycleValue] = useState('');
+  const [cycleUnit, setCycleUnit] = useState('m'); // 기본값 'm' (월)
 
   // input값 에러 여부 관리
-  const [nameError, setNameError] = useState("");
-  const [cycleError, setCycleError] = useState("");
-
+  const [nameError, setNameError] = useState('');
+  const [cycleError, setCycleError] = useState('');
 
   // cycleDays 파싱 함수 ('3d' -> {value: '3', unit: 'd'})
   const parseCycleDays = (cycle: string | null) => {
-    if (!cycle) return { value: "", unit: "m" };
-    const value = cycle.replace(/[^0-9]/g, "");
-    const unit = cycle.replace(/[0-9]/g, "");
-    return { value, unit: unit || "m" };
+    if (!cycle) return { value: '', unit: 'm' };
+    const value = cycle.replace(/[^0-9]/g, '');
+    const unit = cycle.replace(/[0-9]/g, '');
+    return { value, unit: unit || 'm' };
   };
 
   // 아이템 정보 불러오기
@@ -55,8 +56,8 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
     try {
       // 카테고리 목록과 아이템 상세 정보를 동시에 요청
       const [categoryResponse, itemResponse] = await Promise.all([
-        fetch(`http://localhost:8080/api/v1/categories`, { credentials: "include" }),
-        fetch(`http://localhost:8080/api/v1/items/${itemId}`, { credentials: "include" })
+        fetch(`http://localhost:8080/api/v1/categories`, { credentials: 'include' }),
+        fetch(`http://localhost:8080/api/v1/items/${itemId}`, { credentials: 'include' }),
       ]);
 
       if (categoryResponse.ok && itemResponse.ok) {
@@ -71,13 +72,13 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
         setItem(item);
         setName(item.name);
         setCategoryId(item.categoryId || 1);
-        setImgUrl(item.imgUrl || "");
+        setImgUrl(item.imgUrl || '');
         const { value, unit } = parseCycleDays(item.cycleDays);
         setCycleValue(value);
         setCycleUnit(unit);
       }
     } catch (error) {
-      console.error("Error fetching item:", error);
+      console.error('Error fetching item:', error);
     } finally {
       setIsItemLoading(false);
     }
@@ -89,8 +90,8 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
 
   const handleSave = async () => {
     // 에러 초기화
-    setNameError("");
-    setCycleError("");
+    setNameError('');
+    setCycleError('');
     let isValid = true;
 
     // 이름 검증
@@ -110,24 +111,25 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
     // 수정 요청
     try {
       const response = await fetch(`http://localhost:8080/api/v1/items/${itemId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           name,
           categoryId: Number(categoryId),
           imgUrl,
           cycleDays: `${cycleValue}${cycleUnit}`,
-          isActive: item?.isActive
-        })
+          isActive: item?.isActive,
+        }),
       });
       if (response.ok) {
-        alert('수정이 완료되었습니다.');
-        onUpdate(); // 데이터 갱신 요청
-        onClose(); // 모달 닫기 요청
+        showToast('success', '수정이 완료되었습니다.');
+        onUpdate();
+        onClose();
       }
     } catch (error) {
       console.error('아이템 수정 오류 발생:', error);
+      showToast('error', '아이템 수정에 실패했습니다.');
     }
   };
 
@@ -168,11 +170,12 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
-                if (nameError) setNameError(""); // 입력 시 에러 초기화
+                if (nameError) setNameError(''); // 입력 시 에러 초기화
               }}
-              className={`w-full rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${nameError ? "border-red-500" : "border-gray-800 focus:border-orange-500"
-                }`}
-              placeholder='이름'
+              className={`w-full rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${
+                nameError ? 'border-red-500' : 'border-gray-800 focus:border-orange-500'
+              }`}
+              placeholder="이름"
             />
             {nameError && (
               <p className="mt-1.5 flex items-center gap-1 text-xs text-red-500">
@@ -196,9 +199,7 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                ▼
-              </div>
+              <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">▼</div>
             </div>
           </div>
 
@@ -224,9 +225,9 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
                 min="1"
                 onChange={(e) => {
                   setCycleValue(e.target.value);
-                  if (cycleError) setCycleError(""); // 입력 시 에러 초기화
+                  if (cycleError) setCycleError(''); // 입력 시 에러 초기화
                 }}
-                className={`flex-1 rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${cycleError ? "border-red-500" : "border-gray-800 focus:border-orange-500"}`}
+                className={`flex-1 rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${cycleError ? 'border-red-500' : 'border-gray-800 focus:border-orange-500'}`}
                 placeholder="1"
               />
               <div className="relative flex-1">
@@ -239,9 +240,7 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
                   <option value="m">개월</option>
                   <option value="y">년</option>
                 </select>
-                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  ▼
-                </div>
+                <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">▼</div>
               </div>
             </div>
             {cycleError && (
