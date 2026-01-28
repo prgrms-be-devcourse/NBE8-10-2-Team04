@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:.env[.properties]
   mail:
     host: smtp.gmail.com # SMTP 서버 호스트
     port: 587 # SMTP 서버 포트
@@ -33,6 +35,20 @@ spring:
         format_sql: true
         highlight_sql: true
         use_sql_comments: true
+  servlet:
+    multipart:
+      max-file-size: 10MB      # 파일 하나당 최대 크기
+      max-request-size: 10MB   # 요청 전체 최대 크기
+  cloud:
+    aws:
+      credentials:
+        access-key: "${AWS_ACCESS_KEY}"
+        secret-key: "${AWS_SECRET_KEY}"
+      s3:
+        bucket: "${AWS_BUCKET_NAME}"
+      region:
+        static: "ap-northeast-2"
+
 springdoc:
   default-produces-media-type: application/json;charset=UTF-8
 logging:

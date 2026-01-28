@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,10 +40,10 @@ public class ItemController {
         );
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE) //Swagger UI에 파일선택버튼 추가
     @Operation(summary = "아이템 등록")
     public RsData<ItemCreateResponse> createItem(
-            @Valid @RequestBody ItemCreateRequest request
+            @Valid @ModelAttribute ItemCreateRequest request
     ) {
         Long userId = rq.getMemberId();
 
@@ -94,7 +95,7 @@ public class ItemController {
     @Operation(summary = "아이템 수정")
     public RsData<ItemUpdateResponse> modifyItem(
             @PathVariable Long id,
-            @Valid @RequestBody ItemUpdateRequest request
+            @Valid @ModelAttribute ItemUpdateRequest request
     ) {
         Long userId = rq.getMemberId();
 
