@@ -2,11 +2,13 @@ package com.back.domain.item.item.service;
 
 import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.repository.CategoryRepository;
+import com.back.domain.item.item.dto.CategoryAverageUsageResponse;
 import com.back.domain.item.item.dto.ItemCreateRequest;
 import com.back.domain.item.item.dto.ItemUpdateRequest;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
+import com.back.domain.item.itemHistory.repository.ItemHistoryRepository;
 import com.back.domain.item.itemHistory.service.ItemHistoryService;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,6 +33,7 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
     private final S3ImageService s3ImageService;
+    private final ItemHistoryRepository itemHistoryRepository;
 
     public Optional<Item> findById(Long id) {
         return itemRepository.findById(id);
@@ -229,5 +233,26 @@ public class ItemService {
         item.toggleActive();
 
         return item;
+    }
+
+    /**
+     * 특정 사용자의 카테고리별 평균 사용 기간 조회
+     */
+    @Transactional(readOnly = true)
+    public List<CategoryAverageUsageResponse> getCategoryAverageUsage(Long userId) {
+        // Repository에서 카테고리별 평균 사용 기간을 조회
+        List<Map<String, Object>> rawResults = itemHistoryRepository
+                .findAverageUsageDaysByCategoryForUser(userId);
+
+        // 결과를 DTO로 변환
+        return rawResults.stream()
+                .map(result -> new CategoryAverageUsageResponse(
+                        ((Number) result.get("categoryId")).longValue(),
+                        (String) result.get("categoryName"),
+                        result.get("averageUsageDays") != null
+                                ? ((Number) result.get("averageUsageDays")).doubleValue()
+                                : 0.0
+                ))
+                .toList();
     }
 }
