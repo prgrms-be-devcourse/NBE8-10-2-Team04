@@ -25,16 +25,18 @@ export default function AuthPage() {
         body: JSON.stringify({ loginId, password: loginPassword }),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('로그인 성공:', data);
+      const rsData = await response.json();
+
+      if (rsData.resultCode && rsData.resultCode.startsWith("2")) {
+        
+        console.log('로그인 성공:', rsData.msg);
 
         setTimeout(() => {
-          showToast('success', '레인저 인증 완료! 시스템에 접속합니다.');
+          showToast('success', rsData.msg);
         }, 200);
         router.push('/');
       } else {
-        showToast('error', '인증 실패: 아이디나 비밀번호를 확인하세요.');
+        showToast('error', rsData.msg);
       }
     } catch (error) {
       console.error('에러:', error);
@@ -112,8 +114,10 @@ export default function AuthPage() {
         }),
       });
 
-      if (response.ok) {
-        showToast('success', '회원가입이 완료되었습니다. 로그인해주세요.');
+      const rsData = await response.json();
+
+      if (rsData.resultCode && rsData.resultCode.startsWith("2")) {
+        showToast('success', rsData.msg);
         setActiveTab('login');
         setSignupLoginId('');
         setSignupPassword('');
@@ -122,7 +126,7 @@ export default function AuthPage() {
         setSignupErrors({ loginId: '', password: '', email: '' });
       } else {
         console.error('회원가입 실패');
-        showToast('error', '회원가입에 실패했습니다.');
+        showToast('error', rsData.msg);
       }
     } catch (error) {
       console.error('에러 발생:', error);
