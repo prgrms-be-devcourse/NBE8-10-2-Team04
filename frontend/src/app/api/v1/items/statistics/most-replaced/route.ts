@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit') || '10';
 
     const targetUrl = `${BASE_URL}/api/v1/items/statistics/most-replaced?limit=${limit}`;
-    console.log('Fetching from Spring Boot:', targetUrl); // 로그 추가
+    console.log('Fetching from Spring Boot:', targetUrl);
 
     const res = await fetch(targetUrl, {
       method: 'GET',
