@@ -319,7 +319,7 @@ public class ItemService {
             return objectMapper.readValue(cleanedJson, ItemCycleRecommendResponse.class);
 
         } catch (Exception e) {
-            throw new ServiceException("500", "JSON 파싱 중 오류가 발생했습니다." + e);
+            throw new ServiceException("500", "JSON 파싱 중 오류가 발생했습니다.");
         }
     }
 }
