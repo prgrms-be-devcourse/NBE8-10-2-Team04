@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useToast } from '@/contexts/ToastContext';
-import { FolderOpenDotIcon, X, Upload, Image as ImageIcon } from "lucide-react";
+import { X, Upload, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
 
 type Category = {
   id: number;
@@ -36,6 +36,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [startDate, setStartDate] = useState(getSeoulToday());
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const [cycleValue, setCycleValue] = useState('');
   const [cycleUnit, setCycleUnit] = useState('m'); // 기본값 'm' (월)
 
@@ -65,7 +66,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
   useEffect(() => {
     fetchCategories();
   }, []);
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -84,6 +85,38 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
     setPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const handleAiRecommend = async () => {
+    // 이름이 비어있으면 에러 표시 후 중단
+    if (!name.trim()) {
+      setNameError('이름을 입력해야 AI 추천을 받을 수 있습니다.');
+      return;
+    }
+
+    setIsAiLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8080/api/v1/items/cycle-recommend?name=${encodeURIComponent(name)}`, {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // 성공 시 데이터 바인딩
+        setCycleValue(String(result.data.cycleValue));
+        setCycleUnit(result.data.cycleUnit);
+        showToast('success', result.msg);
+        setCycleError('');
+      } else {
+        showToast('error', result.msg || '추천 정보를 가져오지 못했습니다.');
+      }
+    } catch (error) {
+      showToast('error', '네트워크 통신 중 오류가 발생했습니다.');
+    } finally {
+      setIsAiLoading(false);
     }
   };
 
@@ -119,12 +152,12 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
     formData.append("categoryId", String(categoryId));
     formData.append("startDate", startDate);
     formData.append("cycleDays", `${cycleValue}${cycleUnit}`);
-    
+
     // 파일이 있으면 파일 추가
     if (imageFile) {
-      formData.append("image", imageFile); 
+      formData.append("image", imageFile);
     }
-    
+
     // URL이 있으면 URL 추가 (백엔드 로직에 따라 파일이 우선순위)
     if (imgUrl) {
       formData.append("imgUrl", imgUrl);
@@ -173,9 +206,8 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
                 setName(e.target.value);
                 if (nameError) setNameError(''); // 입력 시 에러 초기화
               }}
-              className={`w-full rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${
-                nameError ? 'border-red-500' : 'border-gray-800 focus:border-green-500'
-              }`}
+              className={`w-full rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${nameError ? 'border-red-500' : 'border-gray-800 focus:border-green-500'
+                }`}
               placeholder="이름"
             />
             {nameError && (
@@ -196,9 +228,8 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
                   setCategoryId(v === '' ? null : Number(v));
                   if (categoryError) setCategoryError('');
                 }}
-                className={`w-full appearance-none rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${
-                  categoryError ? 'border-red-500' : 'border-gray-800 focus:border-green-500'
-                }`}
+                className={`w-full appearance-none rounded-lg border bg-[#161b26] p-3 text-white focus:outline-none ${categoryError ? 'border-red-500' : 'border-gray-800 focus:border-green-500'
+                  }`}
               >
                 <option value="">카테고리를 선택해주세요</option>
 
@@ -221,17 +252,17 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
           {/* 이미지 URL */}
           <div className="space-y-3">
             <label className="block text-sm font-medium text-white">이미지 (선택)</label>
-            
+
             {/*  파일 업로드  */}
             <div className="flex items-start gap-4">
               {/* 미리보기 박스 */}
-              <div 
+              <div
                 className={`relative flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg border ${preview ? 'border-green-500' : 'border-dashed border-gray-600 bg-[#161b26]'}`}
               >
                 {preview ? (
                   <>
                     <img src={preview} alt="Preview" className="h-full w-full object-cover" />
-                    <button 
+                    <button
                       onClick={clearFile}
                       className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity"
                     >
@@ -252,7 +283,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
                   className="hidden"
                   id="image-upload"
                 />
-                <label 
+                <label
                   htmlFor="image-upload"
                   className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                 >
@@ -264,9 +295,9 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
             </div>
 
             <div className="relative flex items-center py-1">
-                <div className="flex-grow border-t border-gray-800"></div>
-                <span className="flex-shrink-0 mx-2 text-xs text-gray-500">OR</span>
-                <div className="flex-grow border-t border-gray-800"></div>
+              <div className="flex-grow border-t border-gray-800"></div>
+              <span className="flex-shrink-0 mx-2 text-xs text-gray-500">OR</span>
+              <div className="flex-grow border-t border-gray-800"></div>
             </div>
 
             {/* URL 입력 영역 */}
@@ -276,7 +307,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
               onChange={(e) => {
                 setImgUrl(e.target.value);
                 // URL 입력 시 파일 선택 해제 (UX 선택사항)
-                if (e.target.value && imageFile) clearFile(); 
+                if (e.target.value && imageFile) clearFile();
               }}
               className="w-full rounded-lg border border-gray-800 bg-[#161b26] p-3 text-white placeholder-gray-600 focus:border-green-500 focus:outline-none text-sm"
               placeholder="이미지 주소를 직접 입력하세요 (https://...)"
@@ -298,7 +329,31 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
 
           {/* 교체 주기 */}
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-white">교체 주기</label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="text-sm font-medium text-white">교체 주기</label>
+              {/* AI 추천 버튼 */}
+              <button
+                type="button"
+                onClick={handleAiRecommend}
+                disabled={isAiLoading}
+                className={`flex items-center gap-1.5 text-xs font-semibold transition-colors ${isAiLoading
+                  ? 'text-gray-500 cursor-not-allowed'
+                  : 'text-green-400 hover:text-green-300 cursor-pointer'
+                  }`}
+              >
+                {isAiLoading ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    검색 중...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={14} />
+                    AI 추천 받기
+                  </>
+                )}
+              </button>
+            </div>
             <div className="flex gap-2">
               <input
                 type="number"
