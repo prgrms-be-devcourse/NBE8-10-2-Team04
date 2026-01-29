@@ -36,7 +36,7 @@ export default function AuthPage() {
         // 페이지 전환이 완료된 후 Toast 표시
         setTimeout(() => {
           showToast('success', rsData.msg);
-        }, 200);
+        }, 500);
       } else {
         showToast('error', rsData.msg);
       }
