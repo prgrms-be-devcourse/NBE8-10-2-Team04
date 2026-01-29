@@ -140,4 +140,18 @@ public class ItemController {
                 new ItemUpdateResponse(item)
         );
     }
+
+    @GetMapping("/statistics/category-average")
+    @Operation(summary = "카테고리별 평균 사용 기간 조회")
+    public RsData<List<CategoryAverageUsageResponse>> getCategoryAverageUsage() {
+        Long userId = rq.getMemberId();
+
+        List<CategoryAverageUsageResponse> data = itemService.getCategoryAverageUsage(userId);
+
+        return new RsData<>(
+                "200-1",
+                "카테고리별 평균 사용 기간 조회 성공",
+                data
+        );
+    }
 }
