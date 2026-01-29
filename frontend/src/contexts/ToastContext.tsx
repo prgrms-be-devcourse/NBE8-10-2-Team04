@@ -81,11 +81,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  /**
-   * 토스트 표시
-   * - 새로운 토스트 추가
-   * - 일정 시간 후 자동 제거
-   */
+  // 토스트 표시
   const showToast = useCallback(
     (type: ToastType, message: string, title?: string) => {
       const id = Date.now(); // 간단한 고유 ID 생성
@@ -106,7 +102,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
 
       <div
-        className="fixed top-4 right-4 flex flex-col items-end gap-2 pointer-events-none"
+        className="fixed top-20 right-4 flex flex-col items-end gap-2 pointer-events-none"
         style={{ zIndex: TOAST_Z_INDEX }}
         role="region"
         aria-label="알림"
