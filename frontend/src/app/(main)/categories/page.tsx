@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Grid, Package} from 'lucide-react';
+import { Grid, Package } from 'lucide-react';
 import {
   getCategoryStyle,
   getIconBgClass,
@@ -9,8 +9,9 @@ import {
 
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/common/PageHeader';
+import { useRouter } from 'next/navigation';
 
 type RsData<T> = {
   resultCode: string;
@@ -21,7 +22,7 @@ type RsData<T> = {
 type CategoryApi = {
   id: number | string;
   name: string;
-  itemCount : number;
+  itemCount: number;
 };
 
 type CategoryUI = {
@@ -31,6 +32,7 @@ type CategoryUI = {
 };
 
 export default function CategoriesPage() {
+  const router = useRouter();
   const [categories, setCategories] = useState<CategoryUI[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -101,7 +103,7 @@ export default function CategoriesPage() {
                 const { icon: Icon } = getCategoryStyle(category.name);
 
                 const iconBg = getIconBgClass(category.name);   // 아이콘 배경 (진한색)
-                
+
                 return (
                   <Card
                     key={category.id}

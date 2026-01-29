@@ -11,8 +11,10 @@ import { useItems } from '@/hooks/useItems';
 import ItemModifyModal from '@/components/ItemModifyModal';
 import ItemCreateModal from '@/components/ItemCreateModal';
 import { useToast } from '@/contexts/ToastContext';
+import { useRouter } from 'next/navigation';
 
 export default function ItemsPage() {
+  const router = useRouter();
   const { showToast } = useToast();
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null); // 수정하고자 하는 itemId
