@@ -279,7 +279,12 @@ public class ItemService {
                     .thenApply(response -> parseJson(response.text()))
                     .join(); // 최종 결과 대기 및 반환
         } catch (CompletionException e) {
-            if (e.getCause() instanceof TimeoutException) {
+            Throwable cause = e.getCause();
+            // parseJson에서 발생한 ServiceException인 경우 그대로 다시 던짐
+            if (cause instanceof ServiceException se) {
+                throw se;
+            }
+            if (cause instanceof TimeoutException) {
                 throw new ServiceException("500", "Timeout 발생");
             }
             throw new ServiceException("500", "GenAI 오류 발생");
