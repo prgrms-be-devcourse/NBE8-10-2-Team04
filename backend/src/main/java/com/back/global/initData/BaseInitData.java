@@ -83,6 +83,7 @@ public class BaseInitData {
                 bathroom.getId(),
                 "칫솔",
                 "https://example.com/toothbrush.png",
+                null,
                 LocalDate.of(2026, 1, 1),
                 "3m"
         ));
@@ -91,6 +92,7 @@ public class BaseInitData {
                 kitchen.getId(),
                 "수세미",
                 "https://example.com/sponge.png",
+                null,
                 LocalDate.of(2026, 1, 5),
                 "21d"
         ));
@@ -99,6 +101,7 @@ public class BaseInitData {
                 car.getId(),
                 "엔진오일",
                 "https://example.com/engineoil.png",
+                null,
                 LocalDate.of(2025, 12, 1),
                 "6m"
         ));
@@ -108,6 +111,7 @@ public class BaseInitData {
                 bathroom.getId(),
                 "테스트용 칫솔 (D-Day 0)",
                 "https://example.com/test-toothbrush.png",
+                null,
                 LocalDate.now().minusMonths(3),
                 "3m"
         ));

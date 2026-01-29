@@ -11,10 +11,12 @@ import com.back.domain.item.itemHistory.service.ItemHistoryService;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
+import com.back.global.s3.S3ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +29,7 @@ public class ItemService {
     private final ItemHistoryService itemHistoryService;
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
+    private final S3ImageService s3ImageService;
 
     public Optional<Item> findById(Long id) {
         return itemRepository.findById(id);
@@ -107,11 +110,24 @@ public class ItemService {
         CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
         LocalDate nextReplacementDate = cyclePeriod.addTo(startDate);
 
+
+        String finalImgUrl = request.imgUrl(); // 기본값: 입력받은 URL 문자열
+
+        // 파일이 실제로 들어왔는지 확인
+        if (request.image() != null && !request.image().isEmpty()) {
+            // 파일이 있다면 S3 업로드 후 반환된 URL을 사용
+            try {
+                finalImgUrl = s3ImageService.upload(request.image());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         Item item = create(
                 userId,
                 category,
                 request.name(),
-                request.imgUrl(),
+                finalImgUrl,
                 startDate,
                 request.cycleDays(),
                 nextReplacementDate,
@@ -173,6 +189,21 @@ public class ItemService {
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 카테고리입니다."));
 
+        String finalImgUrl = request.imgUrl(); // 1순위: 프론트에서 보낸 URL 문자열
+
+        // 만약 파일이 넘어왔다면 S3에 업로드하고 URL 덮어쓰기
+        if (request.image() != null && !request.image().isEmpty()) {
+            try {
+                finalImgUrl = s3ImageService.upload(request.image());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        // 파일도 없고 URL도 없으면 기존 이미지 유지 (선택사항, 필요 없으면 제거 가능)
+        else if (finalImgUrl == null || finalImgUrl.isBlank()) {
+            finalImgUrl = "";
+        }
+
         // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
         LocalDate nextReplacementDate = item.getNextReplacementDate();
         if (!Objects.equals(request.cycleDays(), item.getCycleDays())) {
@@ -181,7 +212,7 @@ public class ItemService {
         }
 
         // 아이템 수정
-        item.modify(category, request.name(), request.imgUrl(), request.cycleDays(), nextReplacementDate,
+        item.modify(category, request.name(), finalImgUrl, request.cycleDays(), nextReplacementDate,
                 request.isActive());
 
         return item;

@@ -10,6 +10,7 @@ interface Item {
   category: string;
   status: string;
   createdAt: string;
+  imgUrl?: string;
 }
 
 interface ItemDetailProps {
@@ -68,8 +69,17 @@ export function ItemDetail({ item, onBack }: ItemDetailProps) {
 
         <Card className="bg-black/80 backdrop-blur-sm border-4 border-purple-400 shadow-2xl">
           <CardHeader>
-            <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${getCategoryColor(item.category)} flex items-center justify-center mx-auto mb-4 border-4 border-white/30 shadow-lg`}>
-              <Package className="h-12 w-12 text-white" />
+            <div className={`w-32 h-32 rounded-full bg-gradient-to-br ${getCategoryColor(item.category)} flex items-center justify-center mx-auto mb-4 border-4 border-white/30 shadow-lg`}>
+              {item.imgUrl ? (
+                <img 
+                  src={item.imgUrl} 
+                  alt={item.name} 
+                  className="w-full h-full object-cover" 
+                />
+              ) : (
+                /* imgUrl이 없으면 기존처럼 아이콘을 보여줌 */
+                <Package className="h-12 w-12 text-white" />
+              )}
             </div>
             <CardTitle className="text-white text-center text-3xl">{item.name}</CardTitle>
             <CardDescription className="text-gray-400 text-center text-lg">
