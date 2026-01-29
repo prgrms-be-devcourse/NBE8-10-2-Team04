@@ -271,8 +271,10 @@ public class ItemService {
                         name + "의 권장 교체 주기를 알려줘.",
                         genAiSystemConfig);
 
-        String rawText = response.text();
+        return parseJson(response.text());
+    }
 
+    private ItemCycleRecommendResponse parseJson(String rawText) {
         // response 자체가 null인 경우 체크
         if (rawText == null || rawText.isBlank()) {
             throw new ServiceException("500", "AI로부터 응답을 받지 못했습니다.");
@@ -280,10 +282,9 @@ public class ItemService {
 
         // Not Found 응답 처리
         if (rawText.contains("Not Found")) {
-            throw new ServiceException("404", name + "은(는) 권장 주기를 찾을 수 없는 소모품입니다.");
+            throw new ServiceException("404", "권장 주기를 찾을 수 없는 소모품입니다.");
         }
 
-        // String을 json으로 변환
         try {
             // {} 블록만 추출
             int start = rawText.indexOf("{");
