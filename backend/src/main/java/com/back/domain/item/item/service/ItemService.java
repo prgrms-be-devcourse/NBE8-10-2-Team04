@@ -4,6 +4,7 @@ import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.item.item.dto.CategoryAverageUsageResponse;
 import com.back.domain.item.item.dto.ItemCreateRequest;
+import com.back.domain.item.item.dto.ItemCycleRecommendResponse;
 import com.back.domain.item.item.dto.ItemUpdateRequest;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
@@ -14,9 +15,16 @@ import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
 import com.back.global.s3.S3ImageService;
+import com.google.genai.Client;
+import com.google.genai.types.Content;
+import com.google.genai.types.GenerateContentConfig;
+import com.google.genai.types.GenerateContentResponse;
+import com.google.genai.types.Part;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -34,6 +42,10 @@ public class ItemService {
     private final CategoryRepository categoryRepository;
     private final S3ImageService s3ImageService;
     private final ItemHistoryRepository itemHistoryRepository;
+    private final ObjectMapper objectMapper;
+
+    @Value("${google.gemini.api-key}")
+    private String geminiApiKey;
 
     public Optional<Item> findById(Long id) {
         return itemRepository.findById(id);
@@ -254,5 +266,60 @@ public class ItemService {
                                 : 0.0
                 ))
                 .toList();
+    }
+
+    public ItemCycleRecommendResponse getItemCycleRecommend(String name) {
+        // Gemini Client 설정
+        Client client = Client.builder()
+                .apiKey(geminiApiKey)
+                .build();
+
+        // Gemini 모델 기본 설정
+        GenerateContentConfig config =
+                GenerateContentConfig.builder()
+                        .systemInstruction(Content.fromParts(
+                                Part.fromText("너는 살림 전문가야. 사용자가 소모품 이름을 말하면 권장 교체 주기를 알려줘야 해." +
+                                        "응답은 반드시 다른 설명 없이 다음 JSON 형식으로만 보내줘: {\"cycleValue\": 자연수, \"cycleUnit\": \"d" +
+                                        "(일)/m(개월)/y(년) 중 하나\"}" +
+                                        "일반적인 소모품이 아니라면 Not Found로 응답해줘.")))
+                        .build();
+
+        // 질문 요청
+        GenerateContentResponse response =
+                client.models.generateContent(
+                        "gemini-2.5-flash-lite",
+                        name + "의 권장 교체 주기를 알려줘.",
+                        config);
+
+        String rawText = response.text();
+
+        // response 자체가 null인 경우 체크
+        if (rawText == null || rawText.isBlank()) {
+            throw new ServiceException("500", "AI로부터 응답을 받지 못했습니다.");
+        }
+
+        // Not Found 응답 처리
+        if (rawText.contains("Not Found")) {
+            throw new ServiceException("404", name + "은(는) 권장 주기를 찾을 수 없는 소모품입니다.");
+        }
+
+        // String을 json으로 변환
+        try {
+            // {} 블록만 추출
+            int start = rawText.indexOf("{");
+            int end = rawText.lastIndexOf("}");
+
+            if (start == -1 || end == -1 || start >= end) {
+                throw new ServiceException("500", "AI 응답이 유효한 JSON 형식이 아닙니다.");
+            }
+
+            String cleanedJson = rawText.substring(start, end + 1);
+
+            // JSON을 객체로 변환
+            return objectMapper.readValue(cleanedJson, ItemCycleRecommendResponse.class);
+
+        } catch (Exception e) {
+            throw new ServiceException("500", "JSON 파싱 중 오류가 발생했습니다." + e);
+        }
     }
 }

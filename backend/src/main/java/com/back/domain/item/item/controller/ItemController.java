@@ -154,4 +154,14 @@ public class ItemController {
                 data
         );
     }
+
+    @GetMapping("/cycle-recommend")
+    @Operation(summary = "AI에게 아이템 주기 추천받기")
+    public RsData<ItemCycleRecommendResponse> getItemCycleRecommend(@RequestParam String name) {
+        return new RsData<>(
+                "200",
+                "추천 주기 조회 완료",
+                itemService.getItemCycleRecommend(name)
+        );
+    }
 }
