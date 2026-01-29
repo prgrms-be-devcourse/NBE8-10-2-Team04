@@ -49,6 +49,10 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
+    // Monitoring (Prometheus + Grafana)
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("io.micrometer:micrometer-registry-prometheus")
+
     // Devtools
     developmentOnly("org.springframework.boot:spring-boot-devtools")
 
