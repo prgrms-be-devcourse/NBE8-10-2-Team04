@@ -17,7 +17,6 @@ import com.back.global.exception.ServiceException;
 import com.back.global.s3.S3ImageService;
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentConfig;
-import com.google.genai.types.GenerateContentResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Service
 @RequiredArgsConstructor
@@ -265,13 +268,22 @@ public class ItemService {
     }
 
     public ItemCycleRecommendResponse getItemCycleRecommend(String name) {
-        GenerateContentResponse response =
-                genAiClient.models.generateContent(
-                        "gemini-2.5-flash-lite",
-                        name + "의 권장 교체 주기를 알려줘.",
-                        genAiSystemConfig);
-
-        return parseJson(response.text());
+        try {
+            return CompletableFuture.supplyAsync(() ->
+                            genAiClient.models.generateContent(
+                                    "gemini-2.5-flash-lite",
+                                    name + "의 권장 교체 주기를 알려줘.",
+                                    genAiSystemConfig)
+                    )
+                    .orTimeout(10, TimeUnit.SECONDS) // 타임아웃 설정
+                    .thenApply(response -> parseJson(response.text()))
+                    .join(); // 최종 결과 대기 및 반환
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof TimeoutException) {
+                throw new ServiceException("500", "Timeout 발생");
+            }
+            throw new ServiceException("500", "GenAI 오류 발생");
+        }
     }
 
     private ItemCycleRecommendResponse parseJson(String rawText) {
