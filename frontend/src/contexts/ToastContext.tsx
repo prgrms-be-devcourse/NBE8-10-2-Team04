@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 
@@ -72,6 +72,17 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 // 전역 토스트 상태 관리
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]); // 현재 화면에 표시 중인 토스트 목록
+  const [scrollY, setScrollY] = useState(0);
+
+  // 스크롤 감지 로직
+  useEffect(() => {
+    const handleScroll = () => {
+      // 0부터 64px 사이에서만 반응하도록 제한
+      setScrollY(Math.min(window.scrollY, 64));
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   /**
    * 특정 토스트 제거
@@ -102,11 +113,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {children}
 
       <div
-        className="fixed top-20 right-4 flex flex-col items-end gap-2 pointer-events-none"
-        style={{ zIndex: TOAST_Z_INDEX }}
-        role="region"
-        aria-label="알림"
-        aria-live="polite"
+        className="fixed right-4 flex flex-col items-end gap-2 pointer-events-none transition-transform duration-75 ease-out"
+        style={{
+          zIndex: TOAST_Z_INDEX,
+          // 스크롤된 만큼 위로 올리되, 최대 64px만 올림
+          transform: `translateY(-${scrollY}px)`,
+          top: '80px', // 초기 위치 (top-20)
+        }}
       >
         {toasts.map((toast) => {
           const style = TOAST_STYLES[toast.type];
