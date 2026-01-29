@@ -66,10 +66,14 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 
+    // Mail
     implementation("org.springframework.boot:spring-boot-starter-mail") // 메일서버와 연결해서 메일을 발송하는데 필요한 라이브러리
 
     // AWS 공식 Java SDK
     implementation("software.amazon.awssdk:s3:2.21.1")
+
+    // Gemini
+    implementation("com.google.genai:google-genai:1.32.0")
 }
 
 tasks.withType<Test> {

@@ -155,6 +155,16 @@ public class ItemController {
         );
     }
 
+    @GetMapping("/cycle-recommend")
+    @Operation(summary = "AI에게 아이템 주기 추천받기")
+    public RsData<ItemCycleRecommendResponse> getItemCycleRecommend(@RequestParam String name) {
+        return new RsData<>(
+                "200",
+                "추천 주기 조회 완료",
+                itemService.getItemCycleRecommend(name)
+        );
+    }
+
     @GetMapping("/statistics/most-replaced")
     @Operation(summary = "가장 자주 교체한 아이템 순위 조회")
     public RsData<List<MostReplacedItemResponse>> getMostReplacedItems(

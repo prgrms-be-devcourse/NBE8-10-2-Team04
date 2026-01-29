@@ -4,6 +4,7 @@ import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.item.item.dto.CategoryAverageUsageResponse;
 import com.back.domain.item.item.dto.ItemCreateRequest;
+import com.back.domain.item.item.dto.ItemCycleRecommendResponse;
 import com.back.domain.item.item.dto.ItemUpdateRequest;
 import com.back.domain.item.item.dto.MostReplacedItemResponse;
 import com.back.domain.item.item.entity.Item;
@@ -15,9 +16,12 @@ import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
 import com.back.global.s3.S3ImageService;
+import com.google.genai.Client;
+import com.google.genai.types.GenerateContentConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -25,6 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +43,9 @@ public class ItemService {
     private final CategoryRepository categoryRepository;
     private final S3ImageService s3ImageService;
     private final ItemHistoryRepository itemHistoryRepository;
-
+    private final Client genAiClient;
+    private final GenerateContentConfig genAiSystemConfig;
+    private final ObjectMapper objectMapper;
 
     public Optional<Item> findById(Long id) {
         return itemRepository.findById(id);
@@ -256,6 +266,55 @@ public class ItemService {
                                 : 0.0
                 ))
                 .toList();
+    }
+
+    public ItemCycleRecommendResponse getItemCycleRecommend(String name) {
+        try {
+            return CompletableFuture.supplyAsync(() ->
+                            genAiClient.models.generateContent(
+                                    "gemini-2.5-flash-lite",
+                                    name + "의 권장 교체 주기를 알려줘.",
+                                    genAiSystemConfig)
+                    )
+                    .orTimeout(10, TimeUnit.SECONDS) // 타임아웃 설정
+                    .thenApply(response -> parseJson(response.text()))
+                    .join(); // 최종 결과 대기 및 반환
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof TimeoutException) {
+                throw new ServiceException("500", "Timeout 발생");
+            }
+            throw new ServiceException("500", "GenAI 오류 발생");
+        }
+    }
+
+    private ItemCycleRecommendResponse parseJson(String rawText) {
+        // response 자체가 null인 경우 체크
+        if (rawText == null || rawText.isBlank()) {
+            throw new ServiceException("500", "AI로부터 응답을 받지 못했습니다.");
+        }
+
+        // Not Found 응답 처리
+        if (rawText.contains("Not Found")) {
+            throw new ServiceException("404", "권장 주기를 찾을 수 없는 소모품입니다.");
+        }
+
+        try {
+            // {} 블록만 추출
+            int start = rawText.indexOf("{");
+            int end = rawText.lastIndexOf("}");
+
+            if (start == -1 || end == -1 || start >= end) {
+                throw new ServiceException("500", "AI 응답이 유효한 JSON 형식이 아닙니다.");
+            }
+
+            String cleanedJson = rawText.substring(start, end + 1);
+
+            // JSON을 객체로 변환
+            return objectMapper.readValue(cleanedJson, ItemCycleRecommendResponse.class);
+
+        } catch (Exception e) {
+            throw new ServiceException("500", "JSON 파싱 중 오류가 발생했습니다.");
+        }
     }
 
     /**
