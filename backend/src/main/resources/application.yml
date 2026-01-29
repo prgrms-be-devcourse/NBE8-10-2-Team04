@@ -4,8 +4,8 @@ spring:
   mail:
     host: smtp.gmail.com # SMTP 서버 호스트
     port: 587 # SMTP 서버 포트
-    username: flsemfur # SMTP 서버 로그인 아이디: 발신자
-    password: jkmdohrfdwsrivhw # SMTP 서버 로그인 패스워드
+    username: "${MAIL_USERNAME}" # SMTP 서버 로그인 아이디: 발신자
+    password: "${MAIL_PASSWORD}" # SMTP 서버 로그인 패스워드
     properties:
       mail:
         smtp:
@@ -68,7 +68,7 @@ management:
 
 custom:
   jwt:
-    secretKey: abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrstuvwxyz0123456789
+    secretKey: "${JWT_SECRET_KEY}"
   accessToken:
     expirationSeconds: "#{60*20}"
 google:
