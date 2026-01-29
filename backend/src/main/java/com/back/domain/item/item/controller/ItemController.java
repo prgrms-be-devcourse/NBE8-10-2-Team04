@@ -154,4 +154,20 @@ public class ItemController {
                 data
         );
     }
+
+    @GetMapping("/statistics/most-replaced")
+    @Operation(summary = "가장 자주 교체한 아이템 순위 조회")
+    public RsData<List<MostReplacedItemResponse>> getMostReplacedItems(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        Long userId = rq.getMemberId();
+
+        List<MostReplacedItemResponse> data = itemService.getMostReplacedItems(userId, limit);
+
+        return new RsData<>(
+                "200-1",
+                "가장 자주 교체한 아이템 순위 조회 성공",
+                data
+        );
+    }
 }

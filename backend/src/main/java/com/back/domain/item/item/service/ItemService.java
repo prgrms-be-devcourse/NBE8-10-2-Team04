@@ -5,6 +5,7 @@ import com.back.domain.category.category.repository.CategoryRepository;
 import com.back.domain.item.item.dto.CategoryAverageUsageResponse;
 import com.back.domain.item.item.dto.ItemCreateRequest;
 import com.back.domain.item.item.dto.ItemUpdateRequest;
+import com.back.domain.item.item.dto.MostReplacedItemResponse;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
@@ -34,6 +35,7 @@ public class ItemService {
     private final CategoryRepository categoryRepository;
     private final S3ImageService s3ImageService;
     private final ItemHistoryRepository itemHistoryRepository;
+
 
     public Optional<Item> findById(Long id) {
         return itemRepository.findById(id);
@@ -252,6 +254,27 @@ public class ItemService {
                         result.get("averageUsageDays") != null
                                 ? ((Number) result.get("averageUsageDays")).doubleValue()
                                 : 0.0
+                ))
+                .toList();
+    }
+
+    /**
+     * 특정 사용자의 가장 자주 교체한 아이템 순위 조회
+     */
+    @Transactional(readOnly = true)
+    public List<MostReplacedItemResponse> getMostReplacedItems(Long userId, int limit) {
+        // Repository에서 가장 자주 교체한 아이템 순위를 조회
+        List<Map<String, Object>> rawResults = itemHistoryRepository
+                .findMostReplacedItemsByUser(userId, limit);
+
+        // 결과를 DTO로 변환
+        return rawResults.stream()
+                .map(result -> new MostReplacedItemResponse(
+                        ((Number) result.get("itemId")).longValue(),
+                        (String) result.get("itemName"),
+                        (String) result.get("categoryName"),
+                        ((Number) result.get("replacementCount")).longValue(),
+                        (String) result.get("imgUrl")
                 ))
                 .toList();
     }

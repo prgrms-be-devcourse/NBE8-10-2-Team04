@@ -37,4 +37,19 @@ public interface ItemHistoryRepository extends JpaRepository<ItemHistory, Long> 
             ORDER BY ih.item.category.name
             """)
     List<Map<String, Object>> findAverageUsageDaysByCategoryForUser(Long userId);
+
+    // 특정 사용자의 가장 자주 교체한 아이템 순위 조회
+    @Query("""
+            SELECT ih.item.id as itemId,
+                   ih.item.name as itemName,
+                   ih.item.category.name as categoryName,
+                   COUNT(ih) as replacementCount,
+                   ih.item.imgUrl as imgUrl
+            FROM ItemHistory ih
+            WHERE ih.item.user.id = :userId
+            GROUP BY ih.item.id, ih.item.name, ih.item.category.name, ih.item.imgUrl
+            ORDER BY replacementCount DESC
+            LIMIT :limit
+            """)
+    List<Map<String, Object>> findMostReplacedItemsByUser(Long userId, int limit);
 }
