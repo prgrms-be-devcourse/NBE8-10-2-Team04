@@ -74,6 +74,25 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]); // 현재 화면에 표시 중인 토스트 목록
   const [scrollY, setScrollY] = useState(0);
 
+  const [hasHeader, setHasHeader] = useState(false);
+
+  // 헤더 존재 여부 감지 (스크롤 감지 useEffect 위에 추가)
+  useEffect(() => {
+    const checkHeader = () => {
+      const header = document.querySelector('header');
+      setHasHeader(!!header);
+    };
+
+    // 초기 체크
+    checkHeader();
+
+    // DOM 변경 감지 (페이지 전환 시)
+    const observer = new MutationObserver(checkHeader);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
   // 스크롤 감지 로직
   useEffect(() => {
     const handleScroll = () => {
