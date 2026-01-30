@@ -6,6 +6,7 @@ import com.back.domain.item.item.dto.CategoryAverageUsageResponse;
 import com.back.domain.item.item.dto.ItemCreateRequest;
 import com.back.domain.item.item.dto.ItemCycleRecommendResponse;
 import com.back.domain.item.item.dto.ItemUpdateRequest;
+import com.back.domain.item.item.dto.MostReplacedItemResponse;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
@@ -314,5 +315,26 @@ public class ItemService {
         } catch (Exception e) {
             throw new ServiceException("500", "JSON 파싱 중 오류가 발생했습니다.");
         }
+    }
+
+    /**
+     * 특정 사용자의 가장 자주 교체한 아이템 순위 조회
+     */
+    @Transactional(readOnly = true)
+    public List<MostReplacedItemResponse> getMostReplacedItems(Long userId, int limit) {
+        // Repository에서 가장 자주 교체한 아이템 순위를 조회
+        List<Map<String, Object>> rawResults = itemHistoryRepository
+                .findMostReplacedItemsByUser(userId, limit);
+
+        // 결과를 DTO로 변환
+        return rawResults.stream()
+                .map(result -> new MostReplacedItemResponse(
+                        ((Number) result.get("itemId")).longValue(),
+                        (String) result.get("itemName"),
+                        (String) result.get("categoryName"),
+                        ((Number) result.get("replacementCount")).longValue(),
+                        (String) result.get("imgUrl")
+                ))
+                .toList();
     }
 }
