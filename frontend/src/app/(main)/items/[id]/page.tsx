@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Activity, Tag, Package, Calendar, History } from 'lucide-react';
 import ItemModifyForm from '@/components/ItemModifyModal';
 import { DeleteItemDialog } from '@/components/items/DeleteItemDialog';
+import { useToast } from '@/contexts/ToastContext';
 
 type ItemHistory = {
   id: number;
@@ -44,6 +45,8 @@ export default function ItemPage() {
 
   const disabled = !item?.isActive;
 
+  const { showToast } = useToast();
+
   // 아이템 삭제
   const handleDelete = async () => {
     try {
@@ -51,12 +54,15 @@ export default function ItemPage() {
         method: 'DELETE',
       });
       if (response.ok) {
+        showToast('success', '아이템이 삭제되었습니다.');
         router.push('/items');
       } else {
         console.error('삭제 실패');
+        showToast('error', '삭제 실패');
       }
     } catch (error) {
       console.error('Error deleting item:', error);
+      showToast('error', '삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -162,8 +168,9 @@ export default function ItemPage() {
             </div>
             <div className="flex gap-3">
               <button
-                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${item.isActive ? 'bg-[#22C55E] text-white' : 'bg-[#1E293B] text-gray-500'
-                  }`}
+                className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${
+                  item.isActive ? 'bg-[#22C55E] text-white' : 'bg-[#1E293B] text-gray-500'
+                }`}
               >
                 {item.isActive ? '활성' : '비활성'}
               </button>
@@ -233,22 +240,21 @@ export default function ItemPage() {
               )}
 
               {/* 로딩 완료 */}
-              {!isItemHistoryLoading && itemHistories.length > 0 ? (
-                itemHistories.map((history) => (
-                  <div key={history.id} className="bg-[#0B0E14] border border-white/5 rounded-xl p-5">
-                    <div className="text-white text-xl font-bold mb-2 tracking-tight">{history.startDate}</div>
-                    <div className="text-gray-500 text-base">
-                      사용 기간: {history.usedDays === null ? (
-                        <span className="text-green-400">사용 중</span>
-                      ) : (
-                        `${history.usedDays}일`
-                      )}
+              {!isItemHistoryLoading && itemHistories.length > 0
+                ? itemHistories.map((history) => (
+                    <div key={history.id} className="bg-[#0B0E14] border border-white/5 rounded-xl p-5">
+                      <div className="text-white text-xl font-bold mb-2 tracking-tight">{history.startDate}</div>
+                      <div className="text-gray-500 text-base">
+                        사용 기간:{' '}
+                        {history.usedDays === null ? (
+                          <span className="text-green-400">사용 중</span>
+                        ) : (
+                          `${history.usedDays}일`
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                !isItemHistoryLoading && <div className="text-gray-500 text-center py-4">이력이 없습니다.</div>
-              )}
+                  ))
+                : !isItemHistoryLoading && <div className="text-gray-500 text-center py-4">이력이 없습니다.</div>}
             </div>
           </div>
           {/* Action Buttons */}
