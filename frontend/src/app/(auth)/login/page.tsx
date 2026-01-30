@@ -27,14 +27,16 @@ export default function AuthPage() {
 
       const rsData = await response.json();
 
-      if (rsData.resultCode && rsData.resultCode.startsWith("2")) {
-        
+      if (rsData.resultCode && rsData.resultCode.startsWith('2')) {
         console.log('로그인 성공:', rsData.msg);
 
+        // 먼저 main 페이지로 이동
+        router.push('/');
+
+        // 페이지 전환이 완료된 후 Toast 표시
         setTimeout(() => {
           showToast('success', rsData.msg);
-        }, 200);
-        router.push('/');
+        }, 500);
       } else {
         showToast('error', rsData.msg);
       }
@@ -116,7 +118,7 @@ export default function AuthPage() {
 
       const rsData = await response.json();
 
-      if (rsData.resultCode && rsData.resultCode.startsWith("2")) {
+      if (rsData.resultCode && rsData.resultCode.startsWith('2')) {
         showToast('success', rsData.msg);
         setActiveTab('login');
         setSignupLoginId('');
