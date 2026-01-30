@@ -10,8 +10,12 @@ import { useCategories } from '@/hooks/useCategories';
 import { useItems } from '@/hooks/useItems';
 import ItemModifyModal from '@/components/ItemModifyModal';
 import ItemCreateModal from '@/components/ItemCreateModal';
+import { useToast } from '@/contexts/ToastContext';
+import { useRouter } from 'next/navigation';
 
 export default function ItemsPage() {
+  const router = useRouter();
+  const { showToast } = useToast();
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null); // 수정하고자 하는 itemId
   const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
@@ -47,10 +51,12 @@ export default function ItemsPage() {
     try {
       const success = await deleteItem(deleteId);
       if (!success) {
-        alert('삭제 실패');
+        showToast('error', '삭제 실패');
+      } else {
+        showToast('success', '아이템이 삭제되었습니다.');
       }
     } catch (err) {
-      alert('삭제 실패');
+      showToast('error', '삭제 실패');
     } finally {
       setIsDeleteDialogOpen(false);
       setDeleteId(null);
@@ -77,12 +83,12 @@ export default function ItemsPage() {
       const success = await replaceItem(replaceId);
 
       if (!success) {
-        alert('교체 실패');
+        showToast('error', '교체 실패');
       } else {
-        alert('교체되었습니다');
+        showToast('success', '교체되었습니다');
       }
     } catch (err) {
-      alert('교체 실패');
+      showToast('error', '교체 실패');
     } finally {
       setIsReplaceDialogOpen(false);
       setReplaceId(null);
@@ -153,7 +159,7 @@ export default function ItemsPage() {
       <DeleteItemDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen} onConfirm={confirmDelete} />
 
       {/* 수정 모달 */}
-      {(selectedItemId !== null && isModifyModalOpen) && (
+      {selectedItemId !== null && isModifyModalOpen && (
         <ItemModifyModal
           itemId={selectedItemId}
           onClose={() => {

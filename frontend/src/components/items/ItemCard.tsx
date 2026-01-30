@@ -80,11 +80,21 @@ export function ItemCard({
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div
-            className={`flex h-9 w-9 items-center justify-center rounded-full ${
-              item.isActive ? 'bg-red-600' : 'bg-white/20'
-            }`}
+            className="flex h-9 w-9 items-center justify-center rounded-full"
+            style={{
+              backgroundColor: item.isActive
+                ? (categoryColor ?? "#ffffff")
+                : "rgba(255,255,255,0.12)",
+               border: item.isActive && categoryColor
+                ? `1px solid ${categoryColor}`
+                : "1px solid rgba(255,255,255,0.10)",
+            }}
           >
-            <Box className="h-5 w-5 text-white" />
+            {CategoryIcon ? (
+              <CategoryIcon className="h-5 w-5 text-white" />
+            ) : (
+              <Box className="h-5 w-5 text-white" />
+            )}
           </div>
 
           <div className="text-base font-semibold">{item.name}</div>

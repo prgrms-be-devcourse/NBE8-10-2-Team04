@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,10 +40,10 @@ public class ItemController {
         );
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE) //Swagger UI에 파일선택버튼 추가
     @Operation(summary = "아이템 등록")
     public RsData<ItemCreateResponse> createItem(
-            @Valid @RequestBody ItemCreateRequest request
+            @Valid @ModelAttribute ItemCreateRequest request
     ) {
         Long userId = rq.getMemberId();
 
@@ -94,7 +95,7 @@ public class ItemController {
     @Operation(summary = "아이템 수정")
     public RsData<ItemUpdateResponse> modifyItem(
             @PathVariable Long id,
-            @Valid @RequestBody ItemUpdateRequest request
+            @Valid @ModelAttribute ItemUpdateRequest request
     ) {
         Long userId = rq.getMemberId();
 
@@ -137,6 +138,46 @@ public class ItemController {
                 "200",
                 "아이템 활성화 상태 변경 성공",
                 new ItemUpdateResponse(item)
+        );
+    }
+
+    @GetMapping("/statistics/category-average")
+    @Operation(summary = "카테고리별 평균 사용 기간 조회")
+    public RsData<List<CategoryAverageUsageResponse>> getCategoryAverageUsage() {
+        Long userId = rq.getMemberId();
+
+        List<CategoryAverageUsageResponse> data = itemService.getCategoryAverageUsage(userId);
+
+        return new RsData<>(
+                "200-1",
+                "카테고리별 평균 사용 기간 조회 성공",
+                data
+        );
+    }
+
+    @GetMapping("/cycle-recommend")
+    @Operation(summary = "AI에게 아이템 주기 추천받기")
+    public RsData<ItemCycleRecommendResponse> getItemCycleRecommend(@RequestParam String name) {
+        return new RsData<>(
+                "200",
+                "추천 주기 조회 완료",
+                itemService.getItemCycleRecommend(name)
+        );
+    }
+
+    @GetMapping("/statistics/most-replaced")
+    @Operation(summary = "가장 자주 교체한 아이템 순위 조회")
+    public RsData<List<MostReplacedItemResponse>> getMostReplacedItems(
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        Long userId = rq.getMemberId();
+
+        List<MostReplacedItemResponse> data = itemService.getMostReplacedItems(userId, limit);
+
+        return new RsData<>(
+                "200-1",
+                "가장 자주 교체한 아이템 순위 조회 성공",
+                data
         );
     }
 }

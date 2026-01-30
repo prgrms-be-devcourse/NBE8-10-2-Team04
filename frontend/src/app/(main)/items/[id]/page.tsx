@@ -1,16 +1,18 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PageHeader } from '@/components/common/PageHeader';
 
 import { Activity, Tag, Package, Calendar, History } from 'lucide-react';
 import ItemModifyForm from '@/components/ItemModifyModal';
 import { DeleteItemDialog } from '@/components/items/DeleteItemDialog';
+import { useToast } from '@/contexts/ToastContext';
 
 type ItemHistory = {
   id: number;
   startDate: string;
+  usedDays: number | null;
 };
 
 type ItemDetail = {
@@ -43,6 +45,8 @@ export default function ItemPage() {
 
   const disabled = !item?.isActive;
 
+  const { showToast } = useToast();
+
   // 아이템 삭제
   const handleDelete = async () => {
     try {
@@ -50,12 +54,15 @@ export default function ItemPage() {
         method: 'DELETE',
       });
       if (response.ok) {
+        showToast('success', '아이템이 삭제되었습니다.');
         router.push('/items');
       } else {
         console.error('삭제 실패');
+        showToast('error', '삭제 실패');
       }
     } catch (error) {
       console.error('Error deleting item:', error);
+      showToast('error', '삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -109,40 +116,6 @@ export default function ItemPage() {
     }
   };
 
-  // 날짜 차이(일) 계산 함수
-  const getDiffDays = (start: string, end: Date | string) => {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-
-    // 시간 정보를 제거하고 날짜만 비교하기 위해 UTC 기준으로 계산
-    const diffTime = endDate.getTime() - startDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays < 0 ? 0 : diffDays;
-  };
-
-  // 계산된 이력 데이터 생성
-  const calculatedHistories = useMemo(() => {
-    const today = new Date();
-
-    return itemHistories.map((history, index) => {
-      let usageDays = 0;
-
-      if (index === 0) {
-        // 가장 최신 데이터: 오늘과의 차이
-        usageDays = getDiffDays(history.startDate, today);
-      } else {
-        // 이전 데이터: 바로 위(최근) 데이터의 시작일과의 차이
-        usageDays = getDiffDays(history.startDate, itemHistories[index - 1].startDate);
-      }
-
-      return {
-        ...history,
-        displayUsageDays: usageDays,
-      };
-    });
-  }, [itemHistories]);
-
   // 페이지 접속 시 데이터 fetch
   useEffect(() => {
     fetchItem();
@@ -161,7 +134,7 @@ export default function ItemPage() {
   return (
     <div className="min-h-screen bg-[#020617] font-sans pb-20">
       {/* Header */}
-      <PageHeader variant="purple" />
+      <PageHeader variant="purple" onBack={() => router.push('/items')} />
 
       {/* Main Titles */}
       <div className="text-center mb-10">
@@ -267,16 +240,21 @@ export default function ItemPage() {
               )}
 
               {/* 로딩 완료 */}
-              {calculatedHistories.length > 0 ? (
-                calculatedHistories.map((history) => (
-                  <div key={history.id} className="bg-[#0B0E14] border border-white/5 rounded-xl p-5">
-                    <div className="text-white text-xl font-bold mb-2 tracking-tight">{history.startDate}</div>
-                    <div className="text-gray-500 text-base">실제 사용일: {history.displayUsageDays}일</div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-gray-500 text-center py-4">이력이 없습니다.</div>
-              )}
+              {!isItemHistoryLoading && itemHistories.length > 0
+                ? itemHistories.map((history) => (
+                    <div key={history.id} className="bg-[#0B0E14] border border-white/5 rounded-xl p-5">
+                      <div className="text-white text-xl font-bold mb-2 tracking-tight">{history.startDate}</div>
+                      <div className="text-gray-500 text-base">
+                        사용 기간:{' '}
+                        {history.usedDays === null ? (
+                          <span className="text-green-400">사용 중</span>
+                        ) : (
+                          `${history.usedDays}일`
+                        )}
+                      </div>
+                    </div>
+                  ))
+                : !isItemHistoryLoading && <div className="text-gray-500 text-center py-4">이력이 없습니다.</div>}
             </div>
           </div>
           {/* Action Buttons */}

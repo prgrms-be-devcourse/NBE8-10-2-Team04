@@ -3,10 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { History as HistoryIcon, Calendar, Package, Clock } from 'lucide-react';
-
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/common/PageHeader';
+import { getCategoryStyle } from '@/lib/category-styles';
 
 type RsData<T> = {
   resultCode: string;
@@ -18,13 +17,20 @@ type HistoryItem = {
   id: number | string;
   itemId: number | string;
   itemName: string;
+  categoryName: string;
   startDate: string;
   usedDays: number | null;
 };
 
+function getHistoryCategoryStyle(categoryName: string) {
+  const style = getCategoryStyle(categoryName);
+  return { Icon: style.icon, color: style.color, };
+}
+
 //실제값 사용하려면 주석 변경하면됨
 //const API_BASE = "";
 const API_BASE = 'http://localhost:8080';
+
 
 export default function Page() {
   const router = useRouter();
@@ -119,44 +125,49 @@ export default function Page() {
 
               {!loading &&
                 !errorMsg &&
-                historyItems.map((item) => (
-                  <div
-                    key={String(item.id)}
-                    className="rounded-lg border border-gray-700 bg-gray-900/50 p-4 transition-colors hover:border-yellow-500/50"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div
-                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center 
-                     rounded-full bg-green-600 "
-                      >
-                        <Package className="h-6 w-6 text-white" />
-                      </div>
+                historyItems.map((item) => {
+                  const { Icon, color } = getHistoryCategoryStyle(item.categoryName);
 
-                      {/* 텍스트 영역 */}
-                      <div className="flex-1">
-                        {/* 아이템명 */}
-                        <div className="text-sm font-semibold text-white">{item.itemName}</div>
-
-                        {/* 교체일 */}
-                        <div className="mt-1 flex items-center gap-1 text-xs text-white/60">
-                          <Calendar className="h-3.5 w-3.5" />
-                          교체일: <span className="text-yellow-400">{item.startDate.split(' ')[0]}</span>
+                  return (
+                    <div
+                      key={String(item.id)}
+                      className="rounded-lg border border-gray-700 bg-gray-900/50 p-4 transition-colors hover:border-yellow-500/50"
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* 아이콘 */}
+                        <div
+                          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full"
+                          style={{ backgroundColor: color, border: `1px solid ${color}`, }}
+                        >
+                          <Icon className="h-6 w-6 text-white" />
                         </div>
 
-                        {/* 사용기간 */}
-                        <div className="mt-1 flex items-center gap-1 text-xs text-white/60">
-                          <Clock className="h-3.5 w-3.5" />
-                          사용기간:{' '}
-                          {item.usedDays === null ? (
-                            <span className="text-green-400">사용 중</span>
-                          ) : (
-                            <span className="text-gray-400">{item.usedDays}일</span>
-                          )}
+                        {/* 텍스트 영역 */}
+                        <div className="flex-1">
+                          {/* 아이템명 */}
+                          <div className="text-sm font-semibold text-white">{item.itemName}</div>
+
+                          {/* 교체일 */}
+                          <div className="mt-1 flex items-center gap-1 text-xs text-white/60">
+                            <Calendar className="h-3.5 w-3.5" />
+                            교체일: <span className="text-yellow-400">{item.startDate.split(' ')[0]}</span>
+                          </div>
+
+                          {/* 사용기간 */}
+                          <div className="mt-1 flex items-center gap-1 text-xs text-white/60">
+                            <Clock className="h-3.5 w-3.5" />
+                            사용기간:{' '}
+                            {item.usedDays === null ? (
+                              <span className="text-green-400">사용 중</span>
+                            ) : (
+                              <span className="text-gray-400">{item.usedDays}일</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
           </CardContent>
         </Card>

@@ -42,6 +42,7 @@ public class UserService {
     }
 
 
+    @Transactional
     public void deleteById(Long id) {
         userRepository.findById(id)
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));

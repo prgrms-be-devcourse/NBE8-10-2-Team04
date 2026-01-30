@@ -2,23 +2,37 @@ package com.back.domain.item.item.service;
 
 import com.back.domain.category.category.entity.Category;
 import com.back.domain.category.category.repository.CategoryRepository;
+import com.back.domain.item.item.dto.CategoryAverageUsageResponse;
 import com.back.domain.item.item.dto.ItemCreateRequest;
+import com.back.domain.item.item.dto.ItemCycleRecommendResponse;
 import com.back.domain.item.item.dto.ItemUpdateRequest;
+import com.back.domain.item.item.dto.MostReplacedItemResponse;
 import com.back.domain.item.item.entity.Item;
 import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.item.vo.CyclePeriod;
+import com.back.domain.item.itemHistory.repository.ItemHistoryRepository;
 import com.back.domain.item.itemHistory.service.ItemHistoryService;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
 import com.back.global.exception.ServiceException;
+import com.back.global.s3.S3ImageService;
+import com.google.genai.Client;
+import com.google.genai.types.GenerateContentConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +41,11 @@ public class ItemService {
     private final ItemHistoryService itemHistoryService;
     private final ItemRepository itemRepository;
     private final CategoryRepository categoryRepository;
+    private final S3ImageService s3ImageService;
+    private final ItemHistoryRepository itemHistoryRepository;
+    private final Client genAiClient;
+    private final GenerateContentConfig genAiSystemConfig;
+    private final ObjectMapper objectMapper;
 
     public Optional<Item> findById(Long id) {
         return itemRepository.findById(id);
@@ -107,11 +126,24 @@ public class ItemService {
         CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
         LocalDate nextReplacementDate = cyclePeriod.addTo(startDate);
 
+
+        String finalImgUrl = request.imgUrl(); // 기본값: 입력받은 URL 문자열
+
+        // 파일이 실제로 들어왔는지 확인
+        if (request.image() != null && !request.image().isEmpty()) {
+            // 파일이 있다면 S3 업로드 후 반환된 URL을 사용
+            try {
+                finalImgUrl = s3ImageService.upload(request.image());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         Item item = create(
                 userId,
                 category,
                 request.name(),
-                request.imgUrl(),
+                finalImgUrl,
                 startDate,
                 request.cycleDays(),
                 nextReplacementDate,
@@ -173,6 +205,21 @@ public class ItemService {
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 카테고리입니다."));
 
+        String finalImgUrl = request.imgUrl(); // 1순위: 프론트에서 보낸 URL 문자열
+
+        // 만약 파일이 넘어왔다면 S3에 업로드하고 URL 덮어쓰기
+        if (request.image() != null && !request.image().isEmpty()) {
+            try {
+                finalImgUrl = s3ImageService.upload(request.image());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        // 파일도 없고 URL도 없으면 기존 이미지 유지 (선택사항, 필요 없으면 제거 가능)
+        else if (finalImgUrl == null || finalImgUrl.isBlank()) {
+            finalImgUrl = "";
+        }
+
         // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
         LocalDate nextReplacementDate = item.getNextReplacementDate();
         if (!Objects.equals(request.cycleDays(), item.getCycleDays())) {
@@ -181,7 +228,7 @@ public class ItemService {
         }
 
         // 아이템 수정
-        item.modify(category, request.name(), request.imgUrl(), request.cycleDays(), nextReplacementDate,
+        item.modify(category, request.name(), finalImgUrl, request.cycleDays(), nextReplacementDate,
                 request.isActive());
 
         return item;
@@ -198,5 +245,101 @@ public class ItemService {
         item.toggleActive();
 
         return item;
+    }
+
+    /**
+     * 특정 사용자의 카테고리별 평균 사용 기간 조회
+     */
+    @Transactional(readOnly = true)
+    public List<CategoryAverageUsageResponse> getCategoryAverageUsage(Long userId) {
+        // Repository에서 카테고리별 평균 사용 기간을 조회
+        List<Map<String, Object>> rawResults = itemHistoryRepository
+                .findAverageUsageDaysByCategoryForUser(userId);
+
+        // 결과를 DTO로 변환
+        return rawResults.stream()
+                .map(result -> new CategoryAverageUsageResponse(
+                        ((Number) result.get("categoryId")).longValue(),
+                        (String) result.get("categoryName"),
+                        result.get("averageUsageDays") != null
+                                ? ((Number) result.get("averageUsageDays")).doubleValue()
+                                : 0.0
+                ))
+                .toList();
+    }
+
+    public ItemCycleRecommendResponse getItemCycleRecommend(String name) {
+        try {
+            return CompletableFuture.supplyAsync(() ->
+                            genAiClient.models.generateContent(
+                                    "gemini-2.5-flash-lite",
+                                    name + "의 권장 교체 주기를 알려줘.",
+                                    genAiSystemConfig)
+                    )
+                    .orTimeout(10, TimeUnit.SECONDS) // 타임아웃 설정
+                    .thenApply(response -> parseJson(response.text()))
+                    .join(); // 최종 결과 대기 및 반환
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause();
+            // parseJson에서 발생한 ServiceException인 경우 그대로 다시 던짐
+            if (cause instanceof ServiceException se) {
+                throw se;
+            }
+            if (cause instanceof TimeoutException) {
+                throw new ServiceException("500", "Timeout 발생");
+            }
+            throw new ServiceException("500", "GenAI 오류 발생");
+        }
+    }
+
+    private ItemCycleRecommendResponse parseJson(String rawText) {
+        // response 자체가 null인 경우 체크
+        if (rawText == null || rawText.isBlank()) {
+            throw new ServiceException("500", "AI로부터 응답을 받지 못했습니다.");
+        }
+
+        // Not Found 응답 처리
+        if (rawText.contains("Not Found")) {
+            throw new ServiceException("404", "권장 주기를 찾을 수 없는 소모품입니다.");
+        }
+
+        try {
+            // {} 블록만 추출
+            int start = rawText.indexOf("{");
+            int end = rawText.lastIndexOf("}");
+
+            if (start == -1 || end == -1 || start >= end) {
+                throw new ServiceException("500", "AI 응답이 유효한 JSON 형식이 아닙니다.");
+            }
+
+            String cleanedJson = rawText.substring(start, end + 1);
+
+            // JSON을 객체로 변환
+            return objectMapper.readValue(cleanedJson, ItemCycleRecommendResponse.class);
+
+        } catch (Exception e) {
+            throw new ServiceException("500", "JSON 파싱 중 오류가 발생했습니다.");
+        }
+    }
+
+    /**
+     * 특정 사용자의 가장 자주 교체한 아이템 순위 조회
+     */
+    @Transactional(readOnly = true)
+    public List<MostReplacedItemResponse> getMostReplacedItems(Long userId, int limit) {
+        // Repository에서 가장 자주 교체한 아이템 순위를 조회
+        List<Map<String, Object>> rawResults = itemHistoryRepository
+                .findMostReplacedItemsByUser(userId, limit);
+
+        // 결과를 DTO로 변환
+        return rawResults.stream()
+                .map(result -> new MostReplacedItemResponse(
+                        ((Number) result.get("itemId")).longValue(),
+                        (String) result.get("itemName"),
+                        (String) result.get("categoryName"),
+                        ((Number) result.get("replacementCount")).longValue(),
+                        (String) result.get("imgUrl")
+                ))
+                .toList();
     }
 }

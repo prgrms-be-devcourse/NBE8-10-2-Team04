@@ -18,9 +18,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
                 c.id, c.name, count(i.id)
               )
               from Category c
-              left join Item i on i.category = c
+              left join Item i on i.category = c and i.user.id = :userId
               group by c.id, c.name
               order by c.id
             """)
-    List<CategoryResponse> findAllWithItemCount();
+    List<CategoryResponse> findAllWithItemCount(Long userId);
 }

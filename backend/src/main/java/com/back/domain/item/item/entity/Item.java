@@ -30,6 +30,7 @@ public class Item {
 
     private String name;
 
+    @Column(length = 2048)
     private String imgUrl;
 
     private LocalDate startDate;

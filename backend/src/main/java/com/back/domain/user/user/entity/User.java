@@ -1,10 +1,13 @@
 package com.back.domain.user.user.entity;
 
+import com.back.domain.item.item.entity.Item;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -25,6 +28,9 @@ public class User {
 
     @Column(nullable = false)
     private Long tokenVersion = 0L;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Item> items = new ArrayList<>();
 
     public User(long id, String loginId) {
         this.id = id;
