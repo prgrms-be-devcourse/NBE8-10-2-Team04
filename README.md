@@ -56,7 +56,7 @@
 
 
 ## API 명세서
-[Notion API 명세서 바로가기](https://www.notion.so/API-2ca15a0120548183afd0c8446c170c33#2cb15a01205480e992a8caff71c9ea3e)
+[Notion API 명세서 바로가기](https://www.notion.so/API-2e815a01205481368ebaeff99a878694)
 
 
 ## 팀원 소개
