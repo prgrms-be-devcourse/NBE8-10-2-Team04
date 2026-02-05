@@ -74,6 +74,8 @@ dependencies {
 
     // Gemini
     implementation("com.google.genai:google-genai:1.32.0")
+
+    implementation("org.apache.commons:commons-lang3:3.18.0")
 }
 
 tasks.withType<Test> {
