@@ -19,6 +19,7 @@ import com.back.global.s3.S3ImageService;
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentConfig;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -58,7 +59,7 @@ public class ItemService {
     }
 
     // itemId + userId로 Item 조회 및 권한 검증 (쿼리 1회로 최적화)
-    private Item findItemWithOwnershipOrThrow(Long itemId, Long userId) {
+    private Item findOwnedItemOrThrow(Long itemId, Long userId) {
         return itemRepository.findByIdAndUserId(itemId, userId)
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 아이템이거나 권한이 없습니다."));
     }
@@ -93,18 +94,18 @@ public class ItemService {
         }
 
         // 프론트에서 보낸 URL
-        if (providedUrl != null && !providedUrl.isBlank()) {
+        if (StringUtils.isNotBlank(providedUrl)) {
             return providedUrl;
         }
 
         // 기존 URL 유지 (수정 시), 없으면 빈 문자열
-        return (existingUrl != null && !existingUrl.isBlank()) ? existingUrl : "";
+        return StringUtils.isNotBlank(existingUrl) ? existingUrl : "";
     }
 
     // itemId로 아이템을 조회하고 요청자(userId)가 소유자인지 검증한 뒤 실제 삭제 수행
     @Transactional
     public void deleteItem(Long userId, Long itemId) {
-        Item item = findItemWithOwnershipOrThrow(itemId, userId); // 쿼리 1회로 감소
+        Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
         itemRepository.delete(item);
     }
 
@@ -117,7 +118,7 @@ public class ItemService {
     //단건조회용
     @Transactional(readOnly = true)
     public Item findByIdAndUserId(Long itemId, Long userId) {
-        return findItemWithOwnershipOrThrow(itemId, userId); // 메서드 재사용
+        return findOwnedItemOrThrow(itemId, userId); // 메서드 재사용
     }
 
     //카테고리별 목록조회용
@@ -197,7 +198,7 @@ public class ItemService {
 
     @Transactional
     public Item replaceItem(Long userId, Long itemId) {
-        Item item = findItemWithOwnershipOrThrow(itemId, userId); // 쿼리 1회로 감소
+        Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
 
         // 비활성 아이템은 교체 불가
         if (!item.getIsActive()) {
@@ -219,7 +220,7 @@ public class ItemService {
 
     @Transactional
     public Item modify(Long userId, Long itemId, ItemUpdateRequest request) {
-        Item item = findItemWithOwnershipOrThrow(itemId, userId); // 쿼리 1회로 감소
+        Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
         Category category = findCategoryOrThrow(request.categoryId()); // 메서드 재사용
 
         String finalImgUrl = resolveImageUrl(request.image(), request.imgUrl(), item.getImgUrl()); // 중복 제거
@@ -240,7 +241,7 @@ public class ItemService {
 
     @Transactional
     public Item toggleActive(Long userId, Long itemId) {
-        Item item = findItemWithOwnershipOrThrow(itemId, userId); // 쿼리 1회로 감소
+        Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
 
         // 활성화 상태 토글
         item.toggleActive();
