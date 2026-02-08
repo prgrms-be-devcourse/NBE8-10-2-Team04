@@ -223,7 +223,6 @@ public class ItemService {
         Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
         Category category = findCategoryOrThrow(request.categoryId()); // 메서드 재사용
 
-
         String finalImgUrl = resolveImageUrl(request.image(), request.imgUrl(), item.getImgUrl()); // 중복 제거
 
         if (!Objects.equals(finalImgUrl, item.getImgUrl())) { //기존 이미지 파일이 동일하지 않으면
