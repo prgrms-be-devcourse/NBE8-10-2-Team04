@@ -55,6 +55,7 @@ public class ItemService {
     @Transactional
     public void deleteItem(Long userId, Long itemId) {
         Item item = findItemOrThrow(itemId);
+        s3ImageService.delete(item.getImgUrl()); //아이템 이미지 삭제 (추가)
         item.validateOwner(userId);
         itemRepository.delete(item);
     }
@@ -206,18 +207,16 @@ public class ItemService {
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 카테고리입니다."));
 
         String finalImgUrl = request.imgUrl(); // 1순위: 프론트에서 보낸 URL 문자열
-
-        // 만약 파일이 넘어왔다면 S3에 업로드하고 URL 덮어쓰기
-        if (request.image() != null && !request.image().isEmpty()) {
-            try {
-                finalImgUrl = s3ImageService.upload(request.image());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        if (!Objects.equals(finalImgUrl, item.getImgUrl())) { //기존 이미지 파일이 동일하지 않으면
+            // 만약 파일이 넘어왔다면 S3에 업로드하고 URL 덮어쓰기
+            if (request.image() != null && !request.image().isEmpty()) {
+                try {
+                    finalImgUrl = s3ImageService.upload(request.image());
+                    s3ImageService.delete(item.getImgUrl()); //기존 이미지 삭제
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
-        }
-        // 파일도 없고 URL도 없으면 기존 이미지 유지 (선택사항, 필요 없으면 제거 가능)
-        else if (finalImgUrl == null || finalImgUrl.isBlank()) {
-            finalImgUrl = "";
         }
 
         // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경

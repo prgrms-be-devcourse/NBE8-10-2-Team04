@@ -6,11 +6,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetUrlRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 @Component
@@ -49,5 +53,35 @@ public class S3ImageService {
         return s3Client.utilities()
                 .getUrl(GetUrlRequest.builder().bucket(bucketName).key(storeFileName).build())
                 .toString();
+    }
+
+    /**
+     * 이미지 삭제
+     */
+    public void delete(String imageUrl) {
+        String key = getKeyFromImageAddress(imageUrl);
+
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build());
+        } catch (S3Exception e) {
+            throw new RuntimeException("S3 이미지 삭제 실패", e);
+        }
+    }
+
+    /**
+     * 내부 메서드: URL에서 Key(파일명) 추출
+     * 예: https://bucket.s3.ap-northeast-2.amazonaws.com/test-image.jpg -> test-image.jpg
+     */
+    private String getKeyFromImageAddress(String imageUrl) {
+        try {
+            java.net.URL url = new java.net.URL(imageUrl);
+            String decodingKey = URLDecoder.decode(url.getPath(), StandardCharsets.UTF_8);
+            return decodingKey.substring(1); // 맨 앞의 '/' 제거
+        } catch (Exception e) {
+            throw new RuntimeException("이미지 URL 파싱 실패: " + imageUrl, e);
+        }
     }
 }
