@@ -11,7 +11,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry
                 .addMapping("/api/**")
                 // 프론트엔드 로컬 환경에서 CORS 허용
-                .allowedOrigins("http://localhost:3000")
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "http://43.203.2.175:3000"  // EC2 프론트엔드 추가
+                )
                 // 프론트엔드 Vercel 배포 시 CORS 허용
                 .allowedOriginPatterns("https://*.vercel.app")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
