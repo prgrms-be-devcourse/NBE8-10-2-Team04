@@ -63,7 +63,7 @@ jobs:
           push: true
           tags: ghcr.io/prgrms-be-devcourse/nbe8-10-2-team04/frontend:latest
           build-args: |
-            NEXT_PUBLIC_API_URL=http://43.203.2.175:8080
+            NEXT_PUBLIC_API_BASE_URL=http://43.203.2.175:8080
 
   # 2. 서버에 배포 명령 내리기
   deploy:
