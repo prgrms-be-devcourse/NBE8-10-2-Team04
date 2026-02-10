@@ -18,7 +18,8 @@ export default function AuthPage() {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/user/login', {
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+      const response = await fetch(`${API_BASE}/api/v1/user/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -105,7 +106,7 @@ export default function AuthPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/v1/user/signup', {
+      const response = await fetch(`${API_BASE}/api/v1/user/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
