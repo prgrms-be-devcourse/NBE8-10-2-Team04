@@ -29,7 +29,7 @@ function getHistoryCategoryStyle(categoryName: string) {
 
 //실제값 사용하려면 주석 변경하면됨
 //const API_BASE = "";
-const API_BASE = 'http://localhost:8080';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
 
 export default function Page() {

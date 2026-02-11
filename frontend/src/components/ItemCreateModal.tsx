@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useToast } from '@/contexts/ToastContext';
 import { X, Upload, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+
 type Category = {
   id: number;
   name: string;
@@ -51,7 +53,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
   // 카테고리 목록 불러오기
   const fetchCategories = async () => {
     try {
-      const categoryResponse = await fetch(`http://localhost:8080/api/v1/categories`, { credentials: 'include' });
+      const categoryResponse = await fetch(`${API_BASE}/api/v1/categories`, { credentials: 'include' });
       if (categoryResponse.ok) {
         const categoryData = await categoryResponse.json();
 
@@ -97,7 +99,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
 
     setIsAiLoading(true);
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/items/cycle-recommend?name=${encodeURIComponent(name)}`, {
+      const response = await fetch(`${API_BASE}/api/v1/items/cycle-recommend?name=${encodeURIComponent(name)}`, {
         method: 'GET',
         credentials: 'include',
       });
@@ -165,7 +167,7 @@ export default function ItemCreateModal({ onClose, onCreate }: ItemCreateFormPro
 
     // 등록 요청
     try {
-      const response = await fetch('http://localhost:8080/api/v1/items', {
+      const response = await fetch(`${API_BASE}/api/v1/items`, {
         method: 'POST',
         credentials: 'include',
         body: formData,

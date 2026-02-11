@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ItemSummary } from '@/components/items/ItemCard';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
 type RsData<T> = {
   resultCode: string;
