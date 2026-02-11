@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { X, Upload, Image as ImageIcon } from 'lucide-react'; // 아이콘 추가
 import { useToast } from '@/contexts/ToastContext';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+
 type ItemDetail = {
   id: number;
   name: string;
@@ -62,8 +64,8 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
   const fetchItem = async () => {
     try {
       const [categoryResponse, itemResponse] = await Promise.all([
-        fetch(`http://localhost:8080/api/v1/categories`, { credentials: 'include' }),
-        fetch(`http://localhost:8080/api/v1/items/${itemId}`, { credentials: 'include' }),
+        fetch(`${API_BASE}/api/v1/categories`, { credentials: 'include' }),
+        fetch(`${API_BASE}/api/v1/items/${itemId}`, { credentials: 'include' }),
       ]);
 
       if (categoryResponse.ok && itemResponse.ok) {
@@ -157,7 +159,7 @@ export default function ItemModifyModal({ itemId, onClose, onUpdate }: ItemModif
     }
 
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/items/${itemId}`, {
+      const response = await fetch(`${API_BASE}/api/v1/items/${itemId}`, {
         method: 'PUT', // 또는 PATCH (백엔드 구현에 따름)
         // [중요] Content-Type 헤더 삭제 (FormData 자동 설정)
         credentials: 'include',

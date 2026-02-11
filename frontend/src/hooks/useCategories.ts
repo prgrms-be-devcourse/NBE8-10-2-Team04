@@ -3,7 +3,7 @@
  */
 import { useState, useEffect } from 'react';
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
 type Category = {
   id: number;
@@ -16,8 +16,6 @@ type RsData<T> = {
   data: T;
 };
 
-const API_BASE_URL = 'http://localhost:8080';
-
 export function useCategories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +27,7 @@ export function useCategories() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${API_BASE_URL}/api/v1/categories`, {
+        const res = await fetch(`${API_BASE}/api/v1/categories`, {
           method: 'GET',
           credentials: 'include',
           cache: 'no-store',

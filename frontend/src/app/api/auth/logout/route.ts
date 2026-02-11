@@ -12,7 +12,8 @@ export async function POST() {
 
   try {
     if (accessToken && apiKey) {
-      await fetch("http://localhost:8080/api/v1/user/logout", {
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
+      await fetch(`${API_BASE}/api/v1/user/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
