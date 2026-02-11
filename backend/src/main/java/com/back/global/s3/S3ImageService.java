@@ -6,16 +6,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetUrlRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -68,6 +67,35 @@ public class S3ImageService {
                     .build());
         } catch (S3Exception e) {
             throw new RuntimeException("S3 이미지 삭제 실패", e);
+        }
+    }
+
+    /**
+     * 이미지 다중 삭제
+     */
+    public void deleteMultiple(List<String> imageUrls) {
+        if (imageUrls == null || imageUrls.isEmpty()) {
+            return;
+        }
+
+        List<ObjectIdentifier> objectIdentifiers = imageUrls.stream()
+                .map(this::getKeyFromImageAddress)
+                .map(key -> ObjectIdentifier.builder().key(key).build())
+                .collect(Collectors.toList());
+
+        Delete delete = Delete.builder()
+                .objects(objectIdentifiers)
+                .build();
+
+        DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                .bucket(bucketName)
+                .delete(delete)
+                .build();
+
+        try {
+            s3Client.deleteObjects(deleteObjectsRequest);
+        } catch (S3Exception e) {
+            throw new RuntimeException("S3 다중 이미지 삭제 실패", e);
         }
     }
 

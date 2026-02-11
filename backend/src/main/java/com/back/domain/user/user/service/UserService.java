@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,15 +52,14 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
 
-        List<Item> items = user.getItems();
+        List<String> imageUrls = user.getItems().stream()
+                .map(Item::getImgUrl)
+                .filter(url -> url != null && !url.isEmpty())
+                .collect(Collectors.toList());
 
-        for (Item item : items) {
-            String itemImageUrl = item.getImgUrl();
-
-            // 이미지가 존재하면 S3에서 삭제 요청
-            if (itemImageUrl != null && !itemImageUrl.isEmpty()) {
-                s3ImageService.delete(itemImageUrl);
-            }
+        // API 요청 횟수 감소를 위해 S3 다중 삭제 사용
+        if (!imageUrls.isEmpty()) {
+            this.s3ImageService.deleteMultiple(imageUrls);
         }
         userRepository.deleteById(id);
     }

@@ -22,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
 
@@ -106,8 +108,19 @@ public class ItemService {
     @Transactional
     public void deleteItem(Long userId, Long itemId) {
         Item item = findOwnedItemOrThrow(itemId, userId);// 쿼리 1회로 감소
-        s3ImageService.delete(item.getImgUrl()); //아이템 이미지 삭제 (추가)
+        String imageUrl = item.getImgUrl();
+
         itemRepository.delete(item);
+
+        //  현재 진행 중인 트랜잭션이 성공적으로 커밋되었을 때만 S3 삭제 실행
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    s3ImageService.delete(imageUrl);
+                }
+            });
+        }
     }
 
     //목록조회용
