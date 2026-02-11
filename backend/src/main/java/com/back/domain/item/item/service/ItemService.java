@@ -14,6 +14,7 @@ import com.back.domain.item.itemHistory.repository.ItemHistoryRepository;
 import com.back.domain.item.itemHistory.service.ItemHistoryService;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
+import com.back.global.exception.ErrorCode;
 import com.back.global.exception.ServiceException;
 import com.back.global.s3.S3ImageService;
 import com.google.genai.Client;
@@ -57,25 +58,26 @@ public class ItemService {
 
     // itemId로 Item 조회 (권한 검증 없음)
     private Item findItemOrThrow(Long itemId) {
-        return itemRepository.findById(itemId).orElseThrow(() -> new ServiceException(("404-1"), "존재하지 않는 아이템입니다."));
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new ServiceException(ErrorCode.ITEM_NOT_FOUND));
     }
 
     // itemId + userId로 Item 조회 및 권한 검증 (쿼리 1회로 최적화)
     private Item findOwnedItemOrThrow(Long itemId, Long userId) {
         return itemRepository.findByIdAndUserId(itemId, userId)
-                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 아이템이거나 권한이 없습니다."));
+                .orElseThrow(() -> new ServiceException(ErrorCode.ITEM_NOT_FOUND_OR_NO_PERMISSION));
     }
 
     // userId로 User 조회
     private User findUserOrThrow(Long userId) {
         return userService.findById(userId)
-                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
     }
 
     // categoryId로 Category 조회
     private Category findCategoryOrThrow(Long categoryId) {
         return categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 카테고리입니다."));
+                .orElseThrow(() -> new ServiceException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
     /**
@@ -91,7 +93,7 @@ public class ItemService {
             try {
                 return s3ImageService.upload(image);
             } catch (IOException e) {
-                throw new ServiceException("500-1", "이미지 업로드 실패: " + e.getMessage());
+                throw new ServiceException(ErrorCode.IMAGE_UPLOAD_FAILED);
             }
         }
 
@@ -138,7 +140,7 @@ public class ItemService {
     //카테고리별 목록조회용
     public List<Item> findAllByUserIdAndCategoryId(Long userId, Long categoryId) {
         if (!categoryRepository.existsById(categoryId)) {
-            throw new ServiceException("404-1", "존재하지 않는 카테고리입니다.");
+            throw new ServiceException(ErrorCode.CATEGORY_NOT_FOUND);
         }
 
         return itemRepository.findAllByUserIdAndCategoryId(userId, categoryId);
@@ -215,7 +217,7 @@ public class ItemService {
 
         // 비활성 아이템은 교체 불가
         if (!item.getIsActive()) {
-            throw new ServiceException("400-2", "비활성 상태의 아이템은 교체할 수 없습니다.");
+            throw new ServiceException(ErrorCode.INACTIVE_ITEM_CANNOT_REPLACE);
         }
 
         // 기존 진행중인 이력 endDate 넣기
@@ -305,21 +307,21 @@ public class ItemService {
                 throw se;
             }
             if (cause instanceof TimeoutException) {
-                throw new ServiceException("500", "Timeout 발생");
+                throw new ServiceException(ErrorCode.AI_TIMEOUT);
             }
-            throw new ServiceException("500", "GenAI 오류 발생");
+            throw new ServiceException(ErrorCode.AI_ERROR);
         }
     }
 
     private ItemCycleRecommendResponse parseJson(String rawText) {
         // response 자체가 null인 경우 체크
         if (rawText == null || rawText.isBlank()) {
-            throw new ServiceException("500", "AI로부터 응답을 받지 못했습니다.");
+            throw new ServiceException(ErrorCode.AI_NO_RESPONSE);
         }
 
         // Not Found 응답 처리
         if (rawText.contains("Not Found")) {
-            throw new ServiceException("404", "권장 주기를 찾을 수 없는 소모품입니다.");
+            throw new ServiceException(ErrorCode.AI_ITEM_NOT_FOUND);
         }
 
         try {
@@ -328,7 +330,7 @@ public class ItemService {
             int end = rawText.lastIndexOf("}");
 
             if (start == -1 || end == -1 || start >= end) {
-                throw new ServiceException("500", "AI 응답이 유효한 JSON 형식이 아닙니다.");
+                throw new ServiceException(ErrorCode.AI_INVALID_JSON);
             }
 
             String cleanedJson = rawText.substring(start, end + 1);
@@ -337,7 +339,7 @@ public class ItemService {
             return objectMapper.readValue(cleanedJson, ItemCycleRecommendResponse.class);
 
         } catch (Exception e) {
-            throw new ServiceException("500", "JSON 파싱 중 오류가 발생했습니다.");
+            throw new ServiceException(ErrorCode.JSON_PARSING_ERROR);
         }
     }
 
