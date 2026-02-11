@@ -22,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
 
@@ -105,8 +107,20 @@ public class ItemService {
     // itemId로 아이템을 조회하고 요청자(userId)가 소유자인지 검증한 뒤 실제 삭제 수행
     @Transactional
     public void deleteItem(Long userId, Long itemId) {
-        Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
+        Item item = findOwnedItemOrThrow(itemId, userId);// 쿼리 1회로 감소
+        String imageUrl = item.getImgUrl();
+
         itemRepository.delete(item);
+
+        //  현재 진행 중인 트랜잭션이 성공적으로 커밋되었을 때만 S3 삭제 실행
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    s3ImageService.delete(imageUrl);
+                }
+            });
+        }
     }
 
     //목록조회용
@@ -134,7 +148,6 @@ public class ItemService {
     public long count() {
         return itemRepository.count();
     }
-
 
 
     @Transactional
@@ -224,6 +237,10 @@ public class ItemService {
         Category category = findCategoryOrThrow(request.categoryId()); // 메서드 재사용
 
         String finalImgUrl = resolveImageUrl(request.image(), request.imgUrl(), item.getImgUrl()); // 중복 제거
+
+        if (!Objects.equals(finalImgUrl, item.getImgUrl())) { //기존 이미지 파일이 동일하지 않으면
+            s3ImageService.delete(item.getImgUrl()); //기존 이미지 삭제
+        }
 
         // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
         LocalDate nextReplacementDate = item.getNextReplacementDate();

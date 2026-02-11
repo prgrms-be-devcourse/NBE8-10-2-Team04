@@ -1,8 +1,10 @@
 package com.back.domain.user.user.service;
 
+import com.back.domain.item.item.entity.Item;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.repository.UserRepository;
 import com.back.global.exception.ServiceException;
+import com.back.global.s3.S3ImageService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -10,8 +12,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +23,7 @@ public class UserService {
     private final AuthTokenService authTokenService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final S3ImageService s3ImageService;
 
 
     public long count() {
@@ -44,8 +49,18 @@ public class UserService {
 
     @Transactional
     public void deleteById(Long id) {
-        userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+
+        List<String> imageUrls = user.getItems().stream()
+                .map(Item::getImgUrl)
+                .filter(url -> url != null && !url.isEmpty())
+                .collect(Collectors.toList());
+
+        // API 요청 횟수 감소를 위해 S3 다중 삭제 사용
+        if (!imageUrls.isEmpty()) {
+            this.s3ImageService.deleteMultiple(imageUrls);
+        }
         userRepository.deleteById(id);
     }
 
