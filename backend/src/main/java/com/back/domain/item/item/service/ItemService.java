@@ -278,15 +278,7 @@ public class ItemService {
                 .findAverageUsageDaysByCategoryForUser(userId);
 
         // 결과를 DTO로 변환
-        return rawResults.stream()
-                .map(result -> new CategoryAverageUsageResponse(
-                        ((Number) result.get("categoryId")).longValue(),
-                        (String) result.get("categoryName"),
-                        result.get("averageUsageDays") != null
-                                ? ((Number) result.get("averageUsageDays")).doubleValue()
-                                : 0.0
-                ))
-                .toList();
+        return CategoryAverageUsageResponse.fromList(rawResults);
     }
 
     public ItemCycleRecommendResponse getItemCycleRecommend(String name) {
@@ -353,14 +345,6 @@ public class ItemService {
                 .findMostReplacedItemsByUser(userId, limit);
 
         // 결과를 DTO로 변환
-        return rawResults.stream()
-                .map(result -> new MostReplacedItemResponse(
-                        ((Number) result.get("itemId")).longValue(),
-                        (String) result.get("itemName"),
-                        (String) result.get("categoryName"),
-                        ((Number) result.get("replacementCount")).longValue(),
-                        (String) result.get("imgUrl")
-                ))
-                .toList();
+        return MostReplacedItemResponse.fromList(rawResults);
     }
 }
