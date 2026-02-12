@@ -50,6 +50,42 @@ throw new ServiceException("500", "알 수 없는 에러");
 throw new ServiceException(ErrorCode.INTERNAL_SERVER_ERROR);
 ```
 
+### 2.4 유효성 검증 (Validation) 처리 규칙
+
+본 프로젝트는 `@Valid` 어노테이션을 사용한 유효성 검증 시, 컨트롤러에서 `BindingResult`를 직접 핸들링하지 않습니다.
+
+#### **규칙**
+
+1. **`BindingResult` 파라미터 금지:** 컨트롤러 메서드 인자에 `BindingResult`를 선언하지 마세요.
+2. **자동 예외 발생:** 유효성 검증 실패 시 Spring이 자동으로 `MethodArgumentNotValidException`을 발생시킵니다.
+3. **전역 처리:** `GlobalExceptionHandler`가 해당 예외를 잡아 표준 에러 응답(`RsData`)으로 변환합니다.
+
+#### **코드 예시**
+
+**지양 (Legacy: 직접 처리 방식)**
+
+```java
+@PostMapping("/signup")
+public RsData<UserDto> join(@Valid @RequestBody UserJoinRequest req, BindingResult bindingResult) {
+    if (bindingResult.hasErrors()) {
+        return new RsData<>("400", bindingResult.getFieldError().getDefaultMessage());
+    }
+    // ...
+}
+```
+
+**권장 (New Standard: 전역 처리 방식)**
+
+```java
+@PostMapping("/signup")
+public RsData<UserDto> join(@Valid @RequestBody UserJoinRequest req) {
+    // 유효성 검증 실패 시, 이곳에 도달하지 않고 GlobalExceptionHandler로 넘어갑니다.
+    User user = userService.join(...);
+    return new RsData<>("201", "성공", ...);
+}
+```
+---
+
 ## 3. 응답 포맷
    클라이언트는 항상 아래와 같은 JSON 형태의 `RsData` 응답을 받게 됩니다.
 
