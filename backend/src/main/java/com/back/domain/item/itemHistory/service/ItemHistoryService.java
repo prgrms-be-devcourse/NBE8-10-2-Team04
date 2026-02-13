@@ -5,6 +5,7 @@ import com.back.domain.item.itemHistory.dto.ItemAllHistoryResponse;
 import com.back.domain.item.itemHistory.dto.ItemHistoryResponse;
 import com.back.domain.item.itemHistory.entity.ItemHistory;
 import com.back.domain.item.itemHistory.repository.ItemHistoryRepository;
+import com.back.global.exception.ErrorCode;
 import com.back.global.exception.ServiceException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,23 +27,20 @@ public class ItemHistoryService {
 
     @Transactional(readOnly = true)
     public List<ItemHistoryResponse> getItemHistories(Long itemId) {
-        return itemHistoryRepository.findByItemIdOrderByStartDateDesc(itemId).stream()
-                .map(ItemHistoryResponse::from)
-                .toList();
+        List<ItemHistory> histories = itemHistoryRepository.findByItemIdOrderByStartDateDesc(itemId);
+        return ItemHistoryResponse.fromList(histories);
     }
 
     @Transactional(readOnly = true)
     public List<ItemAllHistoryResponse> getAllItemHistories(Long userId) {
-        return itemHistoryRepository.findByUserIdOrderByStartDateDesc(userId)
-                .stream()
-                .map(ItemAllHistoryResponse::from)
-                .toList();
+        List<ItemHistory> histories = itemHistoryRepository.findByUserIdOrderByStartDateDesc(userId);
+        return ItemAllHistoryResponse.fromList(histories);
     }
 
     @Transactional
     public void endHistory(Long itemId, LocalDate endDate) {
         ItemHistory ongoing = itemHistoryRepository.findTopByItemIdAndEndDateIsNullOrderByStartDateDesc(itemId)
-                .orElseThrow(() -> new ServiceException("404-1", "진행중인 이력이 없습니다."));
+                .orElseThrow(() -> new ServiceException(ErrorCode.ONGOING_HISTORY_NOT_FOUND));
 
         ongoing.end(endDate);
     }
