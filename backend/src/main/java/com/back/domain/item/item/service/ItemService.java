@@ -39,6 +39,11 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * 아이템의 기본 CRUD 작업을 담당하는 서비스
+ * - 생성, 조회, 수정, 삭제
+ * - 교체, 활성화 토글
+ */
 @Service
 @RequiredArgsConstructor
 public class ItemService {
@@ -49,8 +54,9 @@ public class ItemService {
     private final S3ImageService s3ImageService;
     private final ItemHistoryRepository itemHistoryRepository;
     private final Client genAiClient;
-    private final GenerateContentConfig genAiSystemConfig;
     private final ObjectMapper objectMapper;
+
+    // == 조회 ==
 
     public Optional<Item> findById(Long id) {
         return itemRepository.findById(id);
@@ -80,51 +86,6 @@ public class ItemService {
                 .orElseThrow(() -> new ServiceException(ErrorCode.CATEGORY_NOT_FOUND));
     }
 
-    /**
-     * 이미지 URL 결정 로직 (중복 제거)
-     * image 업로드된 파일
-     * providedUrl 프론트에서 전달한 URL
-     * existingUrl 기존 이미지 URL (수정 시)
-     * return 최종 이미지 URL
-     */
-    private String resolveImageUrl(MultipartFile image, String providedUrl, String existingUrl) {
-        // 파일이 있으면 S3 업로드
-        if (image != null && !image.isEmpty()) {
-            try {
-                return s3ImageService.upload(image);
-            } catch (IOException e) {
-                throw new ServiceException(ErrorCode.IMAGE_UPLOAD_FAILED);
-            }
-        }
-
-        // 프론트에서 보낸 URL
-        if (StringUtils.isNotBlank(providedUrl)) {
-            return providedUrl;
-        }
-
-        // 기존 URL 유지 (수정 시), 없으면 빈 문자열
-        return StringUtils.isNotBlank(existingUrl) ? existingUrl : "";
-    }
-
-    // itemId로 아이템을 조회하고 요청자(userId)가 소유자인지 검증한 뒤 실제 삭제 수행
-    @Transactional
-    public void deleteItem(Long userId, Long itemId) {
-        Item item = findOwnedItemOrThrow(itemId, userId);// 쿼리 1회로 감소
-        String imageUrl = item.getImgUrl();
-
-        itemRepository.delete(item);
-
-        //  현재 진행 중인 트랜잭션이 성공적으로 커밋되었을 때만 S3 삭제 실행
-        if (imageUrl != null && !imageUrl.isEmpty()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    s3ImageService.delete(imageUrl);
-                }
-            });
-        }
-    }
-
     //목록조회용
     @Transactional(readOnly = true)
     public List<Item> findAllByUserIdOrderByNextReplacementDateAsc(Long userId) {
@@ -136,6 +97,7 @@ public class ItemService {
     public Item findByIdAndUserId(Long itemId, Long userId) {
         return findOwnedItemOrThrow(itemId, userId); // 메서드 재사용
     }
+
 
     //카테고리별 목록조회용
     public List<Item> findAllByUserIdAndCategoryId(Long userId, Long categoryId) {
@@ -151,7 +113,9 @@ public class ItemService {
         return itemRepository.count();
     }
 
+    // == 생성 ==
 
+    // 아이템 생성 (내부용)
     @Transactional
     public Item create(
             Long userId,
@@ -172,16 +136,17 @@ public class ItemService {
         return itemRepository.save(item);
     }
 
+    // 아이템 생성 (외부용)
     @Transactional
     public Item createItem(Long userId, ItemCreateRequest request) {
-        Category category = findCategoryOrThrow(request.categoryId()); // 메서드 재사용 + 올바른 에러 메시지
+        Category category = findCategoryOrThrow(request.categoryId());
 
         LocalDate startDate = request.resolvedStartDate();
         CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
         LocalDate nextReplacementDate = cyclePeriod.addTo(startDate);
 
 
-        String finalImgUrl = resolveImageUrl(request.image(), request.imgUrl(), null); // 중복 제거
+        String finalImgUrl = resolveImageUrl(request.image(), request.imgUrl(), null);
 
         Item item = create(
                 userId,
@@ -200,6 +165,35 @@ public class ItemService {
         return item;
     }
 
+    // == 수정 ==
+
+    // 아이템 수정
+    @Transactional
+    public Item modify(Long userId, Long itemId, ItemUpdateRequest request) {
+        Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
+        Category category = findCategoryOrThrow(request.categoryId()); // 메서드 재사용
+
+        String finalImgUrl = resolveImageUrl(request.image(), request.imgUrl(), item.getImgUrl()); // 중복 제거
+
+        // // 기존 이미지 파일이 동일하지 않으면 삭제
+        if (!Objects.equals(finalImgUrl, item.getImgUrl())) {
+            s3ImageService.delete(item.getImgUrl());
+        }
+
+        // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
+        LocalDate nextReplacementDate = item.getNextReplacementDate();
+        if (!Objects.equals(request.cycleDays(), item.getCycleDays())) {
+            CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
+            nextReplacementDate = cyclePeriod.addTo(item.getStartDate());
+        }
+
+        item.modify(category, request.name(), finalImgUrl, request.cycleDays(), nextReplacementDate,
+                request.isActive());
+
+        return item;
+    }
+
+    // 아이템 날짜 수정 (교체 시 사용)
     public void modifyDate(Item item) {
         // 시작일 변경 : 교체를 요청한 시각
         LocalDate newStartDate = LocalDate.now();
@@ -211,6 +205,7 @@ public class ItemService {
         item.modifyDate(newStartDate, newNextReplacementDate);
     }
 
+    // 아이템 교체
     @Transactional
     public Item replaceItem(Long userId, Long itemId) {
         Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
@@ -234,117 +229,58 @@ public class ItemService {
     }
 
     @Transactional
-    public Item modify(Long userId, Long itemId, ItemUpdateRequest request) {
-        Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
-        Category category = findCategoryOrThrow(request.categoryId()); // 메서드 재사용
-
-        String finalImgUrl = resolveImageUrl(request.image(), request.imgUrl(), item.getImgUrl()); // 중복 제거
-
-        if (!Objects.equals(finalImgUrl, item.getImgUrl())) { //기존 이미지 파일이 동일하지 않으면
-            s3ImageService.delete(item.getImgUrl()); //기존 이미지 삭제
-        }
-
-        // 주기(cycleDays) 수정 시 다음 교체일도 함께 변경
-        LocalDate nextReplacementDate = item.getNextReplacementDate();
-        if (!Objects.equals(request.cycleDays(), item.getCycleDays())) {
-            CyclePeriod cyclePeriod = CyclePeriod.from(request.cycleDays());
-            nextReplacementDate = cyclePeriod.addTo(item.getStartDate());
-        }
-
-        // 아이템 수정
-        item.modify(category, request.name(), finalImgUrl, request.cycleDays(), nextReplacementDate,
-                request.isActive());
-
-        return item;
-    }
-
-    @Transactional
     public Item toggleActive(Long userId, Long itemId) {
-        Item item = findOwnedItemOrThrow(itemId, userId); // 쿼리 1회로 감소
-
-        // 활성화 상태 토글
+        Item item = findOwnedItemOrThrow(itemId, userId);
         item.toggleActive();
-
         return item;
     }
 
+    // == 삭제 ==
+
+    // 아이템 삭제
+    // itemId로 아이템을 조회하고 요청자(userId)가 소유자인지 검증한 뒤 실제 삭제 수행
+    @Transactional
+    public void deleteItem(Long userId, Long itemId) {
+        Item item = findOwnedItemOrThrow(itemId, userId);
+        String imageUrl = item.getImgUrl();
+
+        itemRepository.delete(item);
+
+        // 트랜잭션 커밋 후 S3 삭제 실행
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    s3ImageService.delete(imageUrl);
+                }
+            });
+        }
+    }
+
+    // == 유틸 메서드 ==
     /**
-     * 특정 사용자의 카테고리별 평균 사용 기간 조회
+     * 이미지 URL 결정 로직
+     * image 업로드된 파일
+     * providedUrl 프론트에서 전달한 URL
+     * existingUrl 기존 이미지 URL (수정 시)
+     * return 최종 이미지 URL
      */
-    @Transactional(readOnly = true)
-    public List<CategoryAverageUsageResponse> getCategoryAverageUsage(Long userId) {
-        // Repository에서 카테고리별 평균 사용 기간을 조회
-        List<Map<String, Object>> rawResults = itemHistoryRepository
-                .findAverageUsageDaysByCategoryForUser(userId);
-
-        // 결과를 DTO로 변환
-        return CategoryAverageUsageResponse.fromList(rawResults);
-    }
-
-    public ItemCycleRecommendResponse getItemCycleRecommend(String name) {
-        try {
-            return CompletableFuture.supplyAsync(() ->
-                            genAiClient.models.generateContent(
-                                    "gemini-2.5-flash-lite",
-                                    name + "의 권장 교체 주기를 알려줘.",
-                                    genAiSystemConfig)
-                    )
-                    .orTimeout(10, TimeUnit.SECONDS) // 타임아웃 설정
-                    .thenApply(response -> parseJson(response.text()))
-                    .join(); // 최종 결과 대기 및 반환
-        } catch (CompletionException e) {
-            Throwable cause = e.getCause();
-            // parseJson에서 발생한 ServiceException인 경우 그대로 다시 던짐
-            if (cause instanceof ServiceException se) {
-                throw se;
+    private String resolveImageUrl(MultipartFile image, String providedUrl, String existingUrl) {
+        // 파일이 있으면 S3 업로드
+        if (image != null && !image.isEmpty()) {
+            try {
+                return s3ImageService.upload(image);
+            } catch (IOException e) {
+                throw new ServiceException(ErrorCode.IMAGE_UPLOAD_FAILED);
             }
-            if (cause instanceof TimeoutException) {
-                throw new ServiceException(ErrorCode.AI_TIMEOUT);
-            }
-            throw new ServiceException(ErrorCode.AI_ERROR);
-        }
-    }
-
-    private ItemCycleRecommendResponse parseJson(String rawText) {
-        // response 자체가 null인 경우 체크
-        if (rawText == null || rawText.isBlank()) {
-            throw new ServiceException(ErrorCode.AI_NO_RESPONSE);
         }
 
-        // Not Found 응답 처리
-        if (rawText.contains("Not Found")) {
-            throw new ServiceException(ErrorCode.AI_ITEM_NOT_FOUND);
+        // 프론트에서 보낸 URL
+        if (StringUtils.isNotBlank(providedUrl)) {
+            return providedUrl;
         }
 
-        try {
-            // {} 블록만 추출
-            int start = rawText.indexOf("{");
-            int end = rawText.lastIndexOf("}");
-
-            if (start == -1 || end == -1 || start >= end) {
-                throw new ServiceException(ErrorCode.AI_INVALID_JSON);
-            }
-
-            String cleanedJson = rawText.substring(start, end + 1);
-
-            // JSON을 객체로 변환
-            return objectMapper.readValue(cleanedJson, ItemCycleRecommendResponse.class);
-
-        } catch (Exception e) {
-            throw new ServiceException(ErrorCode.JSON_PARSING_ERROR);
-        }
-    }
-
-    /**
-     * 특정 사용자의 가장 자주 교체한 아이템 순위 조회
-     */
-    @Transactional(readOnly = true)
-    public List<MostReplacedItemResponse> getMostReplacedItems(Long userId, int limit) {
-        // Repository에서 가장 자주 교체한 아이템 순위를 조회
-        List<Map<String, Object>> rawResults = itemHistoryRepository
-                .findMostReplacedItemsByUser(userId, limit);
-
-        // 결과를 DTO로 변환
-        return MostReplacedItemResponse.fromList(rawResults);
+        // 기존 URL 유지 (수정 시), 없으면 빈 문자열
+        return StringUtils.isNotBlank(existingUrl) ? existingUrl : "";
     }
 }

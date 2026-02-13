@@ -2,7 +2,9 @@ package com.back.domain.item.item.controller;
 
 import com.back.domain.item.item.dto.*;
 import com.back.domain.item.item.entity.Item;
+import com.back.domain.item.item.service.ItemRecommendationService;
 import com.back.domain.item.item.service.ItemService;
+import com.back.domain.item.item.service.ItemStatisticsService;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,20 +26,17 @@ import java.util.Map;
 public class ItemController {
     private final ItemService itemService;
     private final Rq rq;
+    private final ItemStatisticsService itemStatisticsService;
+    private final ItemRecommendationService itemRecommendationService;
 
+    // == CRUD ==
     @DeleteMapping("/{itemId}")
     @Operation(summary = "아이템 삭제")
-    public RsData<Void> deleteItem(
-            @PathVariable Long itemId
-    ) {
+    public RsData<Void> deleteItem(@PathVariable Long itemId) {
         Long userId = rq.getMemberId();
-
         itemService.deleteItem(userId, itemId);
 
-        return new RsData<>(
-                "200-1",
-                "아이템 삭제 성공"
-        );
+        return new RsData<>("200-1", "아이템 삭제 성공");
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE) //Swagger UI에 파일선택버튼 추가
@@ -46,7 +45,6 @@ public class ItemController {
             @Valid @ModelAttribute ItemCreateRequest request
     ) {
         Long userId = rq.getMemberId();
-
         Item item = itemService.createItem(userId, request);
 
         return new RsData<>(
@@ -79,9 +77,7 @@ public class ItemController {
 
     @GetMapping("/{itemId}")
     @Operation(summary = "아이템 단건 조회")
-    public RsData<ItemResponse> getItem(
-            @PathVariable Long itemId
-    ) {
+    public RsData<ItemResponse> getItem(@PathVariable Long itemId) {
         Long userId = rq.getMemberId();
         Item item = itemService.findByIdAndUserId(itemId, userId);
 
@@ -99,8 +95,6 @@ public class ItemController {
             @Valid @ModelAttribute ItemUpdateRequest request
     ) {
         Long userId = rq.getMemberId();
-
-        // 아이템 수정
         Item item = itemService.modify(userId, id, request);
 
         return new RsData<>(
@@ -115,8 +109,6 @@ public class ItemController {
     public RsData<ItemReplaceResponse> replaceItem(@PathVariable Long id) {
         // todo: 요청 헤더의 인증 정보를 바탕으로 user_id 받아오기
         Long userId = rq.getMemberId();
-
-        // 아이템 교체
         Item item = itemService.replaceItem(userId, id);
 
         return new RsData<>(
@@ -140,28 +132,15 @@ public class ItemController {
         );
     }
 
+    // == 통계 ==
+
     @GetMapping("/statistics/category-average")
     @Operation(summary = "카테고리별 평균 사용 기간 조회")
     public RsData<List<CategoryAverageUsageResponse>> getCategoryAverageUsage() {
         Long userId = rq.getMemberId();
+        List<CategoryAverageUsageResponse> data = itemStatisticsService.getCategoryAverageUsage(userId);
 
-        List<CategoryAverageUsageResponse> data = itemService.getCategoryAverageUsage(userId);
-
-        return new RsData<>(
-                "200-1",
-                "카테고리별 평균 사용 기간 조회 성공",
-                data
-        );
-    }
-
-    @GetMapping("/cycle-recommend")
-    @Operation(summary = "AI에게 아이템 주기 추천받기")
-    public RsData<ItemCycleRecommendResponse> getItemCycleRecommend(@RequestParam String name) {
-        return new RsData<>(
-                "200",
-                "추천 주기 조회 완료",
-                itemService.getItemCycleRecommend(name)
-        );
+        return new RsData<>("200-1", "카테고리별 평균 사용 기간 조회 성공", data);
     }
 
     @GetMapping("/statistics/most-replaced")
@@ -170,13 +149,21 @@ public class ItemController {
             @RequestParam(defaultValue = "10") int limit
     ) {
         Long userId = rq.getMemberId();
+        List<MostReplacedItemResponse> data = itemStatisticsService.getMostReplacedItems(userId, limit);
 
-        List<MostReplacedItemResponse> data = itemService.getMostReplacedItems(userId, limit);
+        return new RsData<>("200-1", "가장 자주 교체한 아이템 순위 조회 성공", data);
+    }
 
+    // == AI 추천 ==
+
+    @GetMapping("/cycle-recommend")
+    @Operation(summary = "AI에게 아이템 주기 추천받기")
+    public RsData<ItemCycleRecommendResponse> getItemCycleRecommend(@RequestParam String name) {
+        ItemCycleRecommendResponse recommendation = itemRecommendationService.getItemCycleRecommend(name);
         return new RsData<>(
-                "200-1",
-                "가장 자주 교체한 아이템 순위 조회 성공",
-                data
+                "200",
+                "추천 주기 조회 완료",
+                recommendation
         );
     }
 }
