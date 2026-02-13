@@ -1,9 +1,12 @@
 package com.back.global.globalExceptionHandler;
 
+import com.back.global.exception.ErrorCode;
 import com.back.global.exception.ServiceException;
 import com.back.global.rsData.RsData;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -19,33 +22,55 @@ import java.util.stream.Collectors;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     // 공통 예외 처리
     @ExceptionHandler(ServiceException.class)
-    public RsData<Void> handle(ServiceException ex, HttpServletResponse response) {
+    public ResponseEntity<RsData<Void>> handleServiceException(
+            ServiceException ex,
+            HttpServletResponse response
+    ) {
         RsData<Void> rsData = ex.getRsData();
-        ex.getMessage();
-        response.setStatus(rsData.statusCode());
-        return rsData;
+
+        // 로깅 추가
+        if (ex.getErrorCode() != null) {
+            log.warn("ServiceException 발생: code={}, message={}",
+                    ex.getErrorCode().getCode(),
+                    rsData.msg()
+            );
+        }
+
+        // HttpServletResponse의 상태 코드 설정은 ResponseEntity가 처리하므로 제거
+        HttpStatus httpStatus = ex.getErrorCode() != null
+                ? ex.getErrorCode().getHttpStatus()
+                : HttpStatus.INTERNAL_SERVER_ERROR;
+
+        return new ResponseEntity<>(rsData, httpStatus);
     }
 
     // 값이 존재하지 않을 때
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<RsData<Void>> handle(NoSuchElementException ex) {
+    public ResponseEntity<RsData<Void>> handleNoSuchElementException(NoSuchElementException ex) {
+        log.warn("NoSuchElementException 발생: {}", ex.getMessage());
+
         return new ResponseEntity<>(
                 new RsData<>(
-                        "404-1",
-                        "해당 데이터가 존재하지 않습니다."
+                        ErrorCode.DATA_NOT_FOUND.getCode(),
+                        ErrorCode.DATA_NOT_FOUND.getMessage()
                 ),
-                NOT_FOUND
+                ErrorCode.DATA_NOT_FOUND.getHttpStatus()
         );
     }
 
-    // 요청값 유효성 예외처리 (@Validated 붙은 클래스)
+    // @Validated 검증 실패 처리
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<RsData<Void>> handle(ConstraintViolationException ex) {
+    public ResponseEntity<RsData<Void>> handleConstraintViolationException(
+            ConstraintViolationException ex
+    ) {
+        log.warn("ConstraintViolationException 발생: {}", ex.getMessage());
+
         String message = ex.getConstraintViolations()
                 .stream()
                 .map(violation -> {
@@ -61,15 +86,20 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(
                 new RsData<>(
-                        "400-1",
+                        ErrorCode.INVALID_INPUT_VALUE.getCode(),
                         message
                 ),
-                BAD_REQUEST
+                ErrorCode.INVALID_INPUT_VALUE.getHttpStatus()
         );
     }
 
+    // @Valid 검증 실패 처리
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<RsData<Void>> handle(MethodArgumentNotValidException ex) {
+    public ResponseEntity<RsData<Void>> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException ex
+    ) {
+        log.warn("MethodArgumentNotValidException 발생");
+
         String message = ex.getBindingResult()
                 .getAllErrors()
                 .stream()
@@ -81,38 +111,62 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(
                 new RsData<>(
-                        "400-1",
+                        ErrorCode.INVALID_INPUT_VALUE.getCode(),
                         message
                 ),
-                BAD_REQUEST
+                ErrorCode.INVALID_INPUT_VALUE.getHttpStatus()
         );
     }
 
-    // Json 형식이 올바르지 않을 때
+    // JSON 형식 오류 처리
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<RsData<Void>> handle(HttpMessageNotReadableException ex) {
+    public ResponseEntity<RsData<Void>> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException ex
+    ) {
+        log.warn("HttpMessageNotReadableException 발생: {}", ex.getMessage());
+
         return new ResponseEntity<>(
                 new RsData<>(
-                        "400-1",
-                        "요청 본문이 올바르지 않습니다."
+                        ErrorCode.INVALID_REQUEST_BODY.getCode(),
+                        ErrorCode.INVALID_REQUEST_BODY.getMessage()
                 ),
-                BAD_REQUEST
+                ErrorCode.INVALID_REQUEST_BODY.getHttpStatus()
         );
     }
 
-    // 요청 헤더 값이 존재하지 않을 때
+    // 요청 헤더 누락 처리
     @ExceptionHandler(MissingRequestHeaderException.class)
-    public ResponseEntity<RsData<Void>> handle(MissingRequestHeaderException ex) {
+    public ResponseEntity<RsData<Void>> handleMissingRequestHeaderException(
+            MissingRequestHeaderException ex
+    ) {
+        log.warn("MissingRequestHeaderException 발생: {}", ex.getHeaderName());
+
+        String message = "%s-%s-%s".formatted(
+                ex.getHeaderName(),
+                "NotBlank",
+                ex.getLocalizedMessage()
+        );
+
         return new ResponseEntity<>(
                 new RsData<>(
-                        "400-1",
-                        "%s-%s-%s".formatted(
-                                ex.getHeaderName(),
-                                "NotBlank",
-                                ex.getLocalizedMessage()
-                        )
+                        ErrorCode.INVALID_INPUT_VALUE.getCode(),
+                        message
                 ),
-                BAD_REQUEST
+                ErrorCode.INVALID_INPUT_VALUE.getHttpStatus()
+        );
+    }
+
+    // 예상치 못한 예외 처리
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<RsData<Void>> handleException(Exception ex) {
+        log.error("Unexpected exception 발생", ex);
+
+        return new ResponseEntity<>(
+                new RsData<>(
+                        ErrorCode.INTERNAL_SERVER_ERROR.getCode(),
+                        ErrorCode.INTERNAL_SERVER_ERROR.getMessage()
+                ),
+                ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus()
         );
     }
 }
