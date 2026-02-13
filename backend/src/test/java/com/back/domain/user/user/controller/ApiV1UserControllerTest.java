@@ -64,6 +64,17 @@ public class ApiV1UserControllerTest {
     }
 
     @Test
+    @DisplayName("회원가입: 유효성검증실패-아이디누락")
+    void t1_2() throws Exception {
+        // BindingResult 없으므로 예외 발생을 테스트하면 됨
+        mvc.perform(post("/api/v1/user/signup")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"password\":\"test123\",\"email\":\"test@test.com\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resultCode").value("400-1"));
+    }
+
+    @Test
     @DisplayName("로그인")
     void t2() throws Exception {
         // 1. [준비] t1 데이터는 지워졌으므로, t2를 위해 다시 가입시켜야 합니다!

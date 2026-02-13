@@ -26,21 +26,9 @@ public class ApiV1UserController {
     @PostMapping("/signup")
     @Transactional
     @Operation(summary = "회원가입")
-    public RsData<UserDto> join(
-            @Valid @RequestBody UserJoinRequest request,
-            BindingResult bindingResult // [중요] 위치는 반드시 검증 객체 바로 뒤!
-    ) {
-        // 유효성 검사 실패 체크
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getFieldError().getDefaultMessage();
-
-            // 실패 응답 리턴
-            return new RsData<>(
-                    "400",
-                    errorMessage, //
-                    null
-            );
-        }
+    public RsData<UserDto> join(@Valid @RequestBody UserJoinRequest request) {
+        // BindingResult 제거 - GlobalExceptionHandler가 자동으로 처리
+        // 유효성 검증 실패 시 MethodArgumentNotValidException 발생 → 핸들러가 처리
 
         // 성공 시 로직 실행
         User user = userService.join(
@@ -92,7 +80,6 @@ public class ApiV1UserController {
         }
 
         userService.deleteById(actor.id());
-
         rq.setCookie("accessToken", "");
 
         return new RsData<>(
