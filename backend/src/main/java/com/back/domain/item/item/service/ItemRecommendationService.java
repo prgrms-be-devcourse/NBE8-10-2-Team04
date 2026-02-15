@@ -106,9 +106,11 @@ public class ItemRecommendationService {
             throw new ServiceException(ErrorCode.AI_ITEM_NOT_FOUND);
         }
 
-        try {
-            String cleanedJson = extractJsonBlock(rawText);
+        // extractJsonBlock은 ServiceException(AI_INVALID_JSON)을 던질 수 있으므로
+        // try-catch 블록 외부에서 실행하여 예외가 JSON_PARSING_ERROR로 덮어씌워지는 것을 방지함
+        String cleanedJson = extractJsonBlock(rawText);
 
+        try {
             // JSON을 객체로 변환
             return objectMapper.readValue(cleanedJson, ItemCycleRecommendResponse.class);
         } catch (Exception e) {
