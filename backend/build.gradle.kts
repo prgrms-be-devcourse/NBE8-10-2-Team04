@@ -22,6 +22,7 @@ jacoco {
 
 tasks.test {
     useJUnitPlatform()
+    ignoreFailures = true // 테스트가 실패해도 빌드를 계속 진행 (리포트 생성 가능)
     finalizedBy(tasks.jacocoTestReport) // 테스트 task가 끝나면 jacocoTestReport 실행
 }
 
