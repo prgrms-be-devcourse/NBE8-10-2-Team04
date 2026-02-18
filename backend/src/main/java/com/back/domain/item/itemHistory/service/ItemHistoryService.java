@@ -1,6 +1,7 @@
 package com.back.domain.item.itemHistory.service;
 
 import com.back.domain.item.item.entity.Item;
+import com.back.domain.item.item.repository.ItemRepository;
 import com.back.domain.item.itemHistory.dto.ItemAllHistoryResponse;
 import com.back.domain.item.itemHistory.dto.ItemHistoryResponse;
 import com.back.domain.item.itemHistory.entity.ItemHistory;
@@ -18,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ItemHistoryService {
     private final ItemHistoryRepository itemHistoryRepository;
+    private final ItemRepository itemRepository;
 
     @Transactional
     public void createItemHistory(Item item) {
@@ -26,7 +28,9 @@ public class ItemHistoryService {
     }
 
     @Transactional(readOnly = true)
-    public List<ItemHistoryResponse> getItemHistories(Long itemId) {
+    public List<ItemHistoryResponse> getItemHistories(Long itemId, Long userId) {
+        itemRepository.findByIdAndUserId(itemId, userId)
+                .orElseThrow(() -> new ServiceException(ErrorCode.ITEM_NOT_FOUND_OR_NO_PERMISSION));
         List<ItemHistory> histories = itemHistoryRepository.findByItemIdOrderByStartDateDesc(itemId);
         return ItemHistoryResponse.fromList(histories);
     }
