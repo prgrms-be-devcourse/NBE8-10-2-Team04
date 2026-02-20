@@ -38,8 +38,9 @@ public class ItemHistoryController {
     @GetMapping("/{itemId}/histories")
     @Operation(summary = "특정 아이템의 교체 이력 조회", description = "특정 아이템의 이력을 조회합니다.")
     public RsData<List<ItemHistoryResponse>> getItemHistories(@PathVariable Long itemId) {
+        Long userId = rq.getMemberId();
         // Service에서 이미 변환된 DTO 리스트를 반환
-        List<ItemHistoryResponse> histories = itemHistoryService.getItemHistories(itemId);
+        List<ItemHistoryResponse> histories = itemHistoryService.getItemHistories(itemId, userId);
 
         return new RsData<>("200-1", "아이템 이력 조회 성공", histories);
     }
