@@ -248,12 +248,18 @@ public class ItemService {
 
         // 트랜잭션 커밋 후 S3 삭제 실행
         if (imageUrl != null && !imageUrl.isEmpty()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    s3ImageService.delete(imageUrl);
-                }
-            });
+            // 트랜잭션 동기화가 활성화된 경우(운영)와 아닌 경우(테스트) 분기 처리
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        s3ImageService.delete(imageUrl);
+                    }
+                });
+            } else {
+                // 테스트 환경 등 트랜잭션이 없는 경우 즉시 삭제
+                s3ImageService.delete(imageUrl);
+            }
         }
     }
 

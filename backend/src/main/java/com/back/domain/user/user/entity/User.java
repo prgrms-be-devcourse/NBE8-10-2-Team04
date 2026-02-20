@@ -2,9 +2,7 @@ package com.back.domain.user.user.entity;
 
 import com.back.domain.item.item.entity.Item;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +11,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "users")
 @Getter
+@Builder // 빌더 패턴 사용 가능하게 함
+@AllArgsConstructor // 빌더가 모든 필드를 포함한 생성자를 사용할 수 있게 함
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
     @Id
