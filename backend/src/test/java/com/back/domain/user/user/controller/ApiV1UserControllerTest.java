@@ -105,9 +105,9 @@ public class ApiV1UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("200-1"))
                 .andExpect(jsonPath("$.msg").value("%s님 환영합니다.".formatted(user.getLoginId())))
-                .andExpect(jsonPath("$.data.userDto").exists())
-                .andExpect(jsonPath("$.data.userDto.id").value(user.getId()))
-                .andExpect(jsonPath("$.data.userDto.loginId").value(user.getLoginId()))
+                .andExpect(jsonPath("$.data.user").exists())
+                .andExpect(jsonPath("$.data.user.id").value(user.getId()))
+                .andExpect(jsonPath("$.data.user.loginId").value(user.getLoginId()))
                 .andExpect(jsonPath("$.data.apiKey").value(user.getApiKey()));
     }
 
