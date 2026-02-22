@@ -273,8 +273,8 @@ public class ItemControllerTest {
         resultActions
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("modifyItem"))
-                .andExpect(status().isInternalServerError()) // 로그 기반 수정: 현재 서버가 ServiceException에 대해 500 반환 중
-                .andExpect(jsonPath("$.resultCode").value("500"))
+                .andExpect(status().isBadRequest()) // 500 (isInternalServerError) -> 400 (isBadRequest)
+                .andExpect(jsonPath("$.resultCode").value("400-1"))
                 .andExpect(jsonPath("$.msg").value("cycleDays 형식이 올바르지 않습니다. 예: 30d, 2m, 1y"));
     }
 
@@ -456,8 +456,8 @@ public class ItemControllerTest {
         resultActions
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("createItem"))
-                .andExpect(status().isInternalServerError()) // 로그 기반 수정: 500
-                .andExpect(jsonPath("$.resultCode").value("500"))
+                .andExpect(status().isBadRequest()) // 500 (isInternalServerError) -> 400 (isBadRequest)
+                .andExpect(jsonPath("$.resultCode").value("400-1"))
                 .andExpect(jsonPath("$.msg").value("cycleDays 형식이 올바르지 않습니다. 예: 30d, 2m, 1y"));
     }
 
@@ -506,8 +506,8 @@ public class ItemControllerTest {
         resultActions
                 .andExpect(handler().handlerType(ItemController.class))
                 .andExpect(handler().methodName("createItem"))
-                .andExpect(status().isInternalServerError()) // 로그 기반 수정: 500
-                .andExpect(jsonPath("$.resultCode").value("500"))
+                .andExpect(status().isBadRequest()) // 500 (isInternalServerError) -> 400 (isBadRequest)
+                .andExpect(jsonPath("$.resultCode").value("400-1"))
                 .andExpect(jsonPath("$.msg").value("cycleDays 값은 1 이상이어야 합니다."));
     }
 

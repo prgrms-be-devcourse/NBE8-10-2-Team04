@@ -37,15 +37,13 @@ public class GlobalExceptionHandler {
         // 로깅 추가
         if (ex.getErrorCode() != null) {
             log.warn("ServiceException 발생: code={}, message={}",
-                    ex.getErrorCode().getCode(),
+                    ex.getErrorCode(),
                     rsData.msg()
             );
         }
 
-        // HttpServletResponse의 상태 코드 설정은 ResponseEntity가 처리하므로 제거
-        HttpStatus httpStatus = ex.getErrorCode() != null
-                ? ex.getErrorCode().getHttpStatus()
-                : HttpStatus.INTERNAL_SERVER_ERROR;
+        // 500으로 고정하지 않고, 문자열 앞 3자리(예: "400-1" -> 400)를 상태 코드로 변환
+        HttpStatus httpStatus = HttpStatus.valueOf(ex.getStatusCode());
 
         return new ResponseEntity<>(rsData, httpStatus);
     }

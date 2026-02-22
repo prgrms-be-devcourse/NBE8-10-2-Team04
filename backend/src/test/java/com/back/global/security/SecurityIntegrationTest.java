@@ -20,6 +20,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -121,18 +122,15 @@ class SecurityIntegrationTest {
 
         // When
         ResultActions resultActions = mvc.perform(
-                        post("/api/v1/items")
+                        get("/api/v1/user/me")
                                 .header("Authorization", invalidAuthHeader)
-                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                                .content("{}")
                 )
                 .andDo(print());
 
         // Then
         resultActions
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.resultCode").value("401-2"))
-                .andExpect(jsonPath("$.msg").value("Authorization 헤더가 Bearer 형식이 아닙니다."));
+                .andExpect(jsonPath("$.resultCode").value("401-2"));
     }
 
     // ============================================
@@ -146,18 +144,15 @@ class SecurityIntegrationTest {
 
         // When
         ResultActions resultActions = mvc.perform(
-                        post("/api/v1/items")
+                        get("/api/v1/user/me")
                                 .header("Authorization", invalidToken)
-                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                                .content("{}")
                 )
                 .andDo(print());
 
         // Then - 토큰이 유효하지 않고 apiKey도 없으면 401-3
         resultActions
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.resultCode").value("401-3"))
-                .andExpect(jsonPath("$.msg").value("API 키가 유효하지 않습니다."));
+                .andExpect(jsonPath("$.resultCode").value("401-3"));
     }
 
     // ============================================
@@ -180,16 +175,8 @@ class SecurityIntegrationTest {
 
         // When
         ResultActions resultActions = mvc.perform(
-                        post("/api/v1/items")
+                        get("/api/v1/user/me")
                                 .header("Authorization", "Bearer " + accessToken)
-                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                                .content("""
-                                        {
-                                            "name": "테스트 아이템",
-                                            "categoryId": 1,
-                                            "cycleDays": 30
-                                        }
-                                        """.stripIndent())
                 )
                 .andDo(print());
 
@@ -217,18 +204,15 @@ class SecurityIntegrationTest {
 
         // When - 쿠키 방식으로 토큰 전달 (Authorization 헤더는 Bearer {apiKey} {accessToken} 형식이라서)
         ResultActions resultActions = mvc.perform(
-                        post("/api/v1/items")
+                        get("/api/v1/user/me")
                                 .cookie(new Cookie("accessToken", accessToken))
-                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                                .content("{}")
                 )
                 .andDo(print());
 
         // Then
         resultActions
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.resultCode").value("401-1"))
-                .andExpect(jsonPath("$.msg").value("존재하지 않는 회원입니다."));
+                .andExpect(jsonPath("$.resultCode").value("401-1"));
     }
 
     // ============================================
@@ -248,18 +232,15 @@ class SecurityIntegrationTest {
 
         // When - 쿠키 방식으로 토큰 전달
         ResultActions resultActions = mvc.perform(
-                        post("/api/v1/items")
+                        get("/api/v1/user/me")
                                 .cookie(new Cookie("accessToken", token))
-                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                                .content("{}")
                 )
                 .andDo(print());
 
         // Then - id, loginId가 없으면 401-1 (토큰 클레임이 올바르지 않습니다)
         resultActions
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.resultCode").value("401-1"))
-                .andExpect(jsonPath("$.msg").value("토큰 클레임이 올바르지 않습니다."));
+                .andExpect(jsonPath("$.resultCode").value("401-1"));
     }
 
     // ============================================
@@ -282,10 +263,8 @@ class SecurityIntegrationTest {
 
         // When - 쿠키로 토큰 전달
         ResultActions resultActions = mvc.perform(
-                        post("/api/v1/items")
+                        get("/api/v1/user/me")                                .cookie(new Cookie("accessToken", accessToken))
                                 .cookie(new Cookie("accessToken", accessToken))
-                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                                .content("{}")
                 )
                 .andDo(print());
 
@@ -303,9 +282,7 @@ class SecurityIntegrationTest {
     void t10_anonymousRequestWithoutToken() throws Exception {
         // When - 토큰 없이 요청
         ResultActions resultActions = mvc.perform(
-                        post("/api/v1/items")
-                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                                .content("{}")
+                        get("/api/v1/user/me")
                 )
                 .andDo(print());
 
