@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -336,4 +337,118 @@ public class ApiV1UserControllerTest {
                 .andExpect(jsonPath("$.resultCode").value("200-1"));
     }
 
+    @Test
+    @DisplayName("회원 탈퇴")
+    void t6() throws Exception {
+        // 회원 생성 및 로그인하여 accessToken 발급
+        User user = userService.join("deleteUser", "1234", "delete@test.com");
+
+        ResultActions loginResult = mvc.perform(post("/api/v1/user/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "loginId": "deleteUser",
+                            "password": "1234"
+                        }
+                        """.stripIndent()));
+
+        jakarta.servlet.http.Cookie accessTokenCookie = loginResult
+                .andReturn()
+                .getResponse()
+                .getCookie("accessToken");
+        assert accessTokenCookie != null;
+
+        // 회원 탈퇴
+        ResultActions resultActions = mvc.perform(delete("/api/v1/user/me")
+                        .with(csrf())
+                        .cookie(accessTokenCookie))
+                .andDo(print());
+
+        // 응답 및 쿠키 삭제 확인
+        resultActions
+                .andExpect(handler().handlerType(ApiV1UserController.class))
+                .andExpect(handler().methodName("deleteMe"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("%s님의 정보입니다.".formatted(user.getLoginId())))
+                .andExpect(cookie().value("accessToken", "")); // 토큰 쿠키 비워졌는지 확인
+
+        // DB에서 실제로 삭제(또는 논리적 삭제)되었는지 확인
+        assertTrue(userService.findByLoginId("deleteUser").isEmpty(), "회원이 삭제되어야 합니다.");
+    }
+
+    @Test
+    @DisplayName("비밀번호 확인 - 성공")
+    void t7() throws Exception {
+        // 회원 생성 및 로그인
+        User user = userService.join("verifyUser", "1234", "verify@test.com");
+
+        ResultActions loginResult = mvc.perform(post("/api/v1/user/login")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                            "loginId": "verifyUser",
+                            "password": "1234"
+                        }
+                        """.stripIndent()));
+
+        jakarta.servlet.http.Cookie accessTokenCookie = loginResult
+                .andReturn()
+                .getResponse()
+                .getCookie("accessToken");
+        assert accessTokenCookie != null;
+
+        // 올바른 비밀번호로 확인 요청 (POST /api/v1/user/me/verify-password)
+        ResultActions resultActions = mvc.perform(post("/api/v1/user/me/verify-password")
+                        .with(csrf())
+                        .cookie(accessTokenCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                            "password": "1234"
+                        }
+                        """.stripIndent()))
+                .andDo(print());
+
+        resultActions
+                .andExpect(handler().handlerType(ApiV1UserController.class))
+                .andExpect(handler().methodName("verifyPassword"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.resultCode").value("200-1"))
+                .andExpect(jsonPath("$.msg").value("비밀번호가 확인되었습니다."));
+    }
+
+    @Test
+    @DisplayName("로그인 실패 - 잘못된 비밀번호")
+    void t8() throws Exception {
+        // 회원 생성
+        userService.join("wrongPassUser", "1234", "wrongpass@test.com");
+
+        // 틀린 비밀번호로 로그인 시도
+        mvc.perform(post("/api/v1/user/login")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                        {
+                            "loginId": "wrongPassUser",
+                            "password": "wrongpassword"
+                        }
+                        """.stripIndent()))
+                .andDo(print())
+                .andExpect(status().isUnauthorized()) // 400 대신 401을 기대하도록 수정
+                .andExpect(jsonPath("$.resultCode").value("401-1"))
+                .andExpect(jsonPath("$.msg").value("비밀번호가 일치하지 않습니다."));
+    }
+
+    @Test
+    @DisplayName("인증되지 않은 사용자의 내 정보 조회 실패")
+    void t9() throws Exception {
+        // accessToken 쿠키 없이 /me 엔드포인트에 접근
+        mvc.perform(get("/api/v1/user/me")
+                        .with(csrf()))
+                .andDo(print())
+                .andExpect(status().is4xxClientError());
+    }
 }
