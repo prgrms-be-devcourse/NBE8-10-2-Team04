@@ -1,5 +1,7 @@
 package com.back.domain.category.category.controller;
 
+import com.back.domain.user.user.entity.User;
+import com.back.domain.user.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,14 +25,28 @@ class CategoryControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    // UserService 주입
+    @Autowired
+    private UserService userService;
+
+    // 인증 헤더를 만들기 위한 편의 메서드 추가
+    private String getAuthHeader(User user) {
+        return "Bearer " + user.getApiKey();
+    }
+
     @Test
     @DisplayName("카테고리 조회 - BaseInitData 기본 카테고리 8개 조회 성공")
     void getCategories_success_withBaseInitData() throws Exception {
-        mvc.perform(get("/api/v1/categories"))
+        // BaseInitData 등에 의해 생성된 기존 유저 조회
+        User user = userService.findByLoginId("user1").orElseThrow();
+
+        // 헤더에 인증 정보 포함하여 요청
+        mvc.perform(get("/api/v1/categories")
+                        .header("Authorization", getAuthHeader(user)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.resultCode").value("200-1"))
-                .andExpect(jsonPath("$.msg").value("카테고리 조회 성공"))
+                .andExpect(jsonPath("$.msg").value("카테고리 목록 조회 성공")) // CategoryController의 응답 메시지와 일치하도록 수정
 
                 // BaseInitData에서 8개 생성
                 .andExpect(jsonPath("$.data", hasSize(greaterThanOrEqualTo(8))))

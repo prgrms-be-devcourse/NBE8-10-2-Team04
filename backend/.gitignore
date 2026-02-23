@@ -42,3 +42,5 @@ db_dev.trace.db
 
 ### Secret Env File ###
 .env
+context.md
+claude.md

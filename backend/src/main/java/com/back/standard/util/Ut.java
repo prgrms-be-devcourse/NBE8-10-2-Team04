@@ -5,14 +5,17 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ClaimsBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.experimental.UtilityClass;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
 
+@UtilityClass
 public class Ut {
 
+    @UtilityClass
     public static class jwt {
         public static boolean isValid(String secret, String jwtStr) {
             try {
@@ -70,6 +73,7 @@ public class Ut {
         }
     }
 
+    @UtilityClass
     public static class json {
         private static final ObjectMapper objectMapper = new ObjectMapper();
 

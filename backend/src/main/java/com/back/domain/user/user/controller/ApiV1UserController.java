@@ -3,6 +3,7 @@ package com.back.domain.user.user.controller;
 import com.back.domain.user.user.dto.*;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.service.UserService;
+import com.back.global.exception.ErrorCode;
 import com.back.global.exception.ServiceException;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
@@ -25,21 +26,9 @@ public class ApiV1UserController {
     @PostMapping("/signup")
     @Transactional
     @Operation(summary = "회원가입")
-    public RsData<UserDto> join(
-            @Valid @RequestBody UserJoinRequest request,
-            BindingResult bindingResult // [중요] 위치는 반드시 검증 객체 바로 뒤!
-    ) {
-        // 유효성 검사 실패 체크
-        if (bindingResult.hasErrors()) {
-            String errorMessage = bindingResult.getFieldError().getDefaultMessage();
-
-            // 실패 응답 리턴
-            return new RsData<>(
-                    "400",
-                    errorMessage, //
-                    null
-            );
-        }
+    public RsData<UserDto> join(@Valid @RequestBody UserJoinRequest request) {
+        // BindingResult 제거 - GlobalExceptionHandler가 자동으로 처리
+        // 유효성 검증 실패 시 MethodArgumentNotValidException 발생 → 핸들러가 처리
 
         // 성공 시 로직 실행
         User user = userService.join(
@@ -51,7 +40,7 @@ public class ApiV1UserController {
         return new RsData<>(
                 "201-1",
                 "%s님 환영합니다. 회원가입이 완료되었습니다.".formatted(user.getLoginId()),
-                new UserDto(user)
+                UserDto.from(user)
         );
     }
 
@@ -62,7 +51,7 @@ public class ApiV1UserController {
             @Valid @RequestBody UserLoginRequest reqBody
     ) {
         User user = userService.findByLoginId(reqBody.loginId())
-                .orElseThrow(() -> new ServiceException("401-1", "존재하지 않는 아이디입니다."));
+                .orElseThrow(() -> new ServiceException(ErrorCode.INVALID_LOGIN_ID));
 
         userService.checkPassword(
                 user,
@@ -77,31 +66,27 @@ public class ApiV1UserController {
         return new RsData<>(
                 "200-1",
                 "%s님 환영합니다.".formatted(user.getLoginId()),
-                new UserLoginResponse(
-                        new UserDto(user),
-                        user.getApiKey(),
-                        accessToken
-                )
+                UserLoginResponse.of(user, user.getApiKey(), accessToken)
         );
     }
 
     @DeleteMapping("/me")
     @Operation(summary = "탈퇴")
-    public RsData<Void> deleteMe() {
+    public RsData<UserDto> deleteMe() {
         UserDto actor = rq.getActor();
 
         if (actor == null) {
-            throw new ServiceException("401-1", "로그인이 필요합니다.");
+            throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
         userService.deleteById(actor.id());
-
         rq.setCookie("accessToken", "");
 
         return new RsData<>(
                 "200-1",
-                "회원탈퇴가 완료되었습니다.",
-                null);
+                "%s님의 정보입니다.".formatted(actor.loginId()),
+                actor
+        );
     }
 
     @GetMapping("/me")
@@ -113,7 +98,7 @@ public class ApiV1UserController {
         UserDto actor = rq.getActor();
 
         if (actor == null) {
-            throw new ServiceException("401-1", "로그인이 필요합니다.");
+            throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
         // UserDto는 이미 필요한 정보를 포함하고 있으므로 그대로 반환
@@ -145,7 +130,7 @@ public class ApiV1UserController {
     ) {
         UserDto actor = rq.getActor();
         if (actor == null) {
-            throw new ServiceException("401-1", "로그인이 필요합니다.");
+            throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
         User updatedUser = userService.updateProfile(actor.id(), request.email());
@@ -158,7 +143,7 @@ public class ApiV1UserController {
         return new RsData<>(
                 "200-2",
                 "회원정보가 수정되었습니다.",
-                new UserUpdateResponse(updatedUser)
+                UserUpdateResponse.from(updatedUser)
         );
     }
 
@@ -169,7 +154,7 @@ public class ApiV1UserController {
     ) {
         UserDto actor = rq.getActor();
         if (actor == null) {
-            throw new ServiceException("401-1", "로그인이 필요합니다.");
+            throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
         User updatedUser = userService.changePassword(
@@ -186,7 +171,7 @@ public class ApiV1UserController {
         return new RsData<>(
                 "200-2",
                 "비밀번호가 변경되었습니다.",
-                new UserUpdateResponse(updatedUser)
+                UserUpdateResponse.from(updatedUser)
         );
     }
 
@@ -197,11 +182,11 @@ public class ApiV1UserController {
     ) {
         UserDto actor = rq.getActor();
         if (actor == null) {
-            throw new ServiceException("401-1", "로그인이 필요합니다.");
+            throw new ServiceException(ErrorCode.LOGIN_REQUIRED);
         }
 
         User user = userService.findById(actor.id())
-                .orElseThrow(() -> new ServiceException("404-1", "사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
 
         userService.checkPassword(user, request.password());
 

@@ -1,8 +1,11 @@
 package com.back.domain.user.user.service;
 
+import com.back.domain.item.item.entity.Item;
 import com.back.domain.user.user.entity.User;
 import com.back.domain.user.user.repository.UserRepository;
+import com.back.global.exception.ErrorCode;
 import com.back.global.exception.ServiceException;
+import com.back.global.s3.S3ImageService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -10,8 +13,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +24,7 @@ public class UserService {
     private final AuthTokenService authTokenService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final S3ImageService s3ImageService;
 
 
     public long count() {
@@ -29,7 +35,7 @@ public class UserService {
         userRepository
                 .findByLoginId(loginId)
                 .ifPresent(_user -> {
-                    throw new ServiceException("409-1", "이미 존재하는 아이디입니다.");
+                    throw new ServiceException(ErrorCode.DUPLICATE_LOGIN_ID);
                 });
         password = passwordEncoder.encode(password); //패스워드 암호화 추가
 
@@ -44,14 +50,24 @@ public class UserService {
 
     @Transactional
     public void deleteById(Long id) {
-        userRepository.findById(id)
-                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
+
+        List<String> imageUrls = user.getItems().stream()
+                .map(Item::getImgUrl)
+                .filter(url -> url != null && !url.isEmpty())
+                .collect(Collectors.toList());
+
+        // API 요청 횟수 감소를 위해 S3 다중 삭제 사용
+        if (!imageUrls.isEmpty()) {
+            this.s3ImageService.deleteMultiple(imageUrls);
+        }
         userRepository.deleteById(id);
     }
 
     public void checkPassword(User user, String password) {
         if (!passwordEncoder.matches(password, user.getPassword()))
-            throw new ServiceException("401-1", "비밀번호가 일치하지 않습니다.");
+            throw new ServiceException(ErrorCode.INVALID_PASSWORD);
     }
 
     public Optional<User> findByApiKey(String apiKey) {
@@ -74,7 +90,7 @@ public class UserService {
     @Transactional
     public User updateProfile(long id, @NotBlank @Size(min = 2, max = 30) String email) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
 
         user.modifyUser(email, user.getPassword());
 
@@ -97,14 +113,14 @@ public class UserService {
             @NotBlank @Size(min = 2, max = 30) String currentPassword,
             @NotBlank @Size(min = 2, max = 20) String newPassword) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new ServiceException("404-1", "존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new ServiceException(ErrorCode.USER_NOT_FOUND));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new ServiceException("403-1", "현재 비밀번호가 일치하지 않습니다.");
+            throw new ServiceException(ErrorCode.PASSWORD_MISMATCH);
         }
 
         if (passwordEncoder.matches(newPassword, user.getPassword())) {
-            throw new ServiceException("400-1", "새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+            throw new ServiceException(ErrorCode.SAME_PASSWORD);
         }
 
         String encodedPassword = passwordEncoder.encode(newPassword);

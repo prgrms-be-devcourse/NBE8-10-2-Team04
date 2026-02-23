@@ -2,7 +2,6 @@ package com.back.domain.category.category.controller;
 
 import com.back.domain.category.category.dto.CategoryResponse;
 import com.back.domain.category.category.service.CategoryService;
-import com.back.domain.user.user.dto.UserDto;
 import com.back.global.rq.Rq;
 import com.back.global.rsData.RsData;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,14 +22,17 @@ public class CategoryController {
     private final Rq rq;
 
     @GetMapping
-    @Operation(summary = "카테고리 조회")
+    @Operation(summary = "카테고리 목록 조회 (사용자별 아이템 개수 포함)")
     public RsData<List<CategoryResponse>> getCategories() {
-        UserDto actor = rq.getActor();
+        Long userId = rq.getMemberId();
+
+        // Service에서 이미 CategoryResponse DTO로 변환되어 반환됨
+        List<CategoryResponse> categories = categoryService.findAllWithItemCount(userId);
 
         return new RsData<>(
                 "200-1",
-                "카테고리 조회 성공",
-                categoryService.findAllWithItemCount(actor.id())
+                "카테고리 목록 조회 성공",
+                categories
         );
     }
 }

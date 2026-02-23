@@ -5,9 +5,7 @@ import com.back.domain.item.itemHistory.entity.ItemHistory;
 import com.back.domain.user.user.entity.User;
 import com.back.global.exception.ServiceException;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,6 +14,8 @@ import java.util.Objects;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Builder // 빌더 패턴 사용 가능하게 함
+@AllArgsConstructor // 빌더가 모든 필드를 포함한 생성자를 사용할 수 있게 함
 @Table(name = "items")
 public class Item {
     @Id
@@ -26,6 +26,7 @@ public class Item {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY) // category(1) : item(N)
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     private String name;
